@@ -1,7 +1,7 @@
 /* Fonts */
 @font-face {
     font-family: 'Abyss';
-    src: url('../fonts/Abyss.ttf') format('truetype');
+    src: url('/fonts/Abyss.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -9,7 +9,7 @@
 
 @font-face {
     font-family: 'Geograph';
-    src: url('../fonts/TestGeograph-Medium.otf') format('opentype');
+    src: url('/fonts/TestGeograph-Medium.otf') format('opentype');
     font-weight: 500;
     font-style: normal;
     font-display: swap;
@@ -17,7 +17,7 @@
 
 @font-face {
     font-family: 'Geograph';
-    src: url('../fonts/TestGeograph-Regular.otf') format('opentype');
+    src: url('/fonts/TestGeograph-Regular.otf') format('opentype');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -25,7 +25,7 @@
 
 @font-face {
     font-family: 'Geograph';
-    src: url('../fonts/TestGeograph-Bold.otf') format('opentype');
+    src: url('/fonts/TestGeograph-Bold.otf') format('opentype');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
@@ -33,7 +33,7 @@
 
 @font-face {
     font-family: 'Geograph';
-    src: url('../fonts/TestGeograph-BoldItalic.otf') format('opentype');
+    src: url('/fonts/TestGeograph-BoldItalic.otf') format('opentype');
     font-weight: 700;
     font-style: italic;
     font-display: swap;
@@ -658,7 +658,7 @@ body.loading .globe-video {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('../images/fond-animation.png');
+    background-image: url('/images/fond-animation.png');
     background-size: cover;
     transform: scaleX(0);
     transform-origin: left;
@@ -1068,7 +1068,7 @@ body.loading .globe-video {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('../images/fond-animation.png');
+    background-image: url('/images/fond-animation.png');
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
@@ -1497,7 +1497,7 @@ body.loading .globe-video {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('../images/fond-animation.png');
+    background-image: url('/images/fond-animation.png');
     background-size: cover;
     transform: scaleY(0);
     transform-origin: bottom;

@@ -1,0 +1,29 @@
+{
+  "name": "mondes-immerges",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Mondes Immergés : expérience web immersive sur les milieux aquatiques en disparition (projet étudiant, contenu fictif inspiré de National Geographic)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --base /Mondes-immerges/",
+    "check": "node scripts/check-links.mjs"
+  },
+  "dependencies": {
+    "gsap": "^3.13.0",
+    "ldrs": "^1.1.7",
+    "three": "^0.163.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Johann-Ar/Mondes-immerges.git"
+  },
+  "homepage": "https://johann-ar.github.io/Mondes-immerges/",
+  "engines": {
+    "node": ">=20.11"
+  }
+}

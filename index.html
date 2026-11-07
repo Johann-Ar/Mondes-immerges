@@ -4,1208 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>National Géographique | Mondes Immergés</title>
-	<link rel="icon" type="image/png" href="./images/ng-logo-seul-favicon.png">
-    <style>
-	
-        /* Import des polices */
-        @font-face {
-            font-family: 'Abyss';
-            src: url('./fonts/Abyss.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: 'Geograph';
-            src: url('./fonts/TestGeograph-Medium.otf') format('opentype');
-            font-weight: 500;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: 'Geograph';
-            src: url('./fonts/TestGeograph-Regular.otf') format('opentype');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: 'Geograph';
-            src: url('./fonts/TestGeograph-Bold.otf') format('opentype');
-            font-weight: 700;
-            font-style: normal;
-            font-display: swap;
-        }
-
-        /* Variables CSS modernes */
-        :root {
-            --primary-color: #ffce00;
-            --primary-color-bright: #ffdd00;
-            --secondary-color: #ffffff;
-            --dark-color: #111111;
-            --text-color: #f5f5f5;
-            --text-dark: #2c3e50;
-            --accent-blue: #00c4ff;
-            --surface-glass: rgba(255, 255, 255, 0.1);
-            --surface-dark: rgba(0, 0, 0, 0.7);
-            --gradient-primary: linear-gradient(135deg, #ffce00 0%, #ffdd00 100%);
-            --gradient-dark: linear-gradient(135deg, #111111 0%, #2c3e50 100%);
-            --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.12);
-            --shadow-heavy: 0 16px 64px rgba(0, 0, 0, 0.24);
-            --blur-bg: backdrop-filter: blur(20px);
-            --radius-sm: 8px;
-            --radius-md: 16px;
-            --radius-lg: 24px;
-            --spacing-xs: 0.5rem;
-            --spacing-sm: 1rem;
-            --spacing-md: 1.5rem;
-            --spacing-lg: 2rem;
-            --spacing-xl: 3rem;
-            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-slow: 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Reset et styles de base */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Geograph', 'Inter', sans-serif;
-            background-color: var(--dark-color);
-            color: var(--text-color);
-            overflow-x: hidden;
-            position: relative;
-            line-height: 1.6;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        body::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* Navigation verticale avec style page-collection moderne */
-        .side-nav {
-            position: fixed;
-            top: 50%;
-            left: 0;
-            transform: translateY(-50%);
-            z-index: 999;
-            background: rgba(17, 17, 17, 0.9);
-            backdrop-filter: blur(20px);
-            border-radius: 0 var(--radius-md) var(--radius-md) 0;
-            padding: var(--spacing-md) var(--spacing-xs);
-            transition: all var(--transition-smooth);
-            opacity: 0;
-            pointer-events: none;
-            border-right: 3px solid var(--primary-color-bright);
-            box-shadow: var(--shadow-heavy);
-        }
-
-        .side-nav.visible {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .side-nav ul {
-            list-style: none;
-            padding-left: var(--spacing-sm);
-        }
-
-        .side-nav li {
-            margin: var(--spacing-md) 0;
-            position: relative;
-        }
-
-        .nav-link {
-            display: block;
-            color: transparent;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-            transition: all var(--transition-smooth);
-            padding: var(--spacing-xs) 0;
-            position: relative;
-            font-family: 'Geograph', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .nav-link::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4);
-            opacity: 1;
-            transition: all var(--transition-smooth);
-        }
-
-        .side-nav:hover {
-            background: rgba(17, 17, 17, 0.95);
-            padding: var(--spacing-lg) var(--spacing-md);
-            border-right: 4px solid var(--primary-color-bright);
-        }
-
-        .side-nav:hover .nav-link {
-            color: var(--text-color);
-            opacity: 0.8;
-            padding-left: var(--spacing-md);
-        }
-
-        .side-nav:hover .nav-link:hover {
-            opacity: 1;
-            color: var(--primary-color-bright);
-            transform: translateX(4px);
-        }
-
-        .side-nav:hover .nav-link:hover::before {
-            width: 12px;
-            height: 12px;
-            background: var(--gradient-primary);
-            box-shadow: 0 0 8px var(--primary-color-bright);
-        }
-
-        .nav-link.active::before {
-            width: 12px;
-            height: 12px;
-            background: var(--gradient-primary);
-            box-shadow: 0 0 8px var(--primary-color-bright);
-        }
-
-        .nav-link.active {
-            color: var(--primary-color-bright) !important;
-            opacity: 1 !important;
-        }
-
-        /* Curseur personnalisé avec effets différenciés */
-        * {
-            cursor: none !important;
-        }
-
-        .cursor {
-            position: fixed;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: var(--primary-color-bright);
-            mix-blend-mode: difference;
-            pointer-events: none;
-            z-index: 999999;
-            transform: translate(-50%, -50%);
-            transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease;
-        }
-
-        .cursor-follower {
-            position: fixed;
-            width: 40px;
-            height: 40px;
-            border: 2px solid var(--primary-color-bright);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 999998;
-            transform: translate(-50%, -50%);
-            transition: transform 0.08s ease-out, width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
-            opacity: 0.7;
-            mix-blend-mode: difference;
-        }
-
-        .cursor.hover {
-            width: 50px;
-            height: 50px;
-        }
-
-        .cursor-follower.hover {
-            width: 70px;
-            height: 70px;
-            opacity: 1;
-        }
-
-        .cursor.video-hover {
-            width: 80px !important;
-            height: 80px !important;
-            background: var(--primary-color-bright);
-            mix-blend-mode: difference !important;
-            box-shadow: 0 0 20px var(--primary-color-bright);
-            filter: blur(1px);
-        }
-
-        .cursor-follower.video-hover {
-            width: 120px !important;
-            height: 120px !important;
-            border: 3px solid var(--primary-color-bright);
-            mix-blend-mode: difference !important;
-            box-shadow: 0 0 30px rgba(255, 221, 0, 0.5);
-            opacity: 0.8 !important;
-        }
-
-        .top-nav {
-            display: flex;
-            justify-content: space-between;
-            background-color: #000;
-            padding: 5px 20px;
-            font-size: 12px;
-            z-index: 10;
-            position: relative;
-        }
-        
-        .top-nav a {
-            color: #fff;
-            text-decoration: none;
-            text-transform: uppercase;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            margin-left: 15px;
-            transition: all var(--transition-fast);
-            position: relative;
-            font-family: 'Geograph', sans-serif;
-        }
-
-        .top-nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--gradient-primary);
-            transition: width var(--transition-smooth);
-        }
-
-        .top-nav a:hover::after {
-            width: 100%;
-        }
-        
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin: 0 auto;
-            padding: 0 20px;
-            height: 60px;
-            background-color: #fff;
-            position: relative;
-        }
-        
-        .logo {
-            position: absolute;
-            left: 20px;
-            top: 10px;
-            height: 40px;
-        }
-        
-        .logo img {
-            height: 100%;
-            width: auto;
-        }
-        
-        .nav-menu {
-            display: flex;
-            list-style: none;
-            justify-content: center;
-            margin: 0 auto;
-            width: 100%;
-            padding: 0;
-        }
-        
-        .nav-menu li {
-            margin: 0 12px;
-        }
-        
-        .nav-menu a {
-            color: #000;
-            text-decoration: none;
-            text-transform: uppercase;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            padding: 5px 0;
-            position: relative;
-        }
-
-        .nav-menu a::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 3px;
-            background-color: #ffcc00;
-            bottom: -16px;
-            left: 0;
-            transform: scaleX(0);
-            transition: transform 0.3s;
-        }
-
-        .nav-menu a:hover::after {
-            transform: scaleX(1);
-        }
-
-        /* Section principale avec vidéo de fond */
-        .immerse-section {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            overflow: hidden;
-        }
-        
-        .immerse-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        
-        .bg-video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
-            transform: translate(-50%, -50%);
-            object-fit: cover;
-            filter: brightness(0.7) contrast(1.1);
-            transition: opacity 0.5s ease;
-            z-index: 1;
-        }
-
-        .logo-video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
-            transform: translate(-50%, -50%);
-            object-fit: cover;
-            z-index: 3;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-            filter: none;
-        }
-
-        .transition-video {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 99999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            background: #000; /* Fond noir pour éviter tout flash */
-        }
-
-        .transition-video.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        /* Empêcher la vidéo de disparaître - bloquée sur dernière frame */
-        .transition-video.freeze-last-frame {
-            opacity: 1 !important;
-        }
-
-        .video-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                135deg,
-                rgba(17, 17, 17, 0.3) 0%,
-                rgba(17, 17, 17, 0.6) 100%
-            );
-            z-index: 2;
-            pointer-events: none;
-        }
-        
-        .immerse-content {
-            position: relative;
-            z-index: 5;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: space-between;
-            height: 100vh;
-            padding: 80px 5% 10% 5%;
-            color: white;
-        }
-        
-        .immerse-title {
-            font-family: 'Abyss', serif;
-            font-size: clamp(3rem, 8vw, 6rem);
-            font-weight: 400;
-            line-height: 0.9;
-            position: relative;
-            text-align: left;
-            top: 0;
-            left: 0;
-            opacity: 0;
-            transform: translateY(80px) scale(0.8);
-            animation: titleAppear 1.8s cubic-bezier(0.19, 1, 0.22, 1) 2.5s forwards;
-            text-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
-            margin: 0;
-            padding: 0;
-        }
-        
-        .title-separator {
-            position: absolute;
-            top: calc(100% + 16px);
-            left: 0;
-            width: 0;
-            height: 4px;
-            background: var(--gradient-primary);
-            border-radius: 2px;
-            animation: expandSeparator 1.2s cubic-bezier(0.19, 1, 0.22, 1) 2.8s forwards;
-        }
-
-        .immerse-subtitle {
-            position: absolute;
-            top: calc(100% + 32px);
-            left: 0;
-            font-family: 'Geograph', sans-serif;
-            font-size: clamp(1.3rem, 2.2vw, 1.8rem);
-            font-weight: 300;
-            color: var(--text-color);
-            opacity: 0;
-            transform: translateY(30px);
-            animation: subtitleAppear 1.2s cubic-bezier(0.19, 1, 0.22, 1) 2.8s forwards;
-            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-            max-width: 600px;
-            margin: 0;
-            padding: 0;
-            line-height: 1.3;
-        }
-
-        .explore-globe-btn {
-            display: block;
-            margin: 0 auto;
-            padding: 22px 42px;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(25px);
-            border: 2px solid var(--primary-color);
-            border-radius: 50px;
-            color: var(--text-color);
-            font-weight: 700;
-            font-size: 20px;
-            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-            z-index: 50;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-align: center;
-            white-space: nowrap;
-            font-family: 'Geograph', sans-serif;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-            opacity: 0;
-            transform: translateY(40px) scale(0.9);
-            animation: buttonAppear 1.5s cubic-bezier(0.19, 1, 0.22, 1) 3.5s forwards;
-            position: relative;
-            align-self: center;
-        }
-
-        .explore-globe-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--gradient-primary);
-            border-radius: 50px;
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-            z-index: -1;
-            transform: scale(0.8);
-        }
-
-        .explore-globe-btn:hover::before {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .explore-globe-btn:hover {
-            color: var(--dark-color);
-            transform: translateY(-8px) scale(1.05);
-            border-color: var(--primary-color-bright);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-        }
-
-        @keyframes titleAppear {
-            0% {
-                opacity: 0;
-                transform: translateY(80px) scale(0.8);
-            }
-            60% {
-                opacity: 0.8;
-                transform: translateY(-10px) scale(1.02);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        @keyframes expandSeparator {
-            0% {
-                width: 0;
-                opacity: 0;
-            }
-            50% {
-                opacity: 1;
-            }
-            100% {
-                width: 120px;
-                opacity: 1;
-            }
-        }
-
-        @keyframes subtitleAppear {
-            0% {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            100% {
-                opacity: 0.9;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes buttonAppear {
-            0% {
-                opacity: 0;
-                transform: translateY(40px) scale(0.9);
-            }
-            70% {
-                opacity: 0.8;
-                transform: translateY(-5px) scale(1.05);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        /* Media Queries existantes inchangées */
-        @media (max-width: 768px) {
-            .nav-menu {
-                gap: var(--spacing-sm);
-            }
-
-            .nav-menu a {
-                padding: var(--spacing-xs) var(--spacing-sm);
-                font-size: 11px;
-            }
-
-            .immerse-content {
-                padding: 0 var(--spacing-md);
-            }
-        }
-
-        @media (max-width: 640px) {
-            .header-container {
-                padding: 0 var(--spacing-md);
-            }
-
-            .nav-menu {
-                flex-wrap: wrap;
-                gap: var(--spacing-xs);
-            }
-
-            .immerse-content {
-                padding: 0 var(--spacing-md);
-            }
-        }
-
-        /* ========================================
-           CORRECTIONS RESPONSIVE URGENTES
-           ======================================== */
-
-        /* CORRECTION POUR TABLETTES ET MOBILES PAYSAGE */
-        @media (max-width: 1024px) {
-            /* Header corrigé avec plus de hauteur pour les menus */
-            .header-container {
-                height: auto;
-                min-height: 70px; /* Augmenté pour plus d'espace */
-                padding: 8px 10px 12px 10px; /* Plus d'espace en bas */
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-            }
-            
-            .logo {
-                position: relative;
-                left: auto;
-                top: auto;
-                height: 28px; /* Logo plus petit */
-                margin-bottom: 15px; /* Plus d'espace sous le logo */
-                order: 1;
-            }
-            
-            .nav-menu {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 10px; /* Plus d'espace entre les éléments */
-                margin: 0;
-                padding: 8px 0 4px 0; /* Plus d'espace vertical */
-                order: 2;
-                min-height: 35px; /* Hauteur minimum pour éviter les coupures */
-            }
-            
-            .nav-menu li {
-                margin: 3px 5px; /* Plus d'espace autour des éléments */
-                flex-shrink: 0;
-            }
-            
-            .nav-menu a {
-                font-size: 10px; /* Taille légèrement plus grande */
-                padding: 6px 10px; /* Plus de padding */
-                white-space: nowrap;
-                background: rgba(0, 0, 0, 0.1);
-                border-radius: 15px;
-                line-height: 1.2;
-            }
-
-            /* Top nav corrigé avec plus d'espace */
-            .top-nav {
-                padding: 6px 10px 8px 10px; /* Plus d'espace vertical */
-                font-size: 10px;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 8px; /* Plus d'espace entre les éléments */
-                min-height: 30px; /* Hauteur minimum */
-            }
-            
-            .top-nav a {
-                margin: 3px;
-                font-size: 10px; /* Taille légèrement plus grande */
-                padding: 4px 8px; /* Plus de padding */
-                border-radius: 10px;
-                background: rgba(255, 255, 255, 0.1);
-                line-height: 1.2;
-            }
-
-            /* Contenu principal avec bouton plus bas */
-            .immerse-content {
-                padding: 80px 3% 8% 3%; /* Plus d'espace en haut */
-                justify-content: space-between; /* Répartition verticale */
-                align-items: center;
-                text-align: center;
-                height: calc(100vh - 100px); /* Prendre en compte la hauteur du header */
-            }
-            
-            .immerse-title {
-                font-size: clamp(1.8rem, 8vw, 3.5rem);
-                line-height: 0.85;
-                text-align: center;
-                margin-bottom: 20px;
-            }
-            
-            .title-separator {
-                position: relative;
-                top: auto;
-                left: auto;
-                margin: 15px auto;
-                width: 60px;
-            }
-            
-            .immerse-subtitle {
-                position: relative;
-                top: auto;
-                left: auto;
-                text-align: center;
-                font-size: clamp(1rem, 3.5vw, 1.4rem);
-                max-width: 90%;
-                margin: 0 auto 40px auto; /* Plus d'espace avant le bouton */
-                line-height: 1.4;
-            }
-
-            .explore-globe-btn {
-                position: relative;
-                margin: 80px auto 60px; /* Bouton encore plus bas */
-                padding: 18px 36px;
-                font-size: 18px;
-                letter-spacing: 1px;
-            }
-        }
-
-        /* CORRECTIONS SPÉCIFIQUES MOBILES */
-        @media (max-width: 768px) {
-            .header-container {
-                height: auto;
-                min-height: 65px; /* Plus d'espace */
-                padding: 6px 8px 10px 8px;
-            }
-            
-            .logo {
-                height: 24px; /* Logo plus petit */
-                margin-bottom: 12px;
-            }
-            
-            .nav-menu {
-                min-height: 30px;
-                padding: 6px 0 3px 0;
-                gap: 8px;
-            }
-            
-            .nav-menu a {
-                font-size: 9px;
-                padding: 5px 8px;
-            }
-            
-            .top-nav {
-                padding: 5px 8px 6px 8px;
-                font-size: 9px;
-                min-height: 25px;
-                gap: 6px;
-            }
-            
-            .top-nav a {
-                font-size: 9px;
-                padding: 3px 6px;
-            }
-
-            .immerse-content {
-                padding: 70px 4% 6% 4%;
-                height: calc(100vh - 90px);
-            }
-            
-            .immerse-title {
-                font-size: clamp(1.5rem, 10vw, 3rem);
-                margin-bottom: 15px;
-            }
-            
-            .title-separator {
-                width: 50px;
-                margin: 12px auto;
-            }
-            
-            .immerse-subtitle {
-                font-size: clamp(0.9rem, 4vw, 1.2rem);
-                margin: 0 auto 35px auto;
-                max-width: 95%;
-            }
-
-            .explore-globe-btn {
-                padding: 16px 30px;
-                font-size: 16px;
-                margin: 70px auto 50px; /* Bouton plus bas */
-            }
-        }
-
-        /* CORRECTION POUR TRÈS PETITS ÉCRANS */
-        @media (max-width: 480px) {
-            .header-container {
-                min-height: 60px;
-                padding: 5px 6px 8px 6px;
-            }
-            
-            .logo {
-                height: 20px; /* Logo encore plus petit */
-                margin-bottom: 10px;
-            }
-            
-            .nav-menu {
-                min-height: 28px;
-                padding: 5px 0 2px 0;
-                gap: 6px;
-            }
-            
-            .nav-menu a {
-                font-size: 8px;
-                padding: 4px 6px;
-            }
-            
-            .top-nav {
-                padding: 4px 6px 5px 6px;
-                font-size: 8px;
-                min-height: 22px;
-                gap: 4px;
-            }
-            
-            .top-nav a {
-                font-size: 8px;
-                padding: 2px 4px;
-            }
-
-            .immerse-content {
-                padding: 60px 3% 5% 3%;
-                height: calc(100vh - 80px);
-            }
-            
-            .immerse-title {
-                font-size: clamp(1.3rem, 12vw, 2.5rem);
-                margin-bottom: 12px;
-            }
-            
-            .title-separator {
-                width: 40px;
-                margin: 10px auto;
-            }
-            
-            .immerse-subtitle {
-                font-size: clamp(0.8rem, 4.5vw, 1.1rem);
-                margin: 0 auto 30px auto;
-            }
-
-            .explore-globe-btn {
-                padding: 14px 26px;
-                font-size: 15px;
-                margin: 60px auto 40px; /* Bouton plus bas */
-            }
-        }
-
-        /* ========================================
-           NOUVELLES RÈGLES RESPONSIVE AJOUTÉES
-           ======================================== */
-
-        /* TABLETTES (768px - 1024px) */
-        @media (max-width: 1024px) and (min-width: 769px) {
-            .top-nav {
-                padding: 8px 15px;
-                font-size: 11px;
-            }
-            
-            .top-nav a {
-                margin-left: 10px;
-            }
-
-            .header-container {
-                padding: 0 15px;
-                height: 55px;
-            }
-            
-            .logo {
-                left: 15px;
-                top: 8px;
-                height: 38px;
-            }
-            
-            .nav-menu li {
-                margin: 0 8px;
-            }
-            
-            .nav-menu a {
-                font-size: 10px;
-                padding: 4px 0;
-            }
-
-            .immerse-content {
-                padding: 70px 4% 8% 4%;
-            }
-            
-            .immerse-title {
-                font-size: clamp(2.5rem, 7vw, 5rem);
-            }
-            
-            .immerse-subtitle {
-                font-size: clamp(1.1rem, 2vw, 1.5rem);
-                max-width: 500px;
-            }
-
-            .explore-globe-btn {
-                padding: 20px 36px;
-                font-size: 18px;
-                letter-spacing: 1.5px;
-            }
-
-            .side-nav {
-                padding: var(--spacing-sm) var(--spacing-xs);
-            }
-            
-            .side-nav li {
-                margin: var(--spacing-sm) 0;
-            }
-
-            .nav-link {
-                font-size: 11px;
-            }
-        }
-
-        /* MOBILES GÉNÉRAUX (max-width: 768px) */
-        @media (max-width: 768px) {
-            /* Curseur désactivé sur mobile */
-            .cursor,
-            .cursor-follower {
-                display: none !important;
-            }
-            
-            * {
-                cursor: auto !important;
-            }
-
-            .top-nav {
-                padding: 6px 10px;
-                font-size: 10px;
-                overflow-x: auto;
-                flex-wrap: nowrap;
-            }
-            
-            .top-nav a {
-                margin-left: 8px;
-                font-size: 10px;
-                white-space: nowrap;
-            }
-
-            .header-container {
-                padding: 0 10px;
-                height: 50px;
-                flex-direction: column;
-                justify-content: center;
-            }
-            
-            .logo {
-                position: relative;
-                left: auto;
-                top: auto;
-                height: 32px;
-                margin-bottom: 5px;
-            }
-            
-            .nav-menu {
-                overflow-x: auto;
-                justify-content: flex-start;
-                padding: 0 5px;
-                margin: 0;
-                width: auto;
-                max-width: 100%;
-                scrollbar-width: none;
-                -ms-overflow-style: none;
-                gap: 0;
-                flex-wrap: nowrap;
-            }
-            
-            .nav-menu::-webkit-scrollbar {
-                display: none;
-            }
-            
-            .nav-menu li {
-                margin: 0 6px;
-                flex-shrink: 0;
-            }
-            
-            .nav-menu a {
-                font-size: 9px;
-                padding: 3px 0;
-                white-space: nowrap;
-            }
-
-            .immerse-content {
-                padding: 60px 4% 6% 4%;
-                justify-content: center;
-                text-align: center;
-                align-items: center;
-            }
-            
-            .immerse-title {
-                font-size: clamp(2rem, 12vw, 4rem);
-                line-height: 0.85;
-                text-align: center;
-                position: static;
-            }
-            
-            .title-separator {
-                position: relative;
-                top: 16px;
-                margin: 0 auto;
-                left: auto;
-            }
-            
-            .immerse-subtitle {
-                position: relative;
-                top: 32px;
-                left: auto;
-                text-align: center;
-                font-size: clamp(1rem, 4vw, 1.3rem);
-                max-width: 90%;
-                margin: 0 auto;
-            }
-
-            .explore-globe-btn {
-                padding: 18px 32px;
-                font-size: 17px;
-                letter-spacing: 1px;
-                margin-top: 20px;
-            }
-
-            .side-nav {
-                display: none;
-            }
-
-            @keyframes expandSeparator {
-                0% {
-                    width: 0;
-                    opacity: 0;
-                }
-                50% {
-                    opacity: 1;
-                }
-                100% {
-                    width: 80px;
-                    opacity: 1;
-                }
-            }
-        }
-
-        /* PETITS MOBILES (max-width: 480px) */
-        @media (max-width: 480px) {
-            .top-nav {
-                padding: 4px 8px;
-                font-size: 9px;
-            }
-            
-            .top-nav a {
-                margin-left: 6px;
-                font-size: 9px;
-            }
-
-            .header-container {
-                height: 45px;
-                padding: 0 8px;
-            }
-            
-            .logo {
-                height: 28px;
-                margin-bottom: 3px;
-            }
-            
-            .nav-menu li {
-                margin: 0 4px;
-            }
-            
-            .nav-menu a {
-                font-size: 8px;
-                padding: 2px 0;
-            }
-
-            .immerse-content {
-                padding: 50px 3% 5% 3%;
-            }
-            
-            .immerse-title {
-                font-size: clamp(1.8rem, 14vw, 3.5rem);
-                line-height: 0.8;
-            }
-            
-            .immerse-subtitle {
-                font-size: clamp(0.9rem, 4.5vw, 1.2rem);
-                max-width: 95%;
-            }
-
-            .explore-globe-btn {
-                padding: 16px 28px;
-                font-size: 16px;
-                letter-spacing: 0.5px;
-                margin-top: 15px;
-            }
-        }
-
-        /* PAYSAGE MOBILE */
-        @media (max-width: 768px) and (orientation: landscape) {
-            .immerse-content {
-                padding: 40px 4% 4% 4%;
-                justify-content: center;
-            }
-            
-            .immerse-title {
-                font-size: clamp(1.5rem, 8vw, 3rem);
-                line-height: 0.9;
-            }
-            
-            .immerse-subtitle {
-                font-size: clamp(0.9rem, 3vw, 1.2rem);
-                top: 20px;
-            }
-
-            .title-separator {
-                top: 12px;
-            }
-
-            .explore-globe-btn {
-                padding: 14px 26px;
-                font-size: 15px;
-                margin-top: 10px;
-            }
-        }
-
-        /* TRÈS GRANDS ÉCRANS (min-width: 1440px) */
-        @media (min-width: 1440px) {
-            .top-nav {
-                padding: 8px 40px;
-                font-size: 13px;
-            }
-            
-            .header-container {
-                padding: 0 40px;
-                height: 70px;
-            }
-            
-            .logo {
-                left: 40px;
-                top: 15px;
-                height: 45px;
-            }
-            
-            .nav-menu li {
-                margin: 0 15px;
-            }
-            
-            .nav-menu a {
-                font-size: 12px;
-            }
-            
-            .immerse-content {
-                padding: 100px 6% 12% 6%;
-            }
-            
-            .explore-globe-btn {
-                padding: 24px 44px;
-                font-size: 21px;
-            }
-        }
-        /* Écran de chargement - fondu au noir simple */
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 999999;
-            opacity: 1;
-            transition: opacity 0.8s ease;
-        }
-
-        .loading-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-    </style>
+	<link rel="icon" type="image/png" href="/images/ng-favicon.png">
+    <link rel="stylesheet" href="/src/accueil/accueil.css">
+    <script type="module" src="/src/shared/loader.js"></script>
 </head>
 <body>
-    <!-- Fondu au noir -->
-    <div class="loading-screen" id="loadingScreen"></div>
-
     <!-- Curseur personnalisé -->
     <div class="cursor"></div>
     <div class="cursor-follower"></div>
@@ -1225,7 +28,7 @@
     <header>
         <div class="header-container">
             <div class="logo">
-                <img src="./images/logo_national_geographic.png" alt="National Géographique">
+                <img src="/images/logo-national-geographic.png" alt="National Géographique">
             </div>
             <ul class="nav-menu">
                 <li><a href="#">Histoire</a></li>
@@ -1254,15 +57,15 @@
     <!-- Mondes Immergés Section -->
     <section id="immerse" class="immerse-section">
         <div class="immerse-background">
-            <!-- Vidéo de fond en boucle -->
-            <video class="bg-video" autoplay muted loop playsinline id="backgroundVideo">
-                <source src="./videos/video-arriereplan.webm" type="video/webm">
+            <!-- Vidéo de fond en boucle - LAZY LOADING -->
+            <video class="bg-video" muted loop playsinline preload="none" id="backgroundVideo" data-src="videos/accueil-fond.webm">
+                <!-- Source chargée dynamiquement après logo video -->
                 Votre navigateur ne supporte pas les vidéos HTML5.
             </video>
-            
+
             <!-- Vidéo du logo -->
-            <video class="logo-video" autoplay muted playsinline id="logoVideo">
-                <source src="./videos/anim-logo.webm" type="video/webm">
+            <video class="logo-video" autoplay muted playsinline preload="auto" id="logoVideo">
+                <source src="/videos/logo-anim.webm" type="video/webm">
                 Votre navigateur ne supporte pas les vidéos HTML5.
             </video>
             
@@ -1281,130 +84,96 @@
     </section>
 
     <!-- Vidéo de transition pour la redirection -->
-    <video class="transition-video" muted playsinline id="transitionVideo">
-        <source src="./videos/logo_transi_alpha.webm" type="video/webm">
+    <video class="transition-video" muted playsinline preload="none" id="transitionVideo">
+        <source src="/videos/logo-transition.webm" type="video/webm">
         Votre navigateur ne supporte pas les vidéos HTML5.
     </video>
 
+    <!-- Écran de chargement après transition -->
+    <div id="loading-overlay" class="loading-overlay">
+        <l-jelly size="60" speed="0.9" color="#ffcc00"></l-jelly>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Gestion de l'écran de chargement
-            const loadingScreen = document.getElementById('loadingScreen');
-            const bgVideo = document.querySelector('.bg-video');
-            const logoVideo = document.getElementById('logoVideo');
-
-            let bgVideoReady = false;
-            let logoVideoReady = false;
-            let contentReady = false;
-
-            function checkAllReady() {
-                if ((bgVideoReady || !bgVideo) && (logoVideoReady || !logoVideo) && contentReady) {
-                    setTimeout(() => {
-                        loadingScreen.classList.add('hidden');
-                    }, 500);
-                }
-            }
-
-            // Marquer le contenu comme prêt après un court délai
-            setTimeout(() => {
-                contentReady = true;
-                checkAllReady();
-            }, 100);
-
-            // Surveiller les vidéos
-            if (bgVideo) {
-                bgVideo.addEventListener('canplaythrough', function() {
-                    bgVideoReady = true;
-                    checkAllReady();
-                }, { once: true });
-
-                bgVideo.addEventListener('loadeddata', function() {
-                    if (!bgVideoReady) {
-                        bgVideoReady = true;
-                        checkAllReady();
-                    }
-                }, { once: true });
-            }
-
-            if (logoVideo) {
-                logoVideo.addEventListener('canplaythrough', function() {
-                    logoVideoReady = true;
-                    checkAllReady();
-                }, { once: true });
-
-                logoVideo.addEventListener('loadeddata', function() {
-                    if (!logoVideoReady) {
-                        logoVideoReady = true;
-                        checkAllReady();
-                    }
-                }, { once: true });
-            }
-
-            // Timeout de sécurité : masquer après 3 secondes maximum
-            setTimeout(() => {
-                if (!loadingScreen.classList.contains('hidden')) {
-                    loadingScreen.classList.add('hidden');
-                }
-            }, 3000);
-
-            // Initialisation du curseur personnalisé (désactivé sur mobile)
+            // Initialisation du curseur personnalisé (désactivé sur mobile) - VERSION OPTIMISÉE
             if (window.innerWidth > 768) {
                 const cursor = document.querySelector('.cursor');
                 const follower = document.querySelector('.cursor-follower');
-                
+
                 let mouseX = 0;
                 let mouseY = 0;
                 let followerX = 0;
                 let followerY = 0;
-                
-                document.addEventListener('mousemove', function(e) {
+                let rafId = null;
+
+                // Throttle professionnel pour mousemove (limite à 60fps max)
+                let lastMouseMoveTime = 0;
+                const mouseMoveThrottle = 16; // ~60fps
+
+                const handleMouseMove = function(e) {
+                    const now = performance.now();
+                    if (now - lastMouseMoveTime < mouseMoveThrottle) return;
+                    lastMouseMoveTime = now;
+
                     mouseX = e.clientX;
                     mouseY = e.clientY;
-                    
-                    cursor.style.left = mouseX + 'px';
-                    cursor.style.top = mouseY + 'px';
-                    
-                    const element = document.elementFromPoint(e.clientX, e.clientY);
-                    if (element && (element.tagName === 'VIDEO' || element.classList.contains('bg-video'))) {
-                        cursor.style.width = '60px';
-                        cursor.style.height = '60px';
-                        follower.style.width = '80px';
-                        follower.style.height = '80px';
-                    } else {
-                        const isInteractive = element && (
-                            element.tagName === 'A' || 
-                            element.tagName === 'BUTTON' ||
-                            element.classList.contains('explore-globe-btn')
-                        );
-                        
-                        if (isInteractive) {
-                            cursor.style.width = '50px';
-                            cursor.style.height = '50px';
-                            follower.style.width = '70px';
-                            follower.style.height = '70px';
+
+                    // Utiliser transform au lieu de left/top (plus performant)
+                    cursor.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+
+                    // Throttle l'elementFromPoint (coûteux)
+                    if (now % 100 < mouseMoveThrottle) {
+                        const element = document.elementFromPoint(e.clientX, e.clientY);
+                        if (element && (element.tagName === 'VIDEO' || element.classList.contains('bg-video'))) {
+                            cursor.style.width = '60px';
+                            cursor.style.height = '60px';
+                            follower.style.width = '80px';
+                            follower.style.height = '80px';
                         } else {
-                            cursor.style.width = '30px';
-                            cursor.style.height = '30px';
-                            follower.style.width = '40px';
-                            follower.style.height = '40px';
+                            const isInteractive = element && (
+                                element.tagName === 'A' ||
+                                element.tagName === 'BUTTON' ||
+                                element.classList.contains('explore-globe-btn')
+                            );
+
+                            if (isInteractive) {
+                                cursor.style.width = '50px';
+                                cursor.style.height = '50px';
+                                follower.style.width = '70px';
+                                follower.style.height = '70px';
+                            } else {
+                                cursor.style.width = '30px';
+                                cursor.style.height = '30px';
+                                follower.style.width = '40px';
+                                follower.style.height = '40px';
+                            }
                         }
                     }
-                });
-                
+                };
+
+                document.addEventListener('mousemove', handleMouseMove, { passive: true });
+
                 function animateFollower() {
                     const dx = mouseX - followerX;
                     const dy = mouseY - followerY;
-                    
+
                     followerX += dx * 0.2;
                     followerY += dy * 0.2;
-                    
-                    follower.style.left = followerX + 'px';
-                    follower.style.top = followerY + 'px';
-                    
-                    requestAnimationFrame(animateFollower);
+
+                    // Utiliser transform au lieu de left/top
+                    follower.style.transform = `translate(${followerX}px, ${followerY}px)`;
+
+                    rafId = requestAnimationFrame(animateFollower);
                 }
-                
-                animateFollower();
+
+                rafId = requestAnimationFrame(animateFollower);
+
+                // Cleanup au déchargement de la page
+                window.addEventListener('beforeunload', () => {
+                    if (rafId) cancelAnimationFrame(rafId);
+                    document.removeEventListener('mousemove', handleMouseMove);
+                });
                 
                 // Gestion de l'entrée et sortie de la page
                 document.addEventListener('mouseenter', function() {
@@ -1441,90 +210,164 @@
                 });
             }
             
-            // Gestion des vidéos de fond (bgVideo et logoVideo déjà déclarés plus haut)
-            if (bgVideo) {
-                bgVideo.addEventListener('loadeddata', function() {
+            // ===== GESTION OPTIMISÉE DES VIDÉOS AVEC LAZY LOADING =====
+            const bgVideo = document.querySelector('.bg-video');
+            const logoVideo = document.getElementById('logoVideo');
+            let bgVideoLoaded = false;
+
+            // Fonction pour charger la vidéo d'arrière-plan (LAZY LOADING)
+            function loadBackgroundVideo() {
+                if (bgVideoLoaded || !bgVideo) return;
+                bgVideoLoaded = true;
+
+                const videoSrc = bgVideo.dataset.src;
+                if (!videoSrc) return;
+
+                
+                // Créer un élément source
+                const source = document.createElement('source');
+                source.src = videoSrc;
+                source.type = 'video/webm';
+                bgVideo.appendChild(source);
+
+                // Charger la vidéo
+                bgVideo.load();
+
+                // Événements optimisés
+                bgVideo.addEventListener('canplaythrough', function onReady() {
                     bgVideo.play().catch(function() {
                         /* Autoplay prevented */
                     });
-                });
-                
+                }, { once: true });
+
                 bgVideo.addEventListener('error', function() {
-                    setTimeout(function() {
-                        bgVideo.load();
-                    }, 1000);
-                });
+                    // Retry une seule fois
+                    setTimeout(() => bgVideo.load(), 2000);
+                }, { once: true });
             }
-            
-            // Gestion de la vidéo du logo
+
+            // Gestion de la vidéo du logo avec déclenchement lazy loading
             if (logoVideo) {
-                logoVideo.addEventListener('loadeddata', function() {
-                    logoVideo.play().catch(function() {
-                        /* Autoplay prevented */
-                    });
-                });
-                
-                logoVideo.addEventListener('ended', function() {
-                    logoVideo.style.opacity = '0';
-                    setTimeout(() => {
-                        logoVideo.style.display = 'none';
-                    }, 500);
+
+                let logoHandled = false;
+
+                // Forcer le chargement immédiat
+                logoVideo.load();
+
+                logoVideo.addEventListener('loadstart', function() {
                 });
 
-                logoVideo.addEventListener('error', function() {
+                logoVideo.addEventListener('canplay', function() {
+                    logoVideo.play().catch(function(e) {
+                    });
+                }, { once: true });
+
+                logoVideo.addEventListener('playing', function() {
+                }, { once: true });
+
+                logoVideo.addEventListener('stalled', function() {
+                });
+
+                logoVideo.addEventListener('waiting', function() {
+                });
+
+                logoVideo.addEventListener('error', function(e) {
+                    console.error('[ACCUEIL] Erreur logo vidéo:', logoVideo.error?.message || e);
+                });
+
+                const handleLogoEnd = function() {
+                    if (logoHandled) return;
+                    logoHandled = true;
+
                     logoVideo.style.opacity = '0';
                     setTimeout(() => {
                         logoVideo.style.display = 'none';
                     }, 500);
-                });
-                
+
+                    // LAZY LOADING: Charger la vidéo d'arrière-plan APRÈS le logo
+                    // Polyfill requestIdleCallback pour navigateurs non supportés
+                    const idleCallback = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));
+                    idleCallback(() => {
+                        loadBackgroundVideo();
+                    }, { timeout: 1000 });
+
+                };
+
+                logoVideo.addEventListener('ended', handleLogoEnd, { once: true });
+
+                logoVideo.addEventListener('error', function() {
+                    handleLogoEnd();
+                }, { once: true });
+
                 // Sécurité : masquer après 10 secondes maximum
                 setTimeout(function() {
-                    if (logoVideo.style.display !== 'none') {
-                        logoVideo.style.opacity = '0';
-                        setTimeout(() => {
-                            logoVideo.style.display = 'none';
-                        }, 500);
+                    if (!logoHandled) {
+                        handleLogoEnd();
                     }
                 }, 10000);
+            } else {
+                // Pas de logo video, charger directement la vidéo d'arrière-plan
+                loadBackgroundVideo();
             }
             
             // Gestion du bouton Explorer avec vidéo de transition
             const exploreBtn = document.getElementById('exploreBtn');
             const transitionVideo = document.getElementById('transitionVideo');
-            
-            if (exploreBtn && transitionVideo) {
+            const loadingOverlay = document.getElementById('loading-overlay');
+
+            if (exploreBtn && transitionVideo && loadingOverlay) {
+                let blackScreenShown = false;
+
                 exploreBtn.addEventListener('click', function() {
-                    // Activer la vidéo de transition
+
+                    // Masquer le contenu et activer la vidéo de transition
+                    document.body.classList.add('transition-active');
                     transitionVideo.classList.add('active');
                     transitionVideo.currentTime = 0;
+                    blackScreenShown = false;
+
+                    // Écouter la progression de la vidéo pour afficher l'écran noir AVANT la fin
+                    transitionVideo.addEventListener('timeupdate', function checkEndApproaching() {
+                        const timeLeft = transitionVideo.duration - transitionVideo.currentTime;
+
+                        // Quand il reste 0.3 seconde ou moins, afficher l'écran noir
+                        if (timeLeft <= 0.3 && !blackScreenShown) {
+                            blackScreenShown = true;
+
+                            // Afficher l'écran noir IMMÉDIATEMENT au-dessus de tout
+                            loadingOverlay.style.display = 'flex';
+                            loadingOverlay.style.opacity = '1';
+                            loadingOverlay.style.background = '#000';
+                            loadingOverlay.style.zIndex = '999999';
+                            loadingOverlay.classList.add('active');
+
+                            transitionVideo.removeEventListener('timeupdate', checkEndApproaching);
+                        }
+                    });
 
                     // Lancer la vidéo
                     transitionVideo.play().then(() => {
                         transitionVideo.addEventListener('ended', function() {
+                            if (document.body.classList.contains('redirected')) return;
+                            document.body.classList.add('redirected');
                             transitionVideo.classList.add('freeze-last-frame');
-                            window.location.href = '/Mondes-immerges/interface/';
+                            window.location.href = 'interface/';
                         }, { once: true });
                     }).catch(() => {
-                        window.location.href = '/Mondes-immerges/interface/';
-                    });
-                    
-                    // Sécurité : vérifier la durée de la vidéo et forcer la redirection si nécessaire
-                    transitionVideo.addEventListener('loadedmetadata', function() {
-                        const videoDuration = transitionVideo.duration;
-                        setTimeout(() => {
-                            if (transitionVideo.classList.contains('active') && !transitionVideo.classList.contains('freeze-last-frame')) {
-                                transitionVideo.classList.add('freeze-last-frame');
-                                window.location.href = '/Mondes-immerges/interface/';
-                            }
-                        }, (videoDuration + 0.5) * 1000);
-                    }, { once: true });
-
-                    // Fallback ultime : 15 secondes maximum
-                    setTimeout(() => {
-                        if (!transitionVideo.classList.contains('freeze-last-frame')) {
+                        // En cas d'erreur, redirection immédiate
+                        if (!document.body.classList.contains('redirected')) {
+                            document.body.classList.add('redirected');
                             transitionVideo.classList.add('freeze-last-frame');
-                            window.location.href = '/Mondes-immerges/interface/';
+                            window.location.href = 'interface/';
+                        }
+                    });
+
+                    // Fallback : 15 secondes maximum
+                    setTimeout(() => {
+                        if (!document.body.classList.contains('redirected')) {
+                            document.body.classList.add('redirected');
+                            transitionVideo.classList.add('freeze-last-frame');
+                            window.location.href = 'interface/';
                         }
                     }, 15000);
                 });
@@ -1553,12 +396,24 @@
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || (performance.navigation && performance.navigation.type === 2)) {
                 const transitionVideo = document.getElementById('transitionVideo');
+                const loadingOverlay = document.getElementById('loadingOverlay');
+
                 if (transitionVideo) {
                     transitionVideo.classList.remove('active');
                     transitionVideo.classList.remove('freeze-last-frame');
                     transitionVideo.pause();
                     transitionVideo.currentTime = 0;
                 }
+
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('active');
+                    loadingOverlay.style.display = 'none';
+                    loadingOverlay.style.opacity = '0';
+                }
+
+                // Reset redirected state
+                document.body.classList.remove('redirected');
+                document.body.classList.remove('transition-active');
             }
         });
     </script>
