@@ -1,240 +1,214 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mondes Immergés | National Geographic</title>
-    <link rel="icon" type="image/png" href="/images/mi-favicon.png">
-    <style>
-        /* Masquer l'icône de chargement par défaut du navigateur */
-        * {
-            cursor: none !important;
-        }
-        html, body {
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-            background: #000;
-        }
-        /* Forcer l'affichage immédiat du loader personnalisé */
-        #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 9999;
-            display: flex !important;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        /* Vidéos de transition */
-        #transition-video-in,
-        #transition-video-out {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 99999;
-            opacity: 0;
-            pointer-events: none;
-        }
-        #transition-video-in.active,
-        #transition-video-out.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        /* OVERRIDE PANEL INFO - FOND NOIR PUR */
-        .overlay-content {
-            background: rgba(0, 0, 0, 0.7) !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
-        }
-
-        .overlay-content h3 {
-            font-family: 'Abyss', serif !important;
-            color: #ffffff !important;
-            text-shadow: none !important;
-            font-weight: normal !important;
-            -webkit-text-stroke: 0 !important;
-            text-stroke: 0 !important;
-            letter-spacing: 1px !important;
-        }
-
-        .overlay-content p strong {
-            color: #d9a800 !important;
-        }
-
-        #close-info {
-            background: rgba(0, 0, 0, 0.3) !important;
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-        }
-
-        #close-info:hover {
-            background: rgba(255, 204, 0, 0.2) !important;
-            border-color: rgba(255, 204, 0, 0.8) !important;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 204, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-            transform: scale(1.15) !important;
-            color: #000000 !important;
-        }
-
-        /* Bloquer touches clavier flèches pour éviter bugs navigation */
-        body {
-            overflow: hidden;
-        }
-    </style>
-    <script>
-        // Bloquer touches flèches clavier sur interface
-        document.addEventListener('DOMContentLoaded', function() {
-            document.addEventListener('keydown', function(e) {
-                // Bloquer flèches: ArrowUp, ArrowDown, ArrowLeft, ArrowRight
-                if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                    e.preventDefault();
-                }
-            });
-        });
-    </script>
-    <script type="module" src="/src/shared/loader.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script type="module" src="/src/interface/main.js"></script>
-</head>
-<body>
-	<div class="cursor"></div>
-	<div class="cursor-follower"></div>
-
-    <div id="app">
-        <!-- Écran d'accueil - maintenant caché par défaut -->
-        <div id="welcome-screen" class="hidden" style="display: none;">
-            <!-- Logo supprimé du centre -->
-            <div class="title-container">
-                <h1>MONDES IMMERGÉS</h1>
-                <h2>Voyage scientifique dans les profondeurs des océans</h2>
-                <button id="explore-btn">EXPLORER</button>
-            </div>
-        </div>
-
-        <!-- Conteneur principal pour le globe et les visualisations -->
-        <div id="main-container">
-            <!-- Le globe 3D sera inséré ici -->
-            <div id="globe-container"></div>
-
-            <!-- Interface de satellite -->
-            <div class="satellite-hud hud-top-left">
-                <div><span class="status-indicator status-green"></span>SYSTÈME: ACTIF</div>
-                <div>MISSION: EXPLORATION OCÉANIQUE</div>
-                <div>ORBITE: <span id="orbit-status">NORMALE</span></div>
-                <div>ALTITUDE: <span id="altitude-value">8.720</span> KM</div>
-            </div>
-
-            <div class="satellite-hud hud-top-right">
-                <div>DATE: <span id="current-date">06/05/2025</span></div>
-                <div>HEURE UTC: <span id="current-time">00:00:00</span></div>
-                <div>SAT-ID: NGS-OCEAN-0923</div>
-                <div>STATUT: <span class="status-indicator status-green"></span>OPÉRATIONNEL</div>
-            </div>
-
-            <!-- Crosshair centrale de visée -->
-            <div class="satellite-crosshair">
-                <div class="crosshair-inner"></div>
-                <div class="crosshair-outer"></div>
-                <div class="crosshair-line crosshair-line-h"></div>
-                <div class="crosshair-line crosshair-line-v"></div>
-            </div>
-
-            <div class="coordinates-display">
-                <span id="coord-lat">0.0000</span>° N, <span id="coord-lng">0.0000</span>° E | ZOOM: <span id="zoom-level">1.0</span>x
-            </div>
-
-            <!-- Effet de scan -->
-            <div class="scanner-effect">
-                <div class="scan-line"></div>
-                <div class="scan-grid"></div>
-            </div>
-
-            <!-- Interface utilisateur pour la navigation -->
-            <div id="ui-controls">
-                <div id="navigation-controls">
-                    <button id="zoom-in">+</button>
-                    <button id="zoom-out">-</button>
-                    <button id="reset-view">R</button>
-                </div>
-                <div id="info-button">i</div>
-            </div>
-        </div>
-
-        <!-- Overlay d'informations -->
-        <div id="info-overlay" class="hidden">
-            <div class="overlay-content">
-                <h3>Mondes Immergés</h3>
-
-                <p>
-                    Partez à la découverte des milieux aquatiques les plus menacés de notre planète. Une exploration immersive développée avec National Geographic pour comprendre et préserver ces univers fragiles.
-                    <br><br>
-                    Faites pivoter le globe avec la molette et cliquez sur les <strong>points jaunes</strong> pour découvrir chaque collection documentaire. Les boutons en bas à gauche vous permettent d'ajuster votre vue.
-                    <br><br>
-                    Plongez dans ces mondes immergés et découvrez la beauté et la fragilité de ces écosystèmes à travers le regard des explorateurs National Geographic.
-                </p>
-
-                <div class="info-close-wrapper">
-                    <button id="close-info">Fermer</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Écran de chargement -->
-        <div id="loading-screen">
-            <!-- Vrai jelly loader ldrs -->
-            <l-jelly size="60" speed="0.9" color="#ffcc00"></l-jelly>
-            <!-- Vidéo de transition ENTRÉE -->
-            <video id="transition-video-in" muted playsinline>
-                <source src="/videos/logo-transition-inverse.webm" type="video/webm">
-            </video>
-            <!-- Vidéo de transition SORTIE -->
-            <video id="transition-video-out" muted playsinline>
-                <source src="/videos/logo-transition.webm" type="video/webm">
-            </video>
-        </div>
-
-        <!-- PANNEAU DE CONTENU RETIRÉ - Pas d'éléments content-panel, close-panel, hotspot-title, hotspot-description, hotspot-video -->
-    </div>
-
-    <!-- Scripts -->
-
-    <!-- Script pour mettre à jour l'heure et la date en temps réel -->
-    <script>
-        function updateTime() {
-            const now = new Date();
-
-            // Formater la date
-            const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
-            const currentDateElement = document.getElementById('current-date');
-            if (currentDateElement) {
-                currentDateElement.textContent = now.toLocaleDateString('fr-FR', dateOptions);
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Mondes Immergés | National Geographic</title>
+        <link rel="icon" type="image/png" href="/images/mi-favicon.png" />
+        <style>
+            /* Masquer l'icône de chargement par défaut du navigateur */
+            * {
+                cursor: none !important;
+            }
+            html,
+            body {
+                overflow: hidden;
+                margin: 0;
+                padding: 0;
+                background: #000;
+            }
+            /* Forcer l'affichage immédiat du loader personnalisé */
+            #loading-screen {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: #000;
+                z-index: 9999;
+                display: flex !important;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            /* Vidéos de transition */
+            #transition-video-in,
+            #transition-video-out {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                z-index: 99999;
+                opacity: 0;
+                pointer-events: none;
+            }
+            #transition-video-in.active,
+            #transition-video-out.active {
+                opacity: 1;
+                pointer-events: all;
             }
 
-            // Formater l'heure UTC
-            const hours = String(now.getUTCHours()).padStart(2, '0');
-            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
-            const seconds = String(now.getUTCSeconds()).padStart(2, '0');
-            const currentTimeElement = document.getElementById('current-time');
-            if (currentTimeElement) {
-                currentTimeElement.textContent = `${hours}:${minutes}:${seconds}`;
+            /* OVERRIDE PANEL INFO - FOND NOIR PUR */
+            .overlay-content {
+                background: rgba(0, 0, 0, 0.7) !important;
+                backdrop-filter: blur(12px) !important;
+                -webkit-backdrop-filter: blur(12px) !important;
             }
 
-            // Mettre à jour toutes les secondes
-            setTimeout(updateTime, 1000);
-        }
+            .overlay-content h3 {
+                font-family: 'Abyss', serif !important;
+                color: #ffffff !important;
+                text-shadow: none !important;
+                font-weight: normal !important;
+                -webkit-text-stroke: 0 !important;
+                text-stroke: 0 !important;
+                letter-spacing: 1px !important;
+            }
 
-        // Démarrer la mise à jour de l'heure une fois la page chargée
-        document.addEventListener('DOMContentLoaded', updateTime);
-    </script>
-</body>
+            .overlay-content p strong {
+                color: #d9a800 !important;
+            }
+
+            #close-info {
+                background: rgba(0, 0, 0, 0.3) !important;
+                backdrop-filter: blur(20px) !important;
+                -webkit-backdrop-filter: blur(20px) !important;
+            }
+
+            #close-info:hover {
+                background: rgba(255, 204, 0, 0.2) !important;
+                border-color: rgba(255, 204, 0, 0.8) !important;
+                box-shadow:
+                    0 6px 24px rgba(0, 0, 0, 0.4),
+                    0 0 30px rgba(255, 204, 0, 0.4),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+                transform: scale(1.15) !important;
+                color: #000000 !important;
+            }
+
+            /* Bloquer touches clavier flèches pour éviter bugs navigation */
+            body {
+                overflow: hidden;
+            }
+        </style>
+        <script type="module" src="/src/shared/loader.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&display=swap"
+            rel="stylesheet"
+        />
+        <script type="module" src="/src/interface/main.js"></script>
+    </head>
+    <body>
+        <div class="cursor"></div>
+        <div class="cursor-follower"></div>
+
+        <div id="app">
+            <!-- Écran d'accueil - maintenant caché par défaut -->
+            <div id="welcome-screen" class="hidden" style="display: none">
+                <!-- Logo supprimé du centre -->
+                <div class="title-container">
+                    <h1>MONDES IMMERGÉS</h1>
+                    <h2>Voyage scientifique dans les profondeurs des océans</h2>
+                    <button id="explore-btn">EXPLORER</button>
+                </div>
+            </div>
+
+            <!-- Conteneur principal pour le globe et les visualisations -->
+            <div id="main-container">
+                <!-- Le globe 3D sera inséré ici -->
+                <div id="globe-container"></div>
+
+                <!-- Interface de satellite -->
+                <div class="satellite-hud hud-top-left">
+                    <div><span class="status-indicator status-green"></span>SYSTÈME: ACTIF</div>
+                    <div>MISSION: EXPLORATION OCÉANIQUE</div>
+                    <div>ORBITE: <span id="orbit-status">NORMALE</span></div>
+                    <div>ALTITUDE: <span id="altitude-value">8.720</span> KM</div>
+                </div>
+
+                <div class="satellite-hud hud-top-right">
+                    <div>DATE: <span id="current-date">06/05/2025</span></div>
+                    <div>HEURE UTC: <span id="current-time">00:00:00</span></div>
+                    <div>SAT-ID: NGS-OCEAN-0923</div>
+                    <div>STATUT: <span class="status-indicator status-green"></span>OPÉRATIONNEL</div>
+                </div>
+
+                <!-- Crosshair centrale de visée -->
+                <div class="satellite-crosshair">
+                    <div class="crosshair-inner"></div>
+                    <div class="crosshair-outer"></div>
+                    <div class="crosshair-line crosshair-line-h"></div>
+                    <div class="crosshair-line crosshair-line-v"></div>
+                </div>
+
+                <div class="coordinates-display">
+                    <span id="coord-lat">0.0000</span>° N, <span id="coord-lng">0.0000</span>° E | ZOOM:
+                    <span id="zoom-level">1.0</span>x
+                </div>
+
+                <!-- Effet de scan -->
+                <div class="scanner-effect">
+                    <div class="scan-line"></div>
+                    <div class="scan-grid"></div>
+                </div>
+
+                <!-- Interface utilisateur pour la navigation -->
+                <div id="ui-controls">
+                    <div id="navigation-controls">
+                        <button id="zoom-in">+</button>
+                        <button id="zoom-out">-</button>
+                        <button id="reset-view">R</button>
+                    </div>
+                    <div id="info-button">i</div>
+                </div>
+            </div>
+
+            <!-- Overlay d'informations -->
+            <div id="info-overlay" class="hidden">
+                <div class="overlay-content">
+                    <h3>Mondes Immergés</h3>
+
+                    <p>
+                        Partez à la découverte des milieux aquatiques les plus menacés de notre planète. Une
+                        exploration immersive développée avec National Geographic pour comprendre et préserver
+                        ces univers fragiles.
+                        <br /><br />
+                        Faites pivoter le globe avec la molette et cliquez sur les
+                        <strong>points jaunes</strong> pour découvrir chaque collection documentaire. Les
+                        boutons en bas à gauche vous permettent d'ajuster votre vue. <br /><br />
+                        Plongez dans ces mondes immergés et découvrez la beauté et la fragilité de ces
+                        écosystèmes à travers le regard des explorateurs National Geographic.
+                    </p>
+
+                    <div class="info-close-wrapper">
+                        <button id="close-info">Fermer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Écran de chargement -->
+            <div id="loading-screen">
+                <!-- Vrai jelly loader ldrs -->
+                <l-jelly size="60" speed="0.9" color="#ffcc00"></l-jelly>
+                <!-- Vidéo de transition ENTRÉE -->
+                <video id="transition-video-in" muted playsinline>
+                    <source src="/videos/logo-transition-inverse.webm" type="video/webm" />
+                </video>
+                <!-- Vidéo de transition SORTIE -->
+                <video id="transition-video-out" muted playsinline>
+                    <source src="/videos/logo-transition.webm" type="video/webm" />
+                </video>
+            </div>
+
+            <!-- PANNEAU DE CONTENU RETIRÉ - Pas d'éléments content-panel, close-panel, hotspot-title, hotspot-description, hotspot-video -->
+        </div>
+
+        <!-- Scripts -->
+
+        <!-- Script pour mettre à jour l'heure et la date en temps réel -->
+    </body>
 </html>

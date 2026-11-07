@@ -32,7 +32,7 @@ export class VideoManager {
             shouldMute: options.muted !== false,
             onError: options.onError || null,
             onPlay: options.onPlay || null,
-            name: options.name || 'video-' + this.videos.size
+            name: options.name || 'video-' + this.videos.size,
         };
 
         video.loop = config.shouldLoop;
@@ -81,8 +81,11 @@ export class VideoManager {
         this._playInProgress.set(video, true);
         const p = video.play();
         if (p && p.then) {
-            p.then(() => { this._playInProgress.set(video, false); })
-             .catch(() => { this._playInProgress.set(video, false); });
+            p.then(() => {
+                this._playInProgress.set(video, false);
+            }).catch(() => {
+                this._playInProgress.set(video, false);
+            });
         } else {
             this._playInProgress.set(video, false);
         }

@@ -5,11 +5,11 @@ const OKAVANGO = `${BASE}interface/into-the-okavango/`;
 
 export const REDIRECT_URLS = {
     'grande-barriere': OMBRES,
-    'abysses': OMBRES,
-    'arctique': OKAVANGO,
-    'plastique': OKAVANGO,
+    abysses: OMBRES,
+    arctique: OKAVANGO,
+    plastique: OKAVANGO,
     'triangle-corail': OMBRES,
-    'requins': OKAVANGO
+    requins: OKAVANGO,
 };
 
 // Hotspot inconnu : retour à l'accueil

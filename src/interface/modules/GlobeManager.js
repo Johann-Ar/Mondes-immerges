@@ -43,20 +43,20 @@ export class GlobeManager {
             maxSpeed: 0.002,
             accelerationFactor: 1.3,
             decelerationFactor: 0.9,
-            ellipseMajorAxis: 9.5,  // Réduit de 12 à 9.5 pour zoom de base plus proche
-            ellipseMinorAxis: 6.5,  // Réduit de 8 à 6.5 pour zoom de base plus proche
+            ellipseMajorAxis: 9.5, // Réduit de 12 à 9.5 pour zoom de base plus proche
+            ellipseMinorAxis: 6.5, // Réduit de 8 à 6.5 pour zoom de base plus proche
             inclination: Math.PI / 6,
-            orbitAngle: Math.random() * Math.PI * 2,  // Position aléatoire sur l'orbite au chargement
+            orbitAngle: Math.random() * Math.PI * 2, // Position aléatoire sur l'orbite au chargement
             zoomLevel: 1,
-            maxZoomLevel: 2.0,      // Permet de dézoomer largement
-            minZoomLevel: 0.8,      // Limite le zoom à x0.8 (pas plus proche)
+            maxZoomLevel: 2.0, // Permet de dézoomer largement
+            minZoomLevel: 0.8, // Limite le zoom à x0.8 (pas plus proche)
             inHotspotMode: false,
-            orbitHistory: []
+            orbitHistory: [],
         };
-        
+
         this.celestialParams = {
             sunPosition: new THREE.Vector3(100, 20, 100),
-            moonPosition: new THREE.Vector3(-70, 30, -50)
+            moonPosition: new THREE.Vector3(-70, 30, -50),
         };
 
         this._savedState = null;
@@ -69,36 +69,33 @@ export class GlobeManager {
 
         this.init();
     }
-    
+
     init() {
         // Créer la scène
         this.scene = new THREE.Scene();
-        
+
         // Ajouter une lumière ambiante blanche
         const ambient = new THREE.AmbientLight(0xffffff, 1.2);
         this.scene.add(ambient);
-        
+
         // Ajouter une lumière directionnelle douce
         const directional = new THREE.DirectionalLight(0xffffff, 0.5);
         directional.position.set(5, 10, 7);
         this.scene.add(directional);
-        
+
         this.scene.fog = new THREE.FogExp2(0x000000, 0.00015);
-        
+
         // Créer la caméra
-        this.camera = new THREE.PerspectiveCamera(
-            60,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            1000
-        );
-        
+        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+
         this.updateCameraPosition();
-        
+
         // Créer le renderer avec vérifications WebGL - OPTIMISÉ POUR MOBILE
         try {
             // Détection mobile pour optimisations
-            const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isMobile =
+                window.innerWidth < 768 ||
+                /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             const isLowEnd = isMobile || (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4);
 
             this.renderer = new THREE.WebGLRenderer({
@@ -106,7 +103,7 @@ export class GlobeManager {
                 alpha: true,
                 logarithmicDepthBuffer: !isLowEnd, // Désactiver sur appareils bas de gamme
                 powerPreference: 'default', // "high-performance" force le GPU dédié et provoque des pertes de contexte sur certains Mac
-                precision: isMobile ? 'mediump' : 'highp' // Précision réduite sur mobile
+                precision: isMobile ? 'mediump' : 'highp', // Précision réduite sur mobile
             });
             this.renderer.setSize(window.innerWidth, window.innerHeight);
             this.renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 1.5)); // 1x sur mobile, 1.5x max sur desktop (VRAM)
@@ -115,7 +112,7 @@ export class GlobeManager {
 
             // Stocker le flag mobile pour utilisation ultérieure
             this.isMobile = isMobile;
-            
+
             this.container.appendChild(this.renderer.domElement);
 
             // Gérer la perte et restauration du contexte WebGL
@@ -144,15 +141,14 @@ export class GlobeManager {
         // NOTE: Le globe et la skybox seront créés via preloadAllAssets()
         // Ne pas les créer ici pour éviter les duplications
 
-
         // Créer la trajectoire de la caméra
         this.createOrbitPath();
-        
+
         // Ajouter les écouteurs d'événements
         window.addEventListener('resize', this.onWindowResize.bind(this));
         this.container.addEventListener('click', this.onMouseClick.bind(this));
     }
-    
+
     // Méthode pour gérer les erreurs WebGL
     handleWebGLError() {
         const errorDiv = document.createElement('div');
@@ -171,7 +167,7 @@ export class GlobeManager {
             border: 2px solid #ffdd00;
             max-width: 500px;
         `;
-        
+
         errorDiv.innerHTML = `
             <h2>Erreur d'initialisation 3D</h2>
             <p>Impossible d'initialiser le rendu WebGL.</p>
@@ -180,58 +176,55 @@ export class GlobeManager {
                 Réessayer
             </button>
         `;
-        
+
         this.container.appendChild(errorDiv);
     }
 
     setupLighting() {
         const ambientLight = new THREE.AmbientLight(0x404050, 0.5);
         this.scene.add(ambientLight);
-        
+
         const sunLight = new THREE.DirectionalLight(0xffffff, 1);
         sunLight.position.copy(this.celestialParams.sunPosition);
         sunLight.castShadow = false;
-        
+
         this.scene.add(sunLight);
         this.sunLight = sunLight;
-        
+
         const hemisphereLight = new THREE.HemisphereLight(0x0088ff, 0x00ff88, 0.6);
         this.scene.add(hemisphereLight);
     }
-    
-    
+
     createOrbitPath() {
         const points = [];
         const segments = 100;
-        
+
         for (let i = 0; i <= segments; i++) {
             const angle = (i / segments) * Math.PI * 2;
             const a = this.orbitParams.ellipseMajorAxis;
             const b = this.orbitParams.ellipseMinorAxis;
             const inclination = this.orbitParams.inclination;
-            
+
             let x = a * Math.cos(angle);
             let z = b * Math.sin(angle);
-            
+
             const y = z * Math.sin(inclination);
             z = z * Math.cos(inclination);
-            
+
             points.push(new THREE.Vector3(x, y, z));
         }
-        
-        const pathGeometry = new THREE.BufferGeometry().setFromPoints(points);
-        
+
         const markerGeometry = new THREE.SphereGeometry(0.2, 16, 16);
         const markerMaterial = new THREE.MeshBasicMaterial({
             color: 0xffcc00,
             transparent: true,
-            opacity: 0.9
+            opacity: 0.9,
         });
-        
+
         this.cameraMarker = new THREE.Mesh(markerGeometry, markerMaterial);
         this.scene.add(this.cameraMarker);
     }
-    
+
     createGlobe() {
         glog('GLOBE', 'Création du globe...');
         return new Promise((resolve, reject) => {
@@ -258,22 +251,30 @@ export class GlobeManager {
             }, 10000);
 
             // Résoudre la promesse quand la vidéo est prête à être jouée
-            video.addEventListener('canplaythrough', () => {
-                if (!resolved) {
-                    resolved = true;
-                    clearTimeout(timeout);
-                    resolve();
-                }
-            }, { once: true });
+            video.addEventListener(
+                'canplaythrough',
+                () => {
+                    if (!resolved) {
+                        resolved = true;
+                        clearTimeout(timeout);
+                        resolve();
+                    }
+                },
+                { once: true },
+            );
 
             // Alternative: résoudre dès que suffisamment de données sont chargées
-            video.addEventListener('canplay', () => {
-                if (!resolved) {
-                    resolved = true;
-                    clearTimeout(timeout);
-                    resolve();
-                }
-            }, { once: true });
+            video.addEventListener(
+                'canplay',
+                () => {
+                    if (!resolved) {
+                        resolved = true;
+                        clearTimeout(timeout);
+                        resolve();
+                    }
+                },
+                { once: true },
+            );
 
             video.addEventListener('error', (e) => {
                 if (!resolved) {
@@ -294,7 +295,7 @@ export class GlobeManager {
                 },
                 onPlay: () => {
                     /* Production: play event silenced */
-                }
+                },
             });
 
             this.videoTexture = new THREE.VideoTexture(video);
@@ -310,7 +311,7 @@ export class GlobeManager {
                 opacity: 0.0,
                 colorWrite: false,
                 depthWrite: true,
-                side: THREE.FrontSide
+                side: THREE.FrontSide,
             });
 
             const depthSphere = new THREE.Mesh(depthGeometry, depthMaterial);
@@ -328,7 +329,7 @@ export class GlobeManager {
                 depthTest: true,
                 depthWrite: false,
                 color: 0xffffff,
-                toneMapped: false
+                toneMapped: false,
             });
 
             this.globe = new THREE.Mesh(globeGeometry, globeMaterial);
@@ -347,7 +348,7 @@ export class GlobeManager {
                 opacity: 0.4,
                 alphaTest: 0.1,
                 depthTest: true,
-                depthWrite: false
+                depthWrite: false,
             });
 
             this.clouds = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
@@ -358,7 +359,7 @@ export class GlobeManager {
             video.load();
         });
     }
-    
+
     // ATMOSPHÈRE AMÉLIORÉE: Plus réaliste et visible
     createAtmosphere() {
         const atmosphereGeometry = new THREE.SphereGeometry(2.15, 64, 64); // Plus grande pour effet prononcé
@@ -393,14 +394,14 @@ export class GlobeManager {
             `,
             blending: THREE.AdditiveBlending,
             side: THREE.BackSide,
-            transparent: true
+            transparent: true,
         });
 
         const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
         this.scene.add(atmosphere);
         this.atmosphere = atmosphere;
     }
-    
+
     createSkybox() {
         return new Promise((resolve, reject) => {
             const loader = new THREE.TextureLoader();
@@ -424,7 +425,13 @@ export class GlobeManager {
                 (texture) => {
                     if (!resolved) {
                         try {
-                            glog('SKYBOX', 'Texture chargée OK, dimensions:', texture.image.width, 'x', texture.image.height);
+                            glog(
+                                'SKYBOX',
+                                'Texture chargée OK, dimensions:',
+                                texture.image.width,
+                                'x',
+                                texture.image.height,
+                            );
                             // Le PNG fait 8192×4096 (~128 Mo de VRAM) : on le réduit à 4096×2048 avant l'envoi au GPU
                             const img = texture.image;
                             if (img.width > 4096) {
@@ -465,7 +472,11 @@ export class GlobeManager {
                 },
                 (progress) => {
                     if (progress.lengthComputable) {
-                        glog('SKYBOX', 'Progression:', Math.round(progress.loaded / progress.total * 100) + '%');
+                        glog(
+                            'SKYBOX',
+                            'Progression:',
+                            Math.round((progress.loaded / progress.total) * 100) + '%',
+                        );
                     }
                 },
                 (error) => {
@@ -477,7 +488,7 @@ export class GlobeManager {
                         clearTimeout(timeout);
                         resolve();
                     }
-                }
+                },
             );
         });
     }
@@ -488,90 +499,89 @@ export class GlobeManager {
      */
     preloadAllAssets() {
         glog('PRELOAD', 'Début préchargement de tous les assets...');
-        return Promise.all([
-            this.createGlobe(),
-            this.createSkybox()
-        ]).then(() => {
-            glog('PRELOAD', 'Tous les assets chargés OK');
-            // Démarrer la lecture de la vidéo maintenant que tout est chargé
-            if (this.videoElement) {
-                glog('PRELOAD', 'Lecture vidéo globe...');
-                this.videoElement.play().catch(e => {
-                    gwarn('PRELOAD', 'Erreur lecture vidéo:', e.message);
-                });
-            } else {
-                gwarn('PRELOAD', 'Pas de videoElement !');
-            }
+        return Promise.all([this.createGlobe(), this.createSkybox()])
+            .then(() => {
+                glog('PRELOAD', 'Tous les assets chargés OK');
+                // Démarrer la lecture de la vidéo maintenant que tout est chargé
+                if (this.videoElement) {
+                    glog('PRELOAD', 'Lecture vidéo globe...');
+                    this.videoElement.play().catch((e) => {
+                        gwarn('PRELOAD', 'Erreur lecture vidéo:', e.message);
+                    });
+                } else {
+                    gwarn('PRELOAD', 'Pas de videoElement !');
+                }
 
-            // Démarrer la surveillance du VideoManager
-            videoManager.startMonitoring(10000);
-        }).catch((error) => {
-            gerr('PRELOAD', 'Erreur préchargement:', error);
-            // Continuer quand même pour ne pas bloquer l'application
-            if (this.videoElement) {
-                this.videoElement.play().catch(e => {
-                    gwarn('PRELOAD', 'Erreur lecture vidéo (fallback):', e.message);
-                });
-            }
+                // Démarrer la surveillance du VideoManager
+                videoManager.startMonitoring(10000);
+            })
+            .catch((error) => {
+                gerr('PRELOAD', 'Erreur préchargement:', error);
+                // Continuer quand même pour ne pas bloquer l'application
+                if (this.videoElement) {
+                    this.videoElement.play().catch((e) => {
+                        gwarn('PRELOAD', 'Erreur lecture vidéo (fallback):', e.message);
+                    });
+                }
 
-            // Démarrer la surveillance même en cas d'erreur
-            videoManager.startMonitoring(10000);
-        });
+                // Démarrer la surveillance même en cas d'erreur
+                videoManager.startMonitoring(10000);
+            });
     }
-    
+
     updateCameraPosition() {
         if (!this.orbitParams.isOrbiting) return;
-        
+
         const a = this.orbitParams.ellipseMajorAxis * this.orbitParams.zoomLevel;
         const b = this.orbitParams.ellipseMinorAxis * this.orbitParams.zoomLevel;
-        
+
         let x = a * Math.cos(this.orbitParams.orbitAngle);
         let z = b * Math.sin(this.orbitParams.orbitAngle);
-        
+
         const inclination = this.orbitParams.inclination;
         const y = z * Math.sin(inclination);
         z = z * Math.cos(inclination);
-        
+
         this.camera.position.set(x, y, z);
-        
+
         this.camera.lookAt(0, 0, 0);
-        
+
         if (this.cameraMarker) {
             this.cameraMarker.position.set(x, y, z);
         }
-        
+
         this.orbitParams.orbitAngle += this.orbitParams.currentSpeed;
-        
+
         this.orbitParams.orbitHistory.push(new THREE.Vector3(x, y, z));
-        
+
         if (this.orbitParams.orbitHistory.length > 100) {
             this.orbitParams.orbitHistory.shift();
         }
     }
-    
+
     _updateCameraPositionManual() {
         const a = this.orbitParams.ellipseMajorAxis * this.orbitParams.zoomLevel;
         const b = this.orbitParams.ellipseMinorAxis * this.orbitParams.zoomLevel;
-        
+
         let x = a * Math.cos(this.orbitParams.orbitAngle);
         let z = b * Math.sin(this.orbitParams.orbitAngle);
-        
+
         const inclination = this.orbitParams.inclination;
         const y = z * Math.sin(inclination);
         z = z * Math.cos(inclination);
-        
+
         this.camera.position.set(x, y, z);
-        
+
         this.camera.lookAt(0, 0, 0);
-        
+
         if (this.cameraMarker) {
             this.cameraMarker.position.copy(this.camera.position);
         }
     }
-    
+
     addHotspots(hotspots) {
         // Nettoyer tous les anciens hotspots et leurs labels
-        this.hotspotObjects.forEach(hotspot => {
+        this.hotspotObjects.forEach((hotspot) => {
             this.scene.remove(hotspot);
 
             // Supprimer les event listeners pour éviter les fuites mémoire
@@ -598,11 +608,11 @@ export class GlobeManager {
         this.hotspotObjects = [];
 
         // Nettoyage complet de tous les éléments orphelins
-        document.querySelectorAll('.hotspot-label').forEach(el => el.remove());
-        document.querySelectorAll('.hotspot-label-container').forEach(el => el.remove());
-        document.querySelectorAll('.connector-line').forEach(el => el.remove());
+        document.querySelectorAll('.hotspot-label').forEach((el) => el.remove());
+        document.querySelectorAll('.hotspot-label-container').forEach((el) => el.remove());
+        document.querySelectorAll('.connector-line').forEach((el) => el.remove());
 
-        hotspots.forEach(hotspot => {
+        hotspots.forEach((hotspot) => {
             const { position, title } = hotspot;
 
             const lat = position.lat * (Math.PI / 180);
@@ -628,7 +638,7 @@ export class GlobeManager {
                 opacity: 0, // Commence invisible, apparaîtra avec les autres UI
                 depthTest: true,
                 depthWrite: true, // Activer pour éviter de voir à travers le globe
-                toneMapped: false // Désactive le tone mapping pour conserver la couleur pure
+                toneMapped: false, // Désactive le tone mapping pour conserver la couleur pure
             });
 
             const marker = new THREE.Mesh(markerGeometry, markerMaterial);
@@ -644,7 +654,7 @@ export class GlobeManager {
                 side: THREE.BackSide,
                 depthTest: true,
                 depthWrite: false,
-                toneMapped: false // Désactive le tone mapping pour conserver la couleur pure
+                toneMapped: false, // Désactive le tone mapping pour conserver la couleur pure
             });
 
             const halo = new THREE.Mesh(haloGeometry, haloMaterial);
@@ -659,7 +669,7 @@ export class GlobeManager {
             this.hotspotObjects.push(marker);
         });
     }
-    
+
     addHotspotLabel(marker, text, position) {
         // Créer le label
         const labelDiv = document.createElement('div');
@@ -739,28 +749,28 @@ export class GlobeManager {
         marker.userData.labelHandlers = { onMouseEnter, onMouseLeave, onClick };
         marker.userData.labelText = text;
     }
-    
+
     onMouseClick(event) {
         if (this.orbitParams.inHotspotMode) return;
-        
+
         this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        
+
         this.raycaster.setFromCamera(this.mouse, this.camera);
-        
+
         const globeIntersects = this.raycaster.intersectObject(this.globe);
-        
+
         if (globeIntersects.length > 0) {
             const intersectionPoint = globeIntersects[0].point;
-            
+
             const globeRadius = 2.0;
-            
+
             const phi = Math.acos(intersectionPoint.y / globeRadius);
             const theta = Math.atan2(intersectionPoint.z, intersectionPoint.x);
-            
-            const lat = 90 - (phi * 180 / Math.PI);
-            const lng = (theta * 180 / Math.PI) - 180;
-            
+
+            const lat = 90 - (phi * 180) / Math.PI;
+            const lng = (theta * 180) / Math.PI - 180;
+
             const clickedHotspot = this._findNearestHotspot(lat, lng, 10);
 
             if (clickedHotspot) {
@@ -768,48 +778,45 @@ export class GlobeManager {
                 return;
             }
         }
-        
+
         const hotspotIntersects = this.raycaster.intersectObjects(this.hotspotObjects);
-        
+
         if (hotspotIntersects.length > 0) {
             const selectedHotspot = hotspotIntersects[0].object.userData.hotspot;
             this.activateHotspot(selectedHotspot);
         }
     }
-    
+
     _findNearestHotspot(lat, lng, maxDistance) {
         let nearestHotspot = null;
         let minDistance = maxDistance;
-        
-        const hotspots = this.hotspotObjects.map(obj => obj.userData.hotspot).filter(Boolean);
-        
+
+        const hotspots = this.hotspotObjects.map((obj) => obj.userData.hotspot).filter(Boolean);
+
         for (const hotspot of hotspots) {
             const hotspotLat = hotspot.position.lat;
             const hotspotLng = hotspot.position.lng;
-            
-            const distance = Math.sqrt(
-                Math.pow(hotspotLat - lat, 2) + 
-                Math.pow(hotspotLng - lng, 2)
-            );
-            
+
+            const distance = Math.sqrt(Math.pow(hotspotLat - lat, 2) + Math.pow(hotspotLng - lng, 2));
+
             if (distance < minDistance) {
                 minDistance = distance;
                 nearestHotspot = hotspot;
             }
         }
-        
+
         return nearestHotspot;
     }
-    
+
     // Vue verticale du hotspot
     activateHotspot(hotspot) {
         if (this.orbitParams.inHotspotMode) return;
-        
+
         // Convertir coordonnées GPS vers 3D
         const lat = hotspot.position.lat * (Math.PI / 180);
         const lon = hotspot.position.lng * (Math.PI / 180);
         const radius = 2.1;
-        
+
         const hotspotX = radius * Math.cos(lat) * Math.cos(lon);
         const hotspotY = radius * Math.sin(lat);
         const hotspotZ = radius * Math.cos(lat) * Math.sin(lon);
@@ -831,9 +838,7 @@ export class GlobeManager {
 
         // Calculer une position intermédiaire HAUTE (arc parabolique)
         // Point milieu entre position actuelle et finale, mais plus haut
-        const midPoint = new THREE.Vector3()
-            .addVectors(currentCameraPos, finalPosition)
-            .multiplyScalar(0.5);
+        const midPoint = new THREE.Vector3().addVectors(currentCameraPos, finalPosition).multiplyScalar(0.5);
 
         // Pousser le point milieu plus loin du centre pour créer un arc
         const arcHeight = 1.8; // Hauteur supplémentaire de l'arc
@@ -848,10 +853,10 @@ export class GlobeManager {
             y: midPoint.y,
             z: midPoint.z,
             duration: 1.0,
-            ease: "power1.inOut",
+            ease: 'power1.inOut',
             onUpdate: () => {
                 this.camera.lookAt(0, 0, 0);
-            }
+            },
         });
 
         // Créer un overlay noir pour la transition
@@ -874,105 +879,123 @@ export class GlobeManager {
         }
 
         // Étape 2 : Descente fluide vers le hotspot avec zoom
-        timeline.to(this.camera.position, {
-            x: finalPosition.x,
-            y: finalPosition.y,
-            z: finalPosition.z,
-            duration: 1.2,
-            ease: "power2.out",
-            onUpdate: () => {
-                this.camera.lookAt(0, 0, 0);
+        timeline.to(
+            this.camera.position,
+            {
+                x: finalPosition.x,
+                y: finalPosition.y,
+                z: finalPosition.z,
+                duration: 1.2,
+                ease: 'power2.out',
+                onUpdate: () => {
+                    this.camera.lookAt(0, 0, 0);
+                },
+                onComplete: () => {
+                    this.orbitParams.inHotspotMode = true;
+                    this._redirectToExternalPage(hotspot);
+                },
             },
-            onComplete: () => {
-                this.orbitParams.inHotspotMode = true;
-                this._redirectToExternalPage(hotspot);
-            }
-        }, "-=0.3"); // Overlap pour fluidité
+            '-=0.3',
+        ); // Overlap pour fluidité
 
         // Ajouter le fondu au noir progressif vers la fin de l'animation
-        timeline.to(fadeOverlay, {
-            opacity: 1,
-            duration: 0.8,
-            ease: "power2.in"
-        }, "-=0.8"); // Commence 0.8s avant la fin de l'animation
+        timeline.to(
+            fadeOverlay,
+            {
+                opacity: 1,
+                duration: 0.8,
+                ease: 'power2.in',
+            },
+            '-=0.8',
+        ); // Commence 0.8s avant la fin de l'animation
 
         // Zoom progressif pendant la descente (réduit pour moins de rapprochement)
-        timeline.to(this.camera, {
-            fov: 55,
-            duration: 1.2,
-            ease: "power2.out",
-            onUpdate: () => {
-                this.camera.updateProjectionMatrix();
-            }
-        }, "-=1.2"); // Commence avec la descente
+        timeline.to(
+            this.camera,
+            {
+                fov: 55,
+                duration: 1.2,
+                ease: 'power2.out',
+                onUpdate: () => {
+                    this.camera.updateProjectionMatrix();
+                },
+            },
+            '-=1.2',
+        ); // Commence avec la descente
     }
-    
+
     // Fonction de redirection
-   _redirectToExternalPage(hotspot) {
-       // Jouer la vidéo de transition puis rediriger
-       this.playTransitionVideoAndRedirect(hotspot.id);
-   }
+    _redirectToExternalPage(hotspot) {
+        // Jouer la vidéo de transition puis rediriger
+        this.playTransitionVideoAndRedirect(hotspot.id);
+    }
 
-   /**
-    * Joue la vidéo de transition puis redirige vers une page
-    */
-   playTransitionVideoAndRedirect(hotspotId) {
-       const transitionVideo = document.getElementById('transition-video-out');
+    /**
+     * Joue la vidéo de transition puis redirige vers une page
+     */
+    playTransitionVideoAndRedirect(hotspotId) {
+        const transitionVideo = document.getElementById('transition-video-out');
 
-       if (!transitionVideo) {
-           const redirectUrl = getRedirectUrl(hotspotId);
-           window.location.href = redirectUrl;
-           return;
-       }
+        if (!transitionVideo) {
+            const redirectUrl = getRedirectUrl(hotspotId);
+            window.location.href = redirectUrl;
+            return;
+        }
 
-       // Activer la vidéo (la rendre visible)
-       transitionVideo.classList.add('active');
-       transitionVideo.currentTime = 0;
+        // Activer la vidéo (la rendre visible)
+        transitionVideo.classList.add('active');
+        transitionVideo.currentTime = 0;
 
-       // Lancer la vidéo
-       transitionVideo.play().then(() => {
-           // Écouter la fin de la vidéo pour faire la redirection
-           transitionVideo.addEventListener('ended', () => {
-               const redirectUrl = getRedirectUrl(hotspotId);
-               window.location.href = redirectUrl;
-           }, { once: true });
+        // Lancer la vidéo
+        transitionVideo
+            .play()
+            .then(() => {
+                // Écouter la fin de la vidéo pour faire la redirection
+                transitionVideo.addEventListener(
+                    'ended',
+                    () => {
+                        const redirectUrl = getRedirectUrl(hotspotId);
+                        window.location.href = redirectUrl;
+                    },
+                    { once: true },
+                );
+            })
+            .catch((e) => {
+                // En cas d'erreur, rediriger quand même
+                const redirectUrl = getRedirectUrl(hotspotId);
+                window.location.href = redirectUrl;
+            });
 
-       }).catch(e => {
-           // En cas d'erreur, rediriger quand même
-           const redirectUrl = getRedirectUrl(hotspotId);
-           window.location.href = redirectUrl;
-       });
+        // Timeout de sécurité
+        setTimeout(() => {
+            const redirectUrl = getRedirectUrl(hotspotId);
+            window.location.href = redirectUrl;
+        }, 10000);
+    }
 
-       // Timeout de sécurité
-       setTimeout(() => {
-           const redirectUrl = getRedirectUrl(hotspotId);
-           window.location.href = redirectUrl;
-       }, 10000);
-   }
-   
-   // MÉTHODE CORRIGÉE: Effet de scan avec shader compatible
-   createScanEffect(position) {
-       const phi = (90 - position.lat) * (Math.PI / 180);
-       const theta = (position.lng + 180) * (Math.PI / 180);
-       
-       const x = -(2.1 * Math.sin(phi) * Math.cos(theta));
-       const y = 2.1 * Math.cos(phi);
-       const z = 2.1 * Math.sin(phi) * Math.sin(theta);
-       
-       const scanGeometry = new THREE.RingGeometry(0, 0.3, 32);
-       const scanMaterial = new THREE.ShaderMaterial({
-           uniforms: {
-               color: { value: new THREE.Color(0xffcc00) },
-               time: { value: 0 }
-           },
-           vertexShader: `
+    // MÉTHODE CORRIGÉE: Effet de scan avec shader compatible
+    createScanEffect(position) {
+        const phi = (90 - position.lat) * (Math.PI / 180);
+        const theta = (position.lng + 180) * (Math.PI / 180);
+
+        const x = -(2.1 * Math.sin(phi) * Math.cos(theta));
+        const y = 2.1 * Math.cos(phi);
+        const z = 2.1 * Math.sin(phi) * Math.sin(theta);
+
+        const scanGeometry = new THREE.RingGeometry(0, 0.3, 32);
+        const scanMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                color: { value: new THREE.Color(0xffcc00) },
+                time: { value: 0 },
+            },
+            vertexShader: `
                varying vec2 vUv;
                void main() {
                    vUv = uv;
                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
                }
            `,
-           fragmentShader: `
+            fragmentShader: `
                precision mediump float;
 
                uniform vec3 color;
@@ -988,322 +1011,326 @@ export class GlobeManager {
                    gl_FragColor = vec4(color, alpha);
                }
            `,
-           side: THREE.DoubleSide,
-           transparent: true,
-           blending: THREE.AdditiveBlending,
-           depthWrite: false
-       });
-       
-       const scanRing = new THREE.Mesh(scanGeometry, scanMaterial);
-       
-       scanRing.position.set(x, y, z);
-       scanRing.lookAt(0, 0, 0);
-       
-       this.scene.add(scanRing);
-       
-       let startTime = performance.now();
-       const animate = () => {
-           const elapsedTime = (performance.now() - startTime) / 1000;
-           scanMaterial.uniforms.time.value = elapsedTime;
-           
-           if (elapsedTime < 2) {
-               requestAnimationFrame(animate);
-           } else {
-               this.scene.remove(scanRing);
-               scanRing.geometry.dispose();
-               scanMaterial.dispose();
-           }
-       };
-       
-       animate();
-       
-       gsap.to(scanRing.scale, {
-           x: 4,
-           y: 4,
-           z: 1,
-           duration: 2,
-           ease: "power1.out"
-       });
-       
-       gsap.to(scanMaterial.uniforms.color.value, {
-           r: 1.0,
-           g: 0.8,
-           b: 0.2,
-           duration: 2,
-           ease: "power1.out"
-       });
-   }
-   
-   exitHotspotMode() {
-       if (!this.orbitParams.inHotspotMode) return;
-       
-       this.orbitParams.inHotspotMode = false;
-       
-       // Réinitialiser le champ de vision
-       gsap.to(this.camera, {
-           fov: 60,
-           duration: 1,
-           ease: "power2.out",
-           onUpdate: () => {
-               this.camera.updateProjectionMatrix();
-           }
-       });
-       
-       // Réactiver l'orbite
-       setTimeout(() => {
-           this.orbitParams.isOrbiting = true;
-           this.orbitParams.currentSpeed = this.orbitParams.baseSpeed;
-       }, 500);
-   }
-   
-   exitHotspotModeExternal() {
-       this.exitHotspotMode();
-   }
-   
-   
-   zoom(zoomIn) {
-       const zoomFactor = zoomIn ? 0.85 : 1.15;
-       
-       const newZoomLevel = this.orbitParams.zoomLevel * zoomFactor;
-       
-       this.orbitParams.zoomLevel = Math.min(
-           Math.max(newZoomLevel, this.orbitParams.minZoomLevel),
-           this.orbitParams.maxZoomLevel
-       );
-       
-       gsap.to(this.camera.position, {
-           x: this.camera.position.x * zoomFactor,
-           y: this.camera.position.y * zoomFactor,
-           z: this.camera.position.z * zoomFactor,
-           duration: 0.5,
-           ease: "back.out(1.2)",
-           onUpdate: () => {
-               this.camera.lookAt(0, 0, 0);
-           }
-       });
-   }
-   
-   resetView() {
-       this.orbitParams.zoomLevel = 1;
-       
-       this.orbitParams.currentSpeed = this.orbitParams.baseSpeed;
-       
-       const a = this.orbitParams.ellipseMajorAxis;
-       const b = this.orbitParams.ellipseMinorAxis;
-       const inclination = this.orbitParams.inclination;
-       const currentAngle = this.orbitParams.orbitAngle;
-       
-       const targetX = a * Math.cos(currentAngle);
-       const rawZ = b * Math.sin(currentAngle);
-       const targetY = rawZ * Math.sin(inclination);
-       const targetZ = rawZ * Math.cos(inclination);
-       
-       gsap.to(this.camera.position, {
-           x: targetX,
-           y: targetY,
-           z: targetZ,
-           duration: 1,
-           ease: "elastic.out(1, 0.7)",
-           onUpdate: () => {
-               this.camera.lookAt(0, 0, 0);
-           }
-       });
-   }
-   
-   onWindowResize() {
-       this.camera.aspect = window.innerWidth / window.innerHeight;
-       this.camera.updateProjectionMatrix();
-       this.renderer.setSize(window.innerWidth, window.innerHeight);
-   }
-   
-   setHotspotSelectCallback(callback) {
-       this.onHotspotSelect = callback;
-   }
-   
-   setHotspotExitCallback(callback) {
-       this.onHotspotExit = callback;
-   }
+            side: THREE.DoubleSide,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+        });
 
-   /**
-    * Met à jour les positions de tous les labels et connector lines de manière optimisée
-    */
-   updateHotspotLabels() {
-       if (this.orbitParams.inHotspotMode) {
-           // Cacher tous les labels en mode hotspot
-           this.hotspotObjects.forEach(marker => {
-               if (marker.userData.label) marker.userData.label.style.opacity = '0';
-               if (marker.userData.connectorSvg) marker.userData.connectorSvg.style.opacity = '0';
-           });
-           return;
-       }
+        const scanRing = new THREE.Mesh(scanGeometry, scanMaterial);
 
-       this.hotspotObjects.forEach(marker => {
-           if (!marker.userData.label || !marker.userData.worldPosition) return;
+        scanRing.position.set(x, y, z);
+        scanRing.lookAt(0, 0, 0);
 
-           const worldPos = marker.userData.worldPosition;
+        this.scene.add(scanRing);
 
-           // Vérifier si le point est visible
-           const projected = worldPos.clone().project(this.camera);
+        let startTime = performance.now();
+        const animate = () => {
+            const elapsedTime = (performance.now() - startTime) / 1000;
+            scanMaterial.uniforms.time.value = elapsedTime;
 
-           // Hors de l'écran
-           if (projected.z > 1 || projected.x < -1 || projected.x > 1 ||
-               projected.y < -1 || projected.y > 1) {
-               marker.userData.label.style.opacity = '0';
-               marker.userData.connectorSvg.style.opacity = '0';
-               return;
-           }
+            if (elapsedTime < 2) {
+                requestAnimationFrame(animate);
+            } else {
+                this.scene.remove(scanRing);
+                scanRing.geometry.dispose();
+                scanMaterial.dispose();
+            }
+        };
 
-           // Vérifier occlusion par le globe
-           const direction = new THREE.Vector3().subVectors(worldPos, this.camera.position).normalize();
-           const raycaster = new THREE.Raycaster(this.camera.position, direction);
-           const intersects = raycaster.intersectObject(this.globe);
+        animate();
 
-           if (intersects.length > 0) {
-               const distToIntersection = intersects[0].distance;
-               const distToPoint = this.camera.position.distanceTo(worldPos);
+        gsap.to(scanRing.scale, {
+            x: 4,
+            y: 4,
+            z: 1,
+            duration: 2,
+            ease: 'power1.out',
+        });
 
-               if (distToIntersection < distToPoint - 0.1) {
-                   marker.userData.label.style.opacity = '0';
-                   marker.userData.connectorSvg.style.opacity = '0';
-                   return;
-               }
-           }
+        gsap.to(scanMaterial.uniforms.color.value, {
+            r: 1.0,
+            g: 0.8,
+            b: 0.2,
+            duration: 2,
+            ease: 'power1.out',
+        });
+    }
 
-           // Le point est visible, calculer sa position à l'écran
-           const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
-           const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+    exitHotspotMode() {
+        if (!this.orbitParams.inHotspotMode) return;
 
-           // Position du label avec offset simple
-           const textWidth = marker.userData.labelText.length * 7;
-           const offsetX = 40;
-           const offsetY = -15;
+        this.orbitParams.inHotspotMode = false;
 
-           let labelX = x + offsetX;
-           let labelY = y + offsetY;
+        // Réinitialiser le champ de vision
+        gsap.to(this.camera, {
+            fov: 60,
+            duration: 1,
+            ease: 'power2.out',
+            onUpdate: () => {
+                this.camera.updateProjectionMatrix();
+            },
+        });
 
-           // Garder le label dans l'écran
-           const padding = 10;
-           if (labelX + textWidth > window.innerWidth - padding) {
-               labelX = x - offsetX - textWidth;
-           }
-           if (labelX < padding) labelX = padding;
-           if (labelY < padding) labelY = padding;
-           if (labelY > window.innerHeight - padding) labelY = window.innerHeight - padding;
+        // Réactiver l'orbite
+        setTimeout(() => {
+            this.orbitParams.isOrbiting = true;
+            this.orbitParams.currentSpeed = this.orbitParams.baseSpeed;
+        }, 500);
+    }
 
-           // Mettre à jour le label
-           marker.userData.label.style.left = `${labelX}px`;
-           marker.userData.label.style.top = `${labelY}px`;
-           // Ne rendre visible que si le flag labelsVisible est true
-           if (this.labelsVisible) {
-               marker.userData.label.style.opacity = '1';
-           }
+    exitHotspotModeExternal() {
+        this.exitHotspotMode();
+    }
 
-           // Mettre à jour le connector line (SVG)
-           const line = marker.userData.connectorLine;
-           if (line) {
-               line.setAttribute('x1', x);
-               line.setAttribute('y1', y);
-               line.setAttribute('x2', labelX);
-               line.setAttribute('y2', labelY + 10); // Offset pour centrer sur le label
-               // Ne rendre visible que si le flag labelsVisible est true
-               if (this.labelsVisible) {
-                   marker.userData.connectorSvg.style.opacity = '1';
-               }
-           }
-       });
-   }
+    zoom(zoomIn) {
+        const zoomFactor = zoomIn ? 0.85 : 1.15;
 
-   /**
-    * Active l'affichage des labels de hotspots
-    * Appelé quand les éléments UI doivent apparaître
-    */
-   showLabels() {
-       this.labelsVisible = true;
+        const newZoomLevel = this.orbitParams.zoomLevel * zoomFactor;
 
-       // Animer l'apparition des hotspots (markers) avec GSAP
-       this.hotspotObjects.forEach((marker, index) => {
-           if (marker.userData.materials) {
-               // Animer chaque matériau (cercle principal + halo)
-               marker.userData.materials.forEach((material, matIndex) => {
-                   const targetOpacity = matIndex === 0 ? 0.8 : 0.5; // Principal = 0.8, Halo = 0.5
+        this.orbitParams.zoomLevel = Math.min(
+            Math.max(newZoomLevel, this.orbitParams.minZoomLevel),
+            this.orbitParams.maxZoomLevel,
+        );
 
-                   gsap.to(material, {
-                       opacity: targetOpacity,
-                       duration: 0.8,
-                       delay: index * 0.1, // Délai progressif pour chaque hotspot
-                       ease: "power2.out"
-                   });
-               });
-           }
-       });
-   }
+        gsap.to(this.camera.position, {
+            x: this.camera.position.x * zoomFactor,
+            y: this.camera.position.y * zoomFactor,
+            z: this.camera.position.z * zoomFactor,
+            duration: 0.5,
+            ease: 'back.out(1.2)',
+            onUpdate: () => {
+                this.camera.lookAt(0, 0, 0);
+            },
+        });
+    }
 
-   animate() {
-       requestAnimationFrame(this.animate.bind(this));
+    resetView() {
+        this.orbitParams.zoomLevel = 1;
 
-       // Ne pas rendre si le contexte WebGL est perdu
-       if (this._contextLost) return;
+        this.orbitParams.currentSpeed = this.orbitParams.baseSpeed;
 
-       const delta = this.clock.getDelta();
-       const time = this.clock.getElapsedTime() * 1000;
-       
-       if (this.orbitParams.isOrbiting && !this.orbitParams.inHotspotMode) {
-           this.updateCameraPosition();
-       }
-       
-       if (this.updateSkyboxTime) {
-           this.updateSkyboxTime(time);
-       }
+        const a = this.orbitParams.ellipseMajorAxis;
+        const b = this.orbitParams.ellipseMinorAxis;
+        const inclination = this.orbitParams.inclination;
+        const currentAngle = this.orbitParams.orbitAngle;
 
-       // Animer les ondes des hotspots (sprites)
-       this.hotspotObjects.forEach(hotspot => {
-           const waveRings = hotspot.userData.waveRings;
-           if (waveRings) {
-               waveRings.forEach(wave => {
-                   // Incrémenter le temps de vague
-                   wave.userData.waveTime += delta;
+        const targetX = a * Math.cos(currentAngle);
+        const rawZ = b * Math.sin(currentAngle);
+        const targetY = rawZ * Math.sin(inclination);
+        const targetZ = rawZ * Math.cos(inclination);
 
-                   // Temps relatif avec délai initial
-                   const relativeTime = wave.userData.waveTime - wave.userData.initialDelay;
+        gsap.to(this.camera.position, {
+            x: targetX,
+            y: targetY,
+            z: targetZ,
+            duration: 1,
+            ease: 'elastic.out(1, 0.7)',
+            onUpdate: () => {
+                this.camera.lookAt(0, 0, 0);
+            },
+        });
+    }
 
-                   if (relativeTime > 0) {
-                       // Durée d'une vague complète
-                       const waveDuration = 2.5;
-                       const progress = (relativeTime % waveDuration) / waveDuration;
+    onWindowResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
 
-                       // Expansion de l'anneau
-                       const minRadius = 0.05;
-                       const maxRadius = 0.18;
-                       const currentRadius = minRadius + (maxRadius - minRadius) * progress;
+    setHotspotSelectCallback(callback) {
+        this.onHotspotSelect = callback;
+    }
 
-                       // Recréer la géométrie avec le nouveau rayon
-                       wave.geometry.dispose();
-                       wave.geometry = new THREE.RingGeometry(currentRadius, currentRadius + 0.02, 32);
+    setHotspotExitCallback(callback) {
+        this.onHotspotExit = callback;
+    }
 
-                       // Opacité qui diminue avec l'expansion
-                       wave.material.opacity = 0.7 * (1 - progress);
-                   }
-               });
-           }
-       });
+    /**
+     * Met à jour les positions de tous les labels et connector lines de manière optimisée
+     */
+    updateHotspotLabels() {
+        if (this.orbitParams.inHotspotMode) {
+            // Cacher tous les labels en mode hotspot
+            this.hotspotObjects.forEach((marker) => {
+                if (marker.userData.label) marker.userData.label.style.opacity = '0';
+                if (marker.userData.connectorSvg) marker.userData.connectorSvg.style.opacity = '0';
+            });
+            return;
+        }
 
-       // Mettre à jour les labels et connector lines (méthode optimisée)
-       this.updateHotspotLabels();
-       
-       if (this.clouds) {
-           this.clouds.rotation.y += 0.0001;
-       }
-       
-       if (this.globe && !this.orbitParams.inHotspotMode) {
-           this.globe.rotation.y += 0.0002;
-       }
-       
-       if (this.globe && this.globe.material.uniforms && this.globe.material.uniforms.time) {
-           this.globe.material.uniforms.time.value = time;
-       }
-       
-       // Video playback is managed exclusively by VideoManager - no retry here
-       
-       this.renderer.render(this.scene, this.camera);
-   }
+        this.hotspotObjects.forEach((marker) => {
+            if (!marker.userData.label || !marker.userData.worldPosition) return;
+
+            const worldPos = marker.userData.worldPosition;
+
+            // Vérifier si le point est visible
+            const projected = worldPos.clone().project(this.camera);
+
+            // Hors de l'écran
+            if (
+                projected.z > 1 ||
+                projected.x < -1 ||
+                projected.x > 1 ||
+                projected.y < -1 ||
+                projected.y > 1
+            ) {
+                marker.userData.label.style.opacity = '0';
+                marker.userData.connectorSvg.style.opacity = '0';
+                return;
+            }
+
+            // Vérifier occlusion par le globe
+            const direction = new THREE.Vector3().subVectors(worldPos, this.camera.position).normalize();
+            const raycaster = new THREE.Raycaster(this.camera.position, direction);
+            const intersects = raycaster.intersectObject(this.globe);
+
+            if (intersects.length > 0) {
+                const distToIntersection = intersects[0].distance;
+                const distToPoint = this.camera.position.distanceTo(worldPos);
+
+                if (distToIntersection < distToPoint - 0.1) {
+                    marker.userData.label.style.opacity = '0';
+                    marker.userData.connectorSvg.style.opacity = '0';
+                    return;
+                }
+            }
+
+            // Le point est visible, calculer sa position à l'écran
+            const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
+            const y = (-projected.y * 0.5 + 0.5) * window.innerHeight;
+
+            // Position du label avec offset simple
+            const textWidth = marker.userData.labelText.length * 7;
+            const offsetX = 40;
+            const offsetY = -15;
+
+            let labelX = x + offsetX;
+            let labelY = y + offsetY;
+
+            // Garder le label dans l'écran
+            const padding = 10;
+            if (labelX + textWidth > window.innerWidth - padding) {
+                labelX = x - offsetX - textWidth;
+            }
+            if (labelX < padding) labelX = padding;
+            if (labelY < padding) labelY = padding;
+            if (labelY > window.innerHeight - padding) labelY = window.innerHeight - padding;
+
+            // Mettre à jour le label
+            marker.userData.label.style.left = `${labelX}px`;
+            marker.userData.label.style.top = `${labelY}px`;
+            // Ne rendre visible que si le flag labelsVisible est true
+            if (this.labelsVisible) {
+                marker.userData.label.style.opacity = '1';
+            }
+
+            // Mettre à jour le connector line (SVG)
+            const line = marker.userData.connectorLine;
+            if (line) {
+                line.setAttribute('x1', x);
+                line.setAttribute('y1', y);
+                line.setAttribute('x2', labelX);
+                line.setAttribute('y2', labelY + 10); // Offset pour centrer sur le label
+                // Ne rendre visible que si le flag labelsVisible est true
+                if (this.labelsVisible) {
+                    marker.userData.connectorSvg.style.opacity = '1';
+                }
+            }
+        });
+    }
+
+    /**
+     * Active l'affichage des labels de hotspots
+     * Appelé quand les éléments UI doivent apparaître
+     */
+    showLabels() {
+        this.labelsVisible = true;
+
+        // Animer l'apparition des hotspots (markers) avec GSAP
+        this.hotspotObjects.forEach((marker, index) => {
+            if (marker.userData.materials) {
+                // Animer chaque matériau (cercle principal + halo)
+                marker.userData.materials.forEach((material, matIndex) => {
+                    const targetOpacity = matIndex === 0 ? 0.8 : 0.5; // Principal = 0.8, Halo = 0.5
+
+                    gsap.to(material, {
+                        opacity: targetOpacity,
+                        duration: 0.8,
+                        delay: index * 0.1, // Délai progressif pour chaque hotspot
+                        ease: 'power2.out',
+                    });
+                });
+            }
+        });
+    }
+
+    animate() {
+        requestAnimationFrame(this.animate.bind(this));
+
+        // Ne pas rendre si le contexte WebGL est perdu
+        if (this._contextLost) return;
+
+        const delta = this.clock.getDelta();
+        const time = this.clock.getElapsedTime() * 1000;
+
+        if (this.orbitParams.isOrbiting && !this.orbitParams.inHotspotMode) {
+            this.updateCameraPosition();
+        }
+
+        if (this.updateSkyboxTime) {
+            this.updateSkyboxTime(time);
+        }
+
+        // Animer les ondes des hotspots (sprites)
+        this.hotspotObjects.forEach((hotspot) => {
+            const waveRings = hotspot.userData.waveRings;
+            if (waveRings) {
+                waveRings.forEach((wave) => {
+                    // Incrémenter le temps de vague
+                    wave.userData.waveTime += delta;
+
+                    // Temps relatif avec délai initial
+                    const relativeTime = wave.userData.waveTime - wave.userData.initialDelay;
+
+                    if (relativeTime > 0) {
+                        // Durée d'une vague complète
+                        const waveDuration = 2.5;
+                        const progress = (relativeTime % waveDuration) / waveDuration;
+
+                        // Expansion de l'anneau
+                        const minRadius = 0.05;
+                        const maxRadius = 0.18;
+                        const currentRadius = minRadius + (maxRadius - minRadius) * progress;
+
+                        // Recréer la géométrie avec le nouveau rayon
+                        wave.geometry.dispose();
+                        wave.geometry = new THREE.RingGeometry(currentRadius, currentRadius + 0.02, 32);
+
+                        // Opacité qui diminue avec l'expansion
+                        wave.material.opacity = 0.7 * (1 - progress);
+                    }
+                });
+            }
+        });
+
+        // Mettre à jour les labels et connector lines (méthode optimisée)
+        this.updateHotspotLabels();
+
+        if (this.clouds) {
+            this.clouds.rotation.y += 0.0001;
+        }
+
+        if (this.globe && !this.orbitParams.inHotspotMode) {
+            this.globe.rotation.y += 0.0002;
+        }
+
+        if (this.globe && this.globe.material.uniforms && this.globe.material.uniforms.time) {
+            this.globe.material.uniforms.time.value = time;
+        }
+
+        // Video playback is managed exclusively by VideoManager - no retry here
+
+        this.renderer.render(this.scene, this.camera);
+    }
 }

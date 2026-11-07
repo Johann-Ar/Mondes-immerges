@@ -6,12 +6,12 @@ Expérience web immersive sur les milieux aquatiques en disparition : une page d
 
 **En ligne :** https://johann-ar.github.io/Mondes-immerges/
 
-| Page | URL |
-|---|---|
-| Accueil | `/Mondes-immerges/` |
-| Globe interactif | `/Mondes-immerges/interface/` |
+| Page                 | URL                                                |
+| -------------------- | -------------------------------------------------- |
+| Accueil              | `/Mondes-immerges/`                                |
+| Globe interactif     | `/Mondes-immerges/interface/`                      |
 | Les ombres de la mer | `/Mondes-immerges/interface/les-ombres-de-la-mer/` |
-| Into the Okavango | `/Mondes-immerges/interface/into-the-okavango/` |
+| Into the Okavango    | `/Mondes-immerges/interface/into-the-okavango/`    |
 
 ## Développement
 
@@ -20,6 +20,8 @@ npm install
 npm run dev        # http://localhost:3000
 npm run build      # génère dist/
 npm run check      # vérifie qu'aucun fichier référencé ne manque dans dist/
+npm run lint       # ESLint
+npm run format     # Prettier
 npm run preview    # sert dist/ comme sur GitHub Pages
 ```
 
@@ -38,9 +40,10 @@ src/
     data/                           Hotspots et redirections vers les récits
     modules/                        Globe, interactions, interface, panneau
   shared/loader.js                  Loader <l-jelly> commun à toutes les pages
+  recits/<récit>/                   JS et CSS de chaque récit
 public/                             Copié tel quel dans dist/
   fonts/ images/ videos/            Médias partagés (polices, logos, vidéos)
-  interface/<récit>/                Images, vidéos et JS de chaque récit
+  interface/<récit>/                Images et vidéos de chaque récit
 scripts/check-links.mjs             Contrôle des liens du build
 .github/workflows/deploy.yml        Build + déploiement GitHub Pages
 ```
@@ -49,7 +52,6 @@ Règles :
 
 - Dans le HTML et le CSS traités par Vite, référencer les médias partagés en absolu (`/images/…`, `/fonts/…`) : Vite ajoute `/Mondes-immerges/` au build.
 - Dans le JavaScript du globe, préfixer avec `import.meta.env.BASE_URL`.
-- Les JS des récits (`public/interface/<récit>/js/`) sont des scripts classiques : leurs chemins sont relatifs à la page du récit.
 - Noms de fichiers en kebab-case, sans espaces ni accents.
 
 ## Déploiement

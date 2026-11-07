@@ -13,10 +13,10 @@ export class VisualEffects {
         this.container = options.container;
         this.effectsContainer = null;
         this.notificationContainer = null;
-        
+
         this.init();
     }
-    
+
     /**
      * Initialise les effets visuels
      */
@@ -31,14 +31,14 @@ export class VisualEffects {
         this.effectsContainer.style.height = '100%';
         this.effectsContainer.style.pointerEvents = 'none';
         this.effectsContainer.style.zIndex = '5';
-        
+
         // Ajouter le conteneur au DOM
         this.container.appendChild(this.effectsContainer);
-        
+
         // Créer le conteneur de notifications
         this.createNotificationContainer();
     }
-    
+
     /**
      * Crée un conteneur pour les notifications
      */
@@ -57,10 +57,10 @@ export class VisualEffects {
             pointer-events: none;
             max-width: 400px;
         `;
-        
+
         this.container.appendChild(this.notificationContainer);
     }
-    
+
     /**
      * Ajoute un effet de transition d'entrée
      */
@@ -75,24 +75,25 @@ export class VisualEffects {
         overlay.style.height = '100%';
         overlay.style.backgroundColor = '#000000';
         overlay.style.zIndex = '10';
-        
+
         this.effectsContainer.appendChild(overlay);
-        
+
         // Animer la transition avec GSAP
-        gsap.fromTo(overlay, 
-            { opacity: 1 }, 
-            { 
-                opacity: 0, 
-                duration: 1.5, 
+        gsap.fromTo(
+            overlay,
+            { opacity: 1 },
+            {
+                opacity: 0,
+                duration: 1.5,
                 ease: 'power2.out',
                 onComplete: () => {
                     // Supprimer l'overlay une fois l'animation terminée
                     overlay.remove();
-                }
-            }
+                },
+            },
         );
     }
-    
+
     /**
      * Ajoute un effet de transition de sortie
      * @param {Function} callback - Fonction à appeler une fois la transition terminée
@@ -109,22 +110,22 @@ export class VisualEffects {
         overlay.style.backgroundColor = '#000000';
         overlay.style.zIndex = '10';
         overlay.style.opacity = '0';
-        
+
         this.effectsContainer.appendChild(overlay);
-        
+
         // Animer la transition avec GSAP
-        gsap.to(overlay, { 
-            opacity: 1, 
-            duration: 1, 
+        gsap.to(overlay, {
+            opacity: 1,
+            duration: 1,
             ease: 'power2.in',
             onComplete: () => {
                 if (callback) {
                     callback();
                 }
-            }
+            },
         });
     }
-    
+
     /**
      * Créer un effet de chargement orbital
      * @param {Function} onComplete - Fonction à appeler une fois l'animation terminée
@@ -165,7 +166,7 @@ export class VisualEffects {
                 backdrop-filter: blur(5px);
             `;
         }
-        
+
         // Créer le loader orbital
         const orbitalLoader = document.createElement('div');
         orbitalLoader.style.cssText = `
@@ -176,7 +177,7 @@ export class VisualEffects {
             justify-content: center;
             align-items: center;
         `;
-        
+
         // Anneaux orbitaux (3 anneaux avec différentes vitesses)
         for (let i = 0; i < 3; i++) {
             const ring = document.createElement('div');
@@ -188,7 +189,7 @@ export class VisualEffects {
                 height: ${120 + i * 40}px;
                 animation: orbit${i} ${4 - i * 0.5}s linear infinite;
             `;
-            
+
             // Créer particules sur l'anneau
             for (let j = 0; j < 3 + i; j++) {
                 const particle = document.createElement('div');
@@ -206,10 +207,10 @@ export class VisualEffects {
                 `;
                 ring.appendChild(particle);
             }
-            
+
             orbitalLoader.appendChild(ring);
         }
-        
+
         // Créer le point central
         const center = document.createElement('div');
         center.style.cssText = `
@@ -246,7 +247,7 @@ export class VisualEffects {
 
         // Ajouter les éléments au DOM
         loaderContainer.appendChild(orbitalLoader);
-        
+
         // Ajouter le style des animations
         const styleEl = document.createElement('style');
         styleEl.textContent = `
@@ -294,7 +295,8 @@ export class VisualEffects {
         container.appendChild(loaderContainer);
 
         // Animer l'entrée
-        gsap.fromTo(loaderContainer,
+        gsap.fromTo(
+            loaderContainer,
             { opacity: 0 },
             {
                 opacity: 1,
@@ -305,8 +307,8 @@ export class VisualEffects {
                     if (targetContainer && onComplete) {
                         onComplete();
                     }
-                }
-            }
+                },
+            },
         );
 
         // Définir un timer pour la sortie
@@ -326,12 +328,12 @@ export class VisualEffects {
                         loaderContainer.remove();
                         styleEl.remove();
                         if (onComplete) onComplete();
-                    }
+                    },
                 });
             }
         }, duration * 1000);
     }
-    
+
     /**
      * Ajoute un effet de highlight pour mettre en évidence une sélection
      * @param {Object} position - Position à mettre en évidence (lat, lng)
@@ -348,23 +350,24 @@ export class VisualEffects {
         highlight.style.boxShadow = '0 0 20px rgba(255, 204, 0, 0.5)';
         highlight.style.transform = 'translate(-50%, -50%)';
         highlight.style.pointerEvents = 'none';
-        
+
         // Positionner l'effet (centré sur l'écran pour le moment)
         highlight.style.top = '50%';
         highlight.style.left = '50%';
-        
+
         this.effectsContainer.appendChild(highlight);
-        
+
         // Animer l'effet avec GSAP
-        gsap.fromTo(highlight, 
-            { 
-                scale: 0.5, 
-                opacity: 0 
-            }, 
-            { 
-                scale: 1.5, 
-                opacity: 0.8, 
-                duration: 0.8, 
+        gsap.fromTo(
+            highlight,
+            {
+                scale: 0.5,
+                opacity: 0,
+            },
+            {
+                scale: 1.5,
+                opacity: 0.8,
+                duration: 0.8,
                 ease: 'elastic.out(1, 0.3)',
                 onComplete: () => {
                     // Animation de disparition
@@ -375,13 +378,13 @@ export class VisualEffects {
                         delay: 0.3,
                         onComplete: () => {
                             highlight.remove();
-                        }
+                        },
                     });
-                }
-            }
+                },
+            },
         );
     }
-    
+
     /**
      * Crée un effet d'onde radar rayonnant depuis un point
      * @param {Object} position - Position de départ {x, y}
@@ -392,16 +395,17 @@ export class VisualEffects {
             radius: 50,
             duration: 1,
             color: 'rgba(255, 204, 0, 0.4)',
-            pulseCount: 1
+            pulseCount: 1,
         };
-        
+
         const config = { ...defaults, ...options };
-        
+
         for (let i = 0; i < config.pulseCount; i++) {
-            setTimeout(() => {
-                // Créer l'élément d'effet
-                const radar = document.createElement('div');
-                radar.style.cssText = `
+            setTimeout(
+                () => {
+                    // Créer l'élément d'effet
+                    const radar = document.createElement('div');
+                    radar.style.cssText = `
                     position: absolute;
                     top: ${position.y}px;
                     left: ${position.x}px;
@@ -414,24 +418,26 @@ export class VisualEffects {
                     z-index: 100;
                     pointer-events: none;
                 `;
-                
-                this.effectsContainer.appendChild(radar);
-                
-                // Animer l'expansion
-                gsap.to(radar, {
-                    width: config.radius * 2,
-                    height: config.radius * 2,
-                    opacity: 0,
-                    duration: config.duration,
-                    ease: "power2.out",
-                    onComplete: () => {
-                        radar.remove();
-                    }
-                });
-            }, i * (config.duration * 300)); // Espacer les pulses
+
+                    this.effectsContainer.appendChild(radar);
+
+                    // Animer l'expansion
+                    gsap.to(radar, {
+                        width: config.radius * 2,
+                        height: config.radius * 2,
+                        opacity: 0,
+                        duration: config.duration,
+                        ease: 'power2.out',
+                        onComplete: () => {
+                            radar.remove();
+                        },
+                    });
+                },
+                i * (config.duration * 300),
+            ); // Espacer les pulses
         }
     }
-    
+
     /**
      * Effet de flash global
      * @param {string} color - Couleur du flash (par défaut, blanc)
@@ -448,21 +454,21 @@ export class VisualEffects {
         flash.style.pointerEvents = 'none';
         flash.style.zIndex = '20';
         flash.style.opacity = '0';
-        
+
         this.effectsContainer.appendChild(flash);
-        
+
         // Animer le flash avec GSAP
         gsap.timeline()
             .to(flash, { opacity: 0.7, duration: 0.1 })
-            .to(flash, { 
-                opacity: 0, 
+            .to(flash, {
+                opacity: 0,
                 duration: 0.3,
                 onComplete: () => {
                     flash.remove();
-                }
+                },
             });
     }
-    
+
     /**
      * Affiche une notification en bas à droite
      * @param {string} message - Message à afficher
@@ -474,15 +480,15 @@ export class VisualEffects {
         if (!this.notificationContainer) {
             this.createNotificationContainer();
         }
-        
+
         // Créer l'élément de notification
         const notification = document.createElement('div');
         notification.className = 'notification';
-        
+
         // Déterminer l'icône et la couleur en fonction du type
         let icon = '';
         let color = '#2196F3'; // Bleu pour info
-        
+
         switch (type) {
             case 'success':
                 icon = '✓';
@@ -500,13 +506,13 @@ export class VisualEffects {
                 icon = 'i';
                 color = '#2196F3'; // Bleu
         }
-        
+
         // Construire le contenu
         notification.innerHTML = `
             <div class="notification-icon" style="background-color: ${color};">${icon}</div>
             <div class="notification-message">${message}</div>
         `;
-        
+
         // Appliquer les styles
         notification.style.cssText = `
             display: flex;
@@ -526,7 +532,7 @@ export class VisualEffects {
             border-left: 3px solid ${color};
             backdrop-filter: blur(5px);
         `;
-        
+
         // Styles pour les éléments internes
         const iconElement = notification.querySelector('.notification-icon');
         if (iconElement) {
@@ -542,7 +548,7 @@ export class VisualEffects {
                 flex-shrink: 0;
             `;
         }
-        
+
         const messageElement = notification.querySelector('.notification-message');
         if (messageElement) {
             messageElement.style.cssText = `
@@ -550,38 +556,39 @@ export class VisualEffects {
                 line-height: 1.4;
             `;
         }
-        
+
         // Ajouter au conteneur
         this.notificationContainer.appendChild(notification);
-        
+
         // Animer l'entrée
-        gsap.fromTo(notification, 
-            { 
-                opacity: 0, 
-                x: 50
-            }, 
+        gsap.fromTo(
+            notification,
+            {
+                opacity: 0,
+                x: 50,
+            },
             {
                 opacity: 1,
                 x: 0,
                 duration: 0.4,
-                ease: "power2.out"
-            }
+                ease: 'power2.out',
+            },
         );
-        
+
         // Animer la sortie après la durée spécifiée
         setTimeout(() => {
             gsap.to(notification, {
                 opacity: 0,
                 x: 50,
                 duration: 0.4,
-                ease: "power2.in",
+                ease: 'power2.in',
                 onComplete: () => {
                     notification.remove();
-                }
+                },
             });
         }, duration);
     }
-    
+
     /**
      * Affiche un message système
      * @param {string} message - Message à afficher
@@ -591,7 +598,7 @@ export class VisualEffects {
         const messageElement = document.createElement('div');
         messageElement.className = 'system-message';
         messageElement.textContent = message;
-        
+
         // Appliquer les styles
         messageElement.style.cssText = `
             position: absolute;
@@ -613,29 +620,29 @@ export class VisualEffects {
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(3px);
         `;
-        
+
         this.effectsContainer.appendChild(messageElement);
-        
+
         // Animer l'entrée et la sortie
         gsap.timeline()
             .to(messageElement, {
                 y: 0,
                 opacity: 1,
                 duration: 0.5,
-                ease: "power2.out"
+                ease: 'power2.out',
             })
             .to(messageElement, {
                 y: -10,
                 opacity: 0,
                 duration: 0.5,
                 delay: 3,
-                ease: "power2.in",
+                ease: 'power2.in',
                 onComplete: () => {
                     messageElement.remove();
-                }
+                },
             });
     }
-    
+
     /**
      * Ajoute des particules en arrière-plan
      * @param {Object} options - Options pour les particules
@@ -643,11 +650,11 @@ export class VisualEffects {
     addBackgroundParticles(options = {}) {
         const defaults = {
             count: 50,
-            container: this.container
+            container: this.container,
         };
-        
+
         const config = { ...defaults, ...options };
-        
+
         // Créer un conteneur pour les particules
         const particlesContainer = document.createElement('div');
         particlesContainer.className = 'background-particles';
@@ -661,11 +668,11 @@ export class VisualEffects {
             z-index: 1;
             pointer-events: none;
         `;
-        
+
         // Créer les particules
         for (let i = 0; i < config.count; i++) {
             const particle = document.createElement('div');
-            
+
             // Propriétés aléatoires
             const size = Math.random() * 3 + 1;
             const x = Math.random() * 100;
@@ -673,7 +680,7 @@ export class VisualEffects {
             const delay = Math.random() * 5;
             const duration = Math.random() * 10 + 10;
             const opacity = Math.random() * 0.5 + 0.1;
-            
+
             // Styler la particule
             particle.style.cssText = `
                 position: absolute;
@@ -685,7 +692,7 @@ export class VisualEffects {
                 left: ${x}%;
                 box-shadow: 0 0 ${size * 2}px rgba(255, 255, 255, ${opacity * 0.8});
             `;
-            
+
             // Animer la particule
             gsap.to(particle, {
                 y: `${Math.random() * 20 - 10}%`,
@@ -695,12 +702,12 @@ export class VisualEffects {
                 delay: delay,
                 repeat: -1,
                 yoyo: true,
-                ease: "sine.inOut"
+                ease: 'sine.inOut',
             });
-            
+
             particlesContainer.appendChild(particle);
         }
-        
+
         config.container.appendChild(particlesContainer);
     }
 }

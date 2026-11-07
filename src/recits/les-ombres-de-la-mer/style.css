@@ -1,4 +1,3 @@
-/* Fonts */
 @font-face {
     font-family: 'Abyss';
     src: url('/fonts/Abyss.ttf') format('truetype');
@@ -39,18 +38,16 @@
     font-display: swap;
 }
 
-/* Variables CSS */
 :root {
     --primary-color: #ffce00;
     --primary-color-bright: #ffdd00;
     --secondary-color: #ffffff;
-    --dark-color: #000000;
+    --dark-color: #3a3a3a; /* ENCORE PLUS CLAIR */
     --text-color: #f5f5f5;
     --spacing: clamp(20px, 4vw, 60px);
     --touch-target: 44px;
 }
 
-/* Reset et Base */
 * {
     margin: 0;
     padding: 0;
@@ -63,9 +60,10 @@
     user-select: none;
 }
 
-body, html {
+body,
+html {
     font-family: 'Geograph', sans-serif;
-    background-color: #000000;
+    background-color: var(--dark-color); /* #3a3a3a - ENCORE PLUS CLAIR */
     color: var(--text-color);
     overflow-x: hidden;
     scroll-behavior: smooth;
@@ -78,12 +76,12 @@ body::-webkit-scrollbar {
     display: none;
 }
 
-/* Curseur personnalisé - Desktop uniquement */
+/* Curseur personnalisé seulement sur desktop avec souris */
 @media (hover: hover) and (pointer: fine) {
     * {
         cursor: none !important;
     }
-    
+
     .cursor {
         position: fixed;
         width: 30px;
@@ -94,7 +92,10 @@ body::-webkit-scrollbar {
         pointer-events: none;
         z-index: 999999;
         transform: translate(-50%, -50%);
-        transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease;
+        transition:
+            transform 0.1s ease,
+            width 0.3s ease,
+            height 0.3s ease;
     }
 
     .cursor-follower {
@@ -106,24 +107,29 @@ body::-webkit-scrollbar {
         pointer-events: none;
         z-index: 999998;
         transform: translate(-50%, -50%);
-        transition: transform 0.15s ease-out, width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+        transition:
+            transform 0.15s ease-out,
+            width 0.3s ease,
+            height 0.3s ease,
+            opacity 0.3s ease;
         opacity: 0.7;
         mix-blend-mode: difference;
     }
 }
 
-/* Appareils tactiles - curseur normal */
+/* Sur appareils tactiles, pas de curseur personnalisé */
 @media (hover: none) {
     * {
         cursor: auto !important;
     }
-    
-    .cursor, .cursor-follower {
+
+    .cursor,
+    .cursor-follower {
         display: none !important;
     }
 }
 
-/* Effet de flou lors du défilement */
+/* Effet de flou lors du défilement vers le haut */
 body.scrolling-up {
     transition: filter 0.3s ease;
     filter: blur(5px);
@@ -134,7 +140,6 @@ body.scrolling-up .cursor-follower {
     opacity: 0;
 }
 
-/* Sections et grilles */
 section {
     position: relative;
     width: 100%;
@@ -150,7 +155,7 @@ section {
     width: 100%;
 }
 
-/* Logo fixe */
+/* Logo fixe dans la marge gauche */
 .fixed-logo {
     position: fixed;
     top: 20px;
@@ -164,7 +169,7 @@ section {
     height: auto;
 }
 
-/* Menu hamburger mobile */
+/* Bouton hamburger pour mobile */
 .mobile-menu-toggle {
     position: fixed;
     top: 50%;
@@ -211,7 +216,7 @@ section {
     transform: rotate(-45deg) translate(7px, -6px);
 }
 
-/* Overlay menu */
+/* Overlay pour fermer le menu mobile */
 .menu-overlay {
     position: fixed;
     top: 0;
@@ -230,7 +235,7 @@ section {
     pointer-events: all;
 }
 
-/* Bouton retour exploration */
+/* Bouton de retour à l'exploration - AVEC GOUTTIÈRE FINE */
 .return-exploration {
     position: fixed !important;
     top: 20px !important;
@@ -253,7 +258,7 @@ section {
     backdrop-filter: blur(12px) !important;
     border: none !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
-    max-width: calc(100vw - 50px) !important;
+    max-width: calc(100vw - 50px) !important; /* Gouttière de 25px de chaque côté */
     width: auto !important;
     white-space: nowrap !important;
     text-align: left !important;
@@ -276,33 +281,35 @@ section {
     box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4) !important;
 }
 
+/* Animation dynamique quand on est en haut du site - RÉDUITE AVEC GOUTTIÈRE */
 .return-exploration.at-top {
     animation: pulseButtonLarge 2s ease-in-out infinite !important;
-    transform: translateY(0) scale(1.08) !important;
+    transform: translateY(0) scale(1.08) !important; /* Réduit de 1.15 à 1.08 */
     transform-origin: top right !important;
     box-shadow: 0 6px 30px rgba(255, 221, 0, 0.4) !important;
     border: 2px solid rgba(255, 221, 0, 0.5) !important;
-    padding: 12px 18px !important;
+    padding: 12px 18px !important; /* Réduit le padding */
     font-size: 14px !important;
 }
 
 @keyframes pulseButtonLarge {
-    0%, 100% {
-        transform: translateY(0) scale(1.08);
+    0%,
+    100% {
+        transform: translateY(0) scale(1.08); /* Réduit de 1.15 à 1.08 */
         transform-origin: top right;
         box-shadow: 0 6px 30px rgba(255, 221, 0, 0.4);
     }
     50% {
-        transform: translateY(0) scale(1.15);
+        transform: translateY(0) scale(1.15); /* Réduit de 1.25 à 1.15 */
         transform-origin: top right;
         box-shadow: 0 8px 35px rgba(255, 221, 0, 0.6);
     }
 }
 
-/* Icône planète */
+/* Icône planète ENCORE PLUS RÉDUITE */
 .planet-icon {
     position: relative !important;
-    width: 16px !important;
+    width: 16px !important; /* Réduit de 18px à 16px */
     height: 16px !important;
     flex-shrink: 0 !important;
     transition: transform 0.4s ease !important;
@@ -313,12 +320,12 @@ section {
 }
 
 .return-exploration.at-top .planet-icon {
-    width: 18px !important;
+    width: 18px !important; /* Réduit de 20px à 18px */
     height: 18px !important;
 }
 
 .planet {
-    width: 6px !important;
+    width: 6px !important; /* Réduit de 7px à 6px */
     height: 6px !important;
     background-color: var(--primary-color-bright) !important;
     border-radius: 50% !important;
@@ -330,7 +337,7 @@ section {
 }
 
 .orbit {
-    width: 16px !important;
+    width: 16px !important; /* Réduit de 18px à 16px */
     height: 16px !important;
     border: 1px dashed rgba(255, 221, 0, 0.7) !important;
     border-radius: 50% !important;
@@ -341,7 +348,7 @@ section {
 }
 
 .return-exploration.at-top .orbit {
-    width: 18px !important;
+    width: 18px !important; /* Réduit de 20px à 18px */
     height: 18px !important;
     border-width: 1.5px !important;
 }
@@ -349,11 +356,11 @@ section {
 .orbit::before {
     content: '' !important;
     position: absolute !important;
-    width: 3px !important;
+    width: 3px !important; /* Réduit de 3.5px à 3px */
     height: 3px !important;
     background-color: var(--primary-color-bright) !important;
     border-radius: 50% !important;
-    top: -1.5px !important;
+    top: -1.5px !important; /* Ajusté */
     left: 50% !important;
     transform: translateX(-50%) !important;
 }
@@ -379,7 +386,7 @@ section {
     font-weight: 700 !important;
 }
 
-/* Navigation latérale */
+/* Barre de navigation latérale */
 .side-nav {
     position: fixed;
     top: 50%;
@@ -495,7 +502,7 @@ section {
     top: -15%;
     left: -15%;
     object-fit: cover;
-    filter: brightness(0.8) contrast(1.0);
+    filter: brightness(0.8) contrast(1);
     z-index: 1;
     opacity: 0;
     transition: opacity 1s ease;
@@ -580,17 +587,18 @@ body.loading .globe-video {
     }
 }
 
+/* SOUS-TITRE BEAUCOUP PLUS GROS */
 .subtitle {
     font-family: 'Geograph', sans-serif;
-    font-size: clamp(0.84rem, 1.32vw, 1.08rem) !important;
+    font-size: clamp(0.84rem, 1.32vw, 1.08rem) !important; /* Réduit de 40% */
     font-weight: 500;
-    max-width: 600px !important;
+    max-width: 600px !important; /* Plus large */
     opacity: 0;
     transform: translateX(-30px);
     animation: slideInSubtitle 1.2s cubic-bezier(0.19, 1, 0.22, 1) 1.7s forwards;
     color: var(--text-color);
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
-    line-height: 1.3 !important;
+    line-height: 1.3 !important; /* Meilleur espacement */
 }
 
 @keyframes slideInSubtitle {
@@ -632,7 +640,7 @@ body.loading .globe-video {
     }
 }
 
-/* Section Documentaire */
+/* Documentary Presentation */
 .documentary-presentation {
     position: relative;
     min-height: 120vh;
@@ -691,7 +699,7 @@ body.loading .globe-video {
     }
 }
 
-/* Lecteur vidéo */
+/* Lecteur vidéo inspiré de National Geographic */
 .video-container {
     width: 100%;
     height: 100%;
@@ -709,126 +717,44 @@ body.loading .globe-video {
     z-index: 1;
 }
 
-/* Masquer contrôles par défaut */
 .main-video::-webkit-media-controls {
-    display: none !important;
-    opacity: 0 !important;
+    z-index: 2;
+    display: flex !important;
+    opacity: 1 !important;
 }
 
 .main-video::-webkit-media-controls-panel {
-    display: none !important;
-    opacity: 0 !important;
-}
-
-.main-video::-webkit-media-controls-play-button {
-    display: none !important;
-}
-
-.main-video::-webkit-media-controls-timeline {
-    display: none !important;
-}
-
-.main-video::-webkit-media-controls-current-time-display {
-    display: none !important;
-}
-
-.main-video::-webkit-media-controls-time-remaining-display {
-    display: none !important;
-}
-
-.main-video::-webkit-media-controls-mute-button {
-    display: none !important;
-}
-
-.main-video::-webkit-media-controls-volume-slider {
-    display: none !important;
-}
-
-.main-video::-webkit-media-controls-fullscreen-button {
-    display: none !important;
-}
-
-/* Afficher contrôles pendant la lecture */
-.video-container.playing .main-video::-webkit-media-controls,
-.video-container.paused .main-video::-webkit-media-controls {
-    display: flex !important;
-    opacity: 1 !important;
-    transition: opacity 0.3s ease;
-}
-
-.video-container.playing .main-video::-webkit-media-controls-panel,
-.video-container.paused .main-video::-webkit-media-controls-panel {
     display: flex !important;
     opacity: 1 !important;
 }
 
-.video-container.playing .main-video::-webkit-media-controls-play-button,
-.video-container.paused .main-video::-webkit-media-controls-play-button {
-    display: block !important;
-}
-
-.video-container.playing .main-video::-webkit-media-controls-timeline,
-.video-container.paused .main-video::-webkit-media-controls-timeline {
-    display: block !important;
-}
-
-.video-container.playing .main-video::-webkit-media-controls-current-time-display,
-.video-container.paused .main-video::-webkit-media-controls-current-time-display {
-    display: block !important;
-}
-
-.video-container.playing .main-video::-webkit-media-controls-time-remaining-display,
-.video-container.paused .main-video::-webkit-media-controls-time-remaining-display {
-    display: block !important;
-}
-
-.video-container.playing .main-video::-webkit-media-controls-mute-button,
-.video-container.paused .main-video::-webkit-media-controls-mute-button {
-    display: block !important;
-}
-
-.video-container.playing .main-video::-webkit-media-controls-volume-slider,
-.video-container.paused .main-video::-webkit-media-controls-volume-slider {
-    display: block !important;
-}
-
-.video-container.playing .main-video::-webkit-media-controls-fullscreen-button,
-.video-container.paused .main-video::-webkit-media-controls-fullscreen-button {
-    display: block !important;
-}
-
-/* Masquer contrôles après pause */
-.video-container.paused.hide-controls .main-video::-webkit-media-controls {
-    display: none !important;
-    opacity: 0 !important;
-}
-
-/* Overlay vidéo */
+/* Overlay MASQUÉ par défaut - seulement image et bouton play visibles */
 .video-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: transparent;
+    background: transparent; /* PAS D'OVERLAY PAR DÉFAUT */
     z-index: 3;
     pointer-events: none;
-    opacity: 0;
+    opacity: 0; /* MASQUÉ PAR DÉFAUT */
     transition: opacity 0.3s ease;
 }
 
+/* L'overlay apparaît seulement pendant la lecture */
 .video-container.playing .video-overlay {
     background: linear-gradient(
-        135deg, 
-        rgba(0, 0, 0, 0.4) 0%, 
-        transparent 30%, 
-        transparent 70%, 
+        135deg,
+        rgba(0, 0, 0, 0.4) 0%,
+        transparent 30%,
+        transparent 70%,
         rgba(0, 0, 0, 0.8) 100%
     );
     opacity: 1;
 }
 
-/* Bouton play */
+/* Bouton play National Geographic style */
 .video-play-button {
     position: absolute;
     top: 50%;
@@ -848,7 +774,7 @@ body.loading .globe-video {
     touch-action: manipulation;
     min-width: var(--touch-target);
     min-height: var(--touch-target);
-    box-shadow: 
+    box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.4),
         0 0 0 0 rgba(255, 221, 0, 0.6),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -881,7 +807,7 @@ body.loading .globe-video {
 .video-play-button:hover {
     transform: translate(-50%, -50%) scale(1.1);
     background: linear-gradient(145deg, var(--primary-color-bright), #ffe55c);
-    box-shadow: 
+    box-shadow:
         0 12px 40px rgba(0, 0, 0, 0.5),
         0 0 0 8px rgba(255, 221, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -892,6 +818,7 @@ body.loading .globe-video {
     transform: translate(-50%, -50%) scale(0.95);
 }
 
+/* Pause button style */
 .video-play-button.pause {
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
     border: 3px solid rgba(255, 255, 255, 0.3);
@@ -907,21 +834,54 @@ body.loading .globe-video {
     transform: translate(-50%, -50%) scale(0.8);
 }
 
-/* Contrôles personnalisés */
-.custom-video-controls {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    z-index: 4;
-    opacity: 0;
-    transform: translateY(100%);
-    transition: all 0.3s ease;
+/* Info badge National Geographic - SUPPRIMÉ */
+/* .video-info-badge supprimé complètement */
+
+/* Contrôles vidéo avec gestion automatique */
+.video-container .main-video::-webkit-media-controls-panel {
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+}
+
+.video-container .main-video::-webkit-media-controls {
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+}
+
+/* Afficher les contrôles seulement en mode lecture */
+.video-container.playing .main-video::-webkit-media-controls {
+    opacity: 1 !important;
+}
+
+.video-container.playing .main-video::-webkit-media-controls-panel {
+    opacity: 1 !important;
+}
+
+/* Masquer après 3 secondes en lecture */
+.video-container.playing.auto-hide .main-video::-webkit-media-controls {
+    opacity: 0 !important;
+}
+
+.video-container.playing.auto-hide .main-video::-webkit-media-controls-panel {
+    opacity: 0 !important;
+}
+
+/* Réafficher temporairement en pause */
+.video-container.paused .main-video::-webkit-media-controls {
+    opacity: 1 !important;
+}
+
+.video-container.paused .main-video::-webkit-media-controls-panel {
+    opacity: 1 !important;
+}
+
+/* Masquer définitivement après 5 secondes de pause */
+.video-container.paused.hide-after-pause .main-video::-webkit-media-controls {
+    opacity: 0 !important;
+}
+
+.video-container.paused.hide-after-pause .main-video::-webkit-media-controls-panel {
+    opacity: 0 !important;
 }
 
 .description-container {
@@ -931,7 +891,7 @@ body.loading .globe-video {
 .doc-button {
     display: inline-block;
     background-color: var(--primary-color);
-    color: #000000;
+    color: var(--dark-color);
     padding: 12px 25px;
     border-radius: 30px;
     text-decoration: none;
@@ -957,10 +917,9 @@ body.loading .globe-video {
     height: 20px;
     margin-right: 10px;
     vertical-align: middle;
-    fill: #000000;
+    fill: var(--dark-color);
 }
 
-/* Titres de section */
 .section-title {
     font-family: 'Abyss', serif;
     font-size: clamp(2rem, 4vw, 3rem);
@@ -998,7 +957,6 @@ body.loading .globe-video {
     width: 60px;
 }
 
-/* Descriptions */
 .description {
     font-family: 'Geograph', sans-serif;
     font-size: clamp(1rem, 1.2vw, 1.2rem);
@@ -1025,7 +983,7 @@ body.loading .globe-video {
     transition-delay: 0.4s;
 }
 
-/* Section Expédition */
+/* Expedition Presentation */
 .expedition-presentation {
     position: relative;
     min-height: 100vh;
@@ -1117,7 +1075,7 @@ body.loading .globe-video {
     transform: scale(1);
 }
 
-/* Galerie photo */
+/* Section galerie photo */
 .photo-gallery {
     min-height: 100vh;
     position: relative;
@@ -1126,7 +1084,7 @@ body.loading .globe-video {
     align-items: center;
     justify-content: center;
     padding: var(--spacing);
-    background-color: #000000;
+    background-color: var(--dark-color);
 }
 
 .gallery-container {
@@ -1175,7 +1133,10 @@ body.loading .globe-video {
     justify-content: center;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.8s ease, visibility 0.8s ease, transform 0.8s ease;
+    transition:
+        opacity 0.8s ease,
+        visibility 0.8s ease,
+        transform 0.8s ease;
     transform: scale(0.9);
 }
 
@@ -1268,7 +1229,7 @@ body.loading .globe-video {
     right: -70px; /* Éloignée de l'image pour ne pas se superposer */
 }
 
-/* Mode plein écran */
+/* Mode plein écran pour les images */
 .fullscreen-mode {
     position: fixed;
     top: 0;
@@ -1350,16 +1311,25 @@ body.loading .globe-video {
 }
 
 @keyframes focusEffect {
-    0% { filter: blur(0); transform: scale(1); }
-    50% { filter: blur(3px); transform: scale(1.03); }
-    100% { filter: blur(0); transform: scale(1); }
+    0% {
+        filter: blur(0);
+        transform: scale(1);
+    }
+    50% {
+        filter: blur(3px);
+        transform: scale(1.03);
+    }
+    100% {
+        filter: blur(0);
+        transform: scale(1);
+    }
 }
 
 .gallery-slide.transitioning .gallery-image {
     animation: focusEffect 0.8s ease;
 }
 
-/* Contenu scientifique */
+/* Scientific Content */
 .scientific-content {
     min-height: 120vh;
     padding-top: 20vh;
@@ -1562,7 +1532,7 @@ body.loading .globe-video {
     transform: translateY(0);
 }
 
-/* Section Ressources */
+/* Resources Section */
 .resources {
     min-height: 100vh;
     padding-top: 20vh;
@@ -1710,7 +1680,7 @@ body.loading .globe-video {
     transform: translateX(5px);
 }
 
-/* Section Crédits */
+/* Credits Section */
 .credits {
     min-height: 80vh;
     padding-top: 20vh;
@@ -1930,7 +1900,7 @@ body.loading .globe-video {
     opacity: 0.7;
 }
 
-/* Loader */
+/* Loader simple - ÉCRAN NOIR SEULEMENT */
 .loader {
     position: fixed !important;
     top: 0 !important;
@@ -1941,7 +1911,9 @@ body.loading .globe-video {
     z-index: 999998 !important;
     opacity: 1 !important;
     visibility: visible !important;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
 }
 
 .loader.hidden {
@@ -1950,6 +1922,7 @@ body.loading .globe-video {
     pointer-events: none !important;
 }
 
+/* Suppression de tous les loaders jelly */
 .loader-content,
 .custom-jelly-loader,
 l-jelly,
@@ -2005,7 +1978,7 @@ body.loading .cursor-follower {
 .share-icon svg {
     width: 24px;
     height: 24px;
-    fill: #000000;
+    fill: var(--dark-color);
 }
 
 .share-icon:hover {
@@ -2036,7 +2009,7 @@ body.loading .cursor-follower {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: #000000 !important;
+    background-color: var(--dark-color) !important;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -2067,7 +2040,121 @@ body.loading .cursor-follower {
     fill: var(--text-color);
 }
 
-/* Bouton retour en haut */
+.translate-button {
+    position: fixed;
+    left: 30px; /* À GAUCHE au lieu de droite */
+    bottom: 30px; /* Même position que back-to-top */
+    width: 50px;
+    height: 50px;
+    background-color: var(--primary-color); /* Même couleur que back-to-top */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 999;
+    touch-action: manipulation;
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+    cursor: pointer;
+}
+
+.translate-button.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.translate-button:hover {
+    transform: scale(1.1);
+    background-color: var(--primary-color-bright);
+}
+
+/* Initiales EN/FR */
+.translate-current {
+    font-family: 'Geograph', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark-color); /* Texte sombre sur fond jaune */
+    letter-spacing: 0.5px;
+    line-height: 1;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.translate-button:hover .translate-current {
+    transform: scale(1.1);
+    font-weight: 800;
+}
+
+/* Animation de changement de langue */
+.translate-button.changing {
+    animation: languageSwitch 0.6s ease;
+}
+
+@keyframes languageSwitch {
+    0% {
+        transform: scale(1) rotateY(0deg);
+    }
+    50% {
+        transform: scale(1.2) rotateY(90deg);
+        background-color: var(--primary-color-bright);
+    }
+    100% {
+        transform: scale(1) rotateY(0deg);
+    }
+}
+
+/* Responsive pour mobile */
+@media screen and (max-width: 767px) {
+    .translate-button {
+        left: 20px;
+        bottom: 20px;
+        width: 45px;
+        height: 45px;
+    }
+
+    .translate-current {
+        font-size: 12px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .translate-button {
+        left: 15px;
+        bottom: 15px;
+        width: 45px;
+        height: 45px;
+    }
+
+    .translate-current {
+        font-size: 11px;
+    }
+}
+
+/* Ajustement du bouton back-to-top pour éviter le chevauchement */
+.back-to-top {
+    right: 30px;
+    bottom: 30px;
+}
+
+@media screen and (max-width: 767px) {
+    .back-to-top {
+        right: 20px;
+        bottom: 20px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .back-to-top {
+        right: 15px;
+        bottom: 15px;
+    }
+}
+
+/* Bouton de retour en haut */
 .back-to-top {
     position: fixed;
     right: 30px;
@@ -2102,95 +2189,32 @@ body.loading .cursor-follower {
 .back-to-top svg {
     width: 24px;
     height: 24px;
-    fill: #000000;
-}
-
-/* Bouton de traduction */
-.translate-button {
-    position: fixed;
-    left: 30px;
-    bottom: 30px;
-    width: 50px;
-    height: 50px;
-    background-color: var(--primary-color);
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 999;
-    border: none;
-    touch-action: manipulation;
-    min-width: var(--touch-target);
-    min-height: var(--touch-target);
-    cursor: pointer;
-}
-
-.translate-button.visible {
-    opacity: 1;
-    pointer-events: all;
-}
-
-.translate-button:hover {
-    transform: scale(1.1);
-    background-color: var(--primary-color-bright);
-}
-
-.translate-current {
-    font-family: 'Geograph', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    color: #000000;
-    letter-spacing: 0.5px;
-    line-height: 1;
-    text-transform: uppercase;
-    transition: all 0.3s ease;
-}
-
-.translate-button:hover .translate-current {
-    transform: scale(1.1);
-    font-weight: 800;
-}
-
-.translate-button.changing {
-    animation: languageSwitch 0.6s ease;
-}
-
-@keyframes languageSwitch {
-    0% {
-        transform: scale(1) rotateY(0deg);
-    }
-    50% {
-        transform: scale(1.2) rotateY(90deg);
-        background-color: var(--primary-color-bright);
-    }
-    100% {
-        transform: scale(1) rotateY(0deg);
-    }
+    fill: var(--dark-color);
 }
 
 /* Animations spécifiques */
-[data-animation="fade-up"] {
+[data-animation='fade-up'] {
     opacity: 0;
     transform: translateY(30px);
-    transition: opacity 0.8s ease, transform 0.8s ease;
+    transition:
+        opacity 0.8s ease,
+        transform 0.8s ease;
 }
 
-[data-animation="fade-up"].visible {
+[data-animation='fade-up'].visible {
     opacity: 1;
     transform: translateY(0);
 }
 
-[data-animation="fade-left"] {
+[data-animation='fade-left'] {
     opacity: 0;
     transform: translateX(30px);
-    transition: opacity 0.8s ease, transform 0.8s ease;
+    transition:
+        opacity 0.8s ease,
+        transform 0.8s ease;
 }
 
-[data-animation="fade-left"].visible {
+[data-animation='fade-left'].visible {
     opacity: 1;
     transform: translateX(0);
 }
@@ -2224,7 +2248,9 @@ body.loading .cursor-follower {
 }
 
 /* Focus pour navigation clavier */
-button:focus, a:focus, [tabindex]:focus {
+button:focus,
+a:focus,
+[tabindex]:focus {
     outline: 2px solid var(--primary-color-bright);
     outline-offset: 2px;
 }
@@ -2244,23 +2270,27 @@ button:focus, a:focus, [tabindex]:focus {
     box-shadow: none !important;
 }
 
-/* Suppression du zoom iOS */
-input, textarea, select {
+/* Suppression du zoom sur iOS */
+input,
+textarea,
+select {
     font-size: 16px;
 }
 
-/* MEDIA QUERIES */
+/* Media Queries pour responsivité mobile/tablette/desktop */
 
 /* MOBILE - Moins de 768px */
 @media screen and (max-width: 767px) {
     :root {
         --spacing: clamp(15px, 4vw, 25px);
     }
-    
+
+    /* Afficher le menu hamburger */
     .mobile-menu-toggle {
         display: flex;
     }
-    
+
+    /* Navigation mobile plein écran */
     .side-nav {
         position: fixed;
         top: 0;
@@ -2275,19 +2305,19 @@ input, textarea, select {
         overflow-y: auto;
         z-index: 1000;
     }
-    
+
     .side-nav.open {
         left: 0;
     }
-    
+
     .side-nav ul {
         padding-left: 0;
     }
-    
+
     .side-nav li {
         margin: 25px 0;
     }
-    
+
     .nav-link {
         color: var(--text-color);
         font-size: 18px;
@@ -2295,55 +2325,59 @@ input, textarea, select {
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         justify-content: flex-start;
     }
-    
+
     .nav-link::before {
         display: none;
     }
-    
+
     .nav-link.active {
         color: var(--primary-color-bright);
     }
-    
+
+    /* Hero adapté mobile */
     .hero {
         padding-top: 80px;
     }
-    
+
     .title-container {
         top: 80px;
         left: 20px;
         right: 20px;
         text-align: center;
     }
-    
+
     .title {
         font-size: clamp(2rem, 8vw, 3rem);
     }
-    
+
+    /* SOUS-TITRE MOBILE RÉDUIT 40% */
     .subtitle {
         font-size: clamp(0.72rem, 3vw, 0.96rem) !important;
         text-align: center;
         max-width: none;
     }
-    
+
+    /* Adaptation du bouton retour exploration sur mobile ENCORE PLUS RÉDUIT */
     .return-exploration {
         right: 15px !important;
         top: 15px !important;
-        font-size: 10px !important;
-        padding: 6px 10px !important;
+        font-size: 10px !important; /* Encore plus petit sur mobile */
+        padding: 6px 10px !important; /* Encore plus réduit */
         max-width: calc(100vw - 30px) !important;
-        gap: 6px !important;
-        border-radius: 15px !important;
+        gap: 6px !important; /* Réduit */
+        border-radius: 15px !important; /* Plus petit */
     }
-    
+
     .return-exploration.at-top {
         transform: translateY(0) scale(1.05) !important;
         transform-origin: top right !important;
-        padding: 8px 12px !important;
-        font-size: 11px !important;
+        padding: 8px 12px !important; /* Réduit */
+        font-size: 11px !important; /* Réduit */
     }
-    
+
     @keyframes pulseButtonLarge {
-        0%, 100% {
+        0%,
+        100% {
             transform: translateY(0) scale(1.05);
             transform-origin: top right;
             box-shadow: 0 4px 20px rgba(255, 221, 0, 0.3);
@@ -2354,30 +2388,32 @@ input, textarea, select {
             box-shadow: 0 6px 25px rgba(255, 221, 0, 0.5);
         }
     }
-    
+
+    /* Icône encore plus petite sur mobile */
     .planet-icon {
-        width: 14px !important;
+        width: 14px !important; /* Encore plus petit */
         height: 14px !important;
     }
-    
+
     .orbit {
         width: 14px !important;
         height: 14px !important;
     }
-    
+
     .planet {
-        width: 5px !important;
+        width: 5px !important; /* Encore plus petit */
         height: 5px !important;
     }
-    
+
     .return-text {
-        font-size: 10px !important;
+        font-size: 10px !important; /* Encore plus petit */
     }
-    
+
     .return-exploration.at-top .return-text {
-        font-size: 11px !important;
+        font-size: 11px !important; /* Encore plus petit */
     }
-    
+
+    /* Flèches galerie mobile - grossies seulement */
     .gallery-arrow {
         width: var(--touch-target);
         height: var(--touch-target);
@@ -2386,218 +2422,246 @@ input, textarea, select {
     }
 
     .gallery-arrow svg {
-        width: 25px;
-        height: 25px;
+        width: 25px; /* GROSSI de 20px à 25px */
+        height: 25px; /* GROSSI de 20px à 25px */
     }
-    
+
+    .planet-icon {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    .orbit {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    .planet {
+        width: 6px !important;
+        height: 6px !important;
+    }
+
+    .return-text {
+        font-size: 12px !important;
+    }
+
+    .return-exploration.at-top .return-text {
+        font-size: 13px !important;
+    }
+
+    /* Sections en colonnes uniques */
     .grid-container {
         grid-template-columns: 1fr;
         gap: 20px;
     }
-    
+
     .video-section {
         grid-column: 1 / -1;
         height: 50vh;
         margin-bottom: 40px;
     }
-    
+
     .description-container {
         grid-column: 1 / -1;
         text-align: center;
     }
-    
+
     .expedition-grid {
         display: block;
     }
-    
+
     .expedition-text {
         grid-column: 1 / -1;
         padding-right: 0;
         margin-bottom: 30px;
         text-align: center;
     }
-    
+
     .expedition-image {
         grid-column: 1 / -1;
         height: 40vh;
     }
-    
+
+    /* Galerie mobile avec informations visibles */
     .gallery-container {
         height: 80vh;
     }
-    
+
     .gallery-title {
         position: static;
         text-align: center;
         margin-bottom: 30px;
     }
-    
+
     .gallery-slider {
         margin-top: 0;
         height: calc(100% - 80px);
     }
-    
+
     .gallery-slide {
         flex-direction: column;
         padding: 20px;
     }
-    
+
     .gallery-image-container {
         width: 100%;
         height: 60%;
         margin-bottom: 20px;
     }
-    
+
     .image-info {
         text-align: center;
         height: auto;
     }
-    
+
     .image-info h3 {
         font-size: 1.2rem;
         margin-bottom: 10px;
         color: var(--primary-color-bright);
     }
-    
+
     .image-info p {
         font-size: 0.9rem;
         opacity: 0.8;
         line-height: 1.4;
     }
-    
+
+    .gallery-arrow svg {
+        width: 20px;
+        height: 20px;
+    }
+
     .gallery-dots {
         bottom: 10px;
     }
-    
+
+    /* Stats en colonne unique */
     .stat-container {
         grid-template-columns: 1fr;
         gap: 20px;
         margin: 40px 0;
     }
-    
+
     .stat-card {
         padding: 25px 20px;
         text-align: center;
         border-left: 3px solid var(--primary-color-bright);
     }
-    
+
     .stat-number {
         font-size: 2.5rem;
     }
-    
+
+    /* Images scientifiques en colonne */
     .scientific-image-grid {
         grid-template-columns: 1fr;
         gap: 20px;
     }
-    
+
     .scientific-image-wrapper {
         height: 40vh;
     }
-    
+
+    /* Ressources en colonne */
     .resources-grid {
         grid-template-columns: 1fr;
         gap: 20px;
     }
-    
+
     .resource-card {
         padding: 25px;
         height: auto;
         min-height: 200px;
     }
-    
+
+    /* Crédits en colonne */
     .credits-grid {
         grid-template-columns: 1fr;
         gap: 40px;
     }
-    
-    .back-to-top, .share-button {
+
+    /* Boutons flottants adaptés */
+    .back-to-top,
+    .share-button {
         right: 20px;
     }
-    
+
     .back-to-top {
         bottom: 20px;
     }
-    
+
     .share-button {
         bottom: 80px;
-    }
-    
-    .translate-button {
-        left: 20px;
-        bottom: 20px;
-        width: 45px;
-        height: 45px;
-    }
-    
-    .translate-current {
-        font-size: 12px;
     }
 }
 
 /* TABLETTE - 768px à 1024px */
 @media screen and (min-width: 768px) and (max-width: 1024px) {
+    /* Menu hamburger aussi sur tablette */
     .mobile-menu-toggle {
         display: flex;
     }
-    
+
     .side-nav {
         width: 350px;
         max-width: 40%;
     }
-    
+
     .side-nav.open {
         left: 0;
     }
-    
+
     .nav-link {
         color: var(--text-color);
         font-size: 16px;
         padding: 12px 0;
     }
-    
+
     .nav-link::before {
         display: none;
     }
-    
+
+    /* SOUS-TITRE TABLETTE RÉDUIT 40% */
     .subtitle {
         font-size: clamp(0.78rem, 1.2vw, 1.02rem) !important;
     }
 
+    /* Grilles hybrides */
     .stat-container {
         grid-template-columns: repeat(2, 1fr);
         gap: 25px;
     }
-    
+
     .resources-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .expedition-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 30px;
         align-items: center;
     }
-    
+
     .expedition-text {
         grid-column: 1;
         margin-bottom: 0;
         text-align: left;
     }
-    
+
     .expedition-image {
         grid-column: 2;
         height: 50vh;
     }
-    
+
     .scientific-image-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .video-section {
         height: 60vh;
     }
-    
+
     .gallery-container {
         height: 85vh;
     }
@@ -2605,10 +2669,12 @@ input, textarea, select {
 
 /* DESKTOP - Plus de 1024px */
 @media screen and (min-width: 1025px) {
+    /* Masquer le menu hamburger */
     .mobile-menu-toggle {
         display: none;
     }
-    
+
+    /* Navigation desktop normale */
     .side-nav {
         position: fixed;
         top: 50%;
@@ -2624,21 +2690,21 @@ input, textarea, select {
         border-radius: 0 8px 8px 0;
         max-width: 200px;
     }
-    
+
     .side-nav.visible {
         opacity: 1;
         pointer-events: all;
     }
-    
+
     .side-nav ul {
         padding-left: 6px;
     }
-    
+
     .side-nav li {
         margin: 12px 0;
         position: relative;
     }
-    
+
     .nav-link {
         color: transparent;
         font-size: 13px;
@@ -2647,7 +2713,7 @@ input, textarea, select {
         white-space: nowrap;
         position: relative;
     }
-    
+
     .nav-link::before {
         display: block;
         position: absolute;
@@ -2661,51 +2727,53 @@ input, textarea, select {
         opacity: 1;
         transition: all 0.3s ease;
     }
-    
+
     .side-nav:hover {
         background: rgba(0, 0, 0, 0.5);
         padding: 12px 20px;
     }
-    
+
     .side-nav:hover .nav-link {
         color: var(--text-color);
         opacity: 0.7;
         padding-left: 16px;
     }
-    
+
     .side-nav:hover .nav-link:hover {
         opacity: 1;
         color: var(--primary-color-bright);
     }
-    
+
     .side-nav:hover .nav-link:hover::before {
         width: 8px;
         height: 8px;
         background-color: var(--primary-color-bright);
     }
-    
+
     .nav-link.active::before {
         width: 10px;
         height: 10px;
         background-color: var(--primary-color-bright);
     }
-    
+
+    /* Grilles desktop complètes */
     .stat-container {
         grid-template-columns: repeat(3, 1fr);
     }
-    
+
     .resources-grid {
         grid-template-columns: repeat(3, 1fr);
     }
-    
+
     .scientific-image-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .credits-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
+    /* Réactiver le curseur personnalisé sur desktop avec souris */
     @media (hover: hover) and (pointer: fine) {
         * {
             cursor: none !important;
@@ -2713,12 +2781,13 @@ input, textarea, select {
     }
 }
 
-/* Très petits écrans - 480px et moins */
+/* Optimisations pour très petits écrans - 480px et moins */
 @media screen and (max-width: 480px) {
     .title {
         font-size: clamp(1.5rem, 7vw, 2.5rem);
     }
-    
+
+    /* SOUS-TITRE TRÈS PETITS ÉCRANS RÉDUIT 40% */
     .subtitle {
         font-size: clamp(0.66rem, 2.7vw, 0.84rem) !important;
     }
@@ -2727,84 +2796,74 @@ input, textarea, select {
         top: 15px;
         left: 15px;
     }
-    
+
     .mi-logo {
         width: 36px;
     }
-    
+
     .mobile-menu-toggle {
         left: 10px;
         width: 40px;
         height: 40px;
     }
-    
+
     .video-section {
         height: 40vh;
     }
-    
+
     .video-play-button {
         width: 60px;
         height: 60px;
     }
-    
+
     .video-play-button svg {
         width: 24px;
         height: 24px;
     }
-    
+
     .stat-card {
         padding: 20px 15px;
     }
-    
+
     .stat-number {
         font-size: 2rem;
     }
-    
+
     .resource-card {
         padding: 20px;
     }
-    
-    .back-to-top, .share-icon {
+
+    .back-to-top,
+    .share-icon {
         width: 45px;
         height: 45px;
         right: 15px;
     }
-    
+
     .back-to-top {
         bottom: 15px;
     }
-    
+
     .share-button {
         bottom: 70px;
     }
-    
-    .translate-button {
-        left: 15px;
-        bottom: 15px;
-        width: 45px;
-        height: 45px;
-    }
-    
-    .translate-current {
-        font-size: 11px;
-    }
 }
 
-/* Mode paysage mobile */
+/* Optimisations pour la navigation en mode paysage sur mobile */
 @media screen and (max-height: 500px) and (orientation: landscape) {
     .hero {
         padding-top: 20px;
     }
-    
+
     .title-container {
         top: 20px;
     }
-    
+
     .title {
         font-size: clamp(1.5rem, 6vw, 2rem);
         margin-bottom: 0.3rem;
     }
-    
+
     .subtitle {
         font-size: clamp(0.54rem, 2.1vw, 0.72rem) !important;
     }
@@ -2812,37 +2871,196 @@ input, textarea, select {
     .scroll-indicator {
         bottom: 20px;
     }
-    
+
     .video-section {
         height: 70vh;
     }
-    
+
     .gallery-container {
         height: 70vh;
     }
 }
 
-/* Réduction des animations */
+/* Améliorations d'accessibilité */
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
-    
+
     .scroll-indicator {
         animation: none;
     }
-    
+
     .orbit {
         animation: none;
     }
 }
 
-/* Mode sombre */
+/* Mode sombre forcé si supporté */
 @media (prefers-color-scheme: dark) {
     :root {
         --dark-color: #000000;
         --text-color: #ffffff;
     }
+}
+
+/* Transition fluide pour les contrôles */
+.video-container .main-video {
+    transition: filter 0.3s ease;
+}
+
+/* Indicateur visuel subtil quand les contrôles sont masqués */
+.video-container.playing.auto-hide:hover .main-video,
+.video-container.paused.hide-after-pause:hover .main-video {
+    filter: brightness(1.1);
+}
+
+/* Curseur spécial sur la vidéo */
+.video-container.playing .main-video,
+.video-container.paused .main-video {
+    cursor: pointer;
+}
+
+/* Bouton de traduction - aligné avec back-to-top */
+.translate-button {
+    position: fixed;
+    left: 30px; /* À GAUCHE au lieu de droite */
+    bottom: 30px; /* Même position que back-to-top */
+    width: 50px;
+    height: 50px;
+    background-color: var(--primary-color); /* Même couleur que back-to-top */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 999;
+    touch-action: manipulation;
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+    cursor: pointer;
+}
+
+.translate-button.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.translate-button:hover {
+    transform: scale(1.1);
+    background-color: var(--primary-color-bright);
+}
+
+/* Initiales EN/FR */
+.translate-current {
+    font-family: 'Geograph', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark-color); /* Texte sombre sur fond jaune */
+    letter-spacing: 0.5px;
+    line-height: 1;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.translate-button:hover .translate-current {
+    transform: scale(1.1);
+    font-weight: 800;
+}
+
+/* Animation de changement de langue */
+.translate-button.changing {
+    animation: languageSwitch 0.6s ease;
+}
+
+@keyframes languageSwitch {
+    0% {
+        transform: scale(1) rotateY(0deg);
+    }
+    50% {
+        transform: scale(1.2) rotateY(90deg);
+        background-color: var(--primary-color-bright);
+    }
+    100% {
+        transform: scale(1) rotateY(0deg);
+    }
+}
+
+/* Responsive pour mobile */
+@media screen and (max-width: 767px) {
+    .translate-button {
+        left: 20px;
+        bottom: 20px;
+        width: 45px;
+        height: 45px;
+    }
+
+    .translate-current {
+        font-size: 12px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .translate-button {
+        left: 15px;
+        bottom: 15px;
+        width: 45px;
+        height: 45px;
+    }
+
+    .translate-current {
+        font-size: 11px;
+    }
+}
+
+/* Styles pour les contrôles vidéo intelligents */
+.video-container .main-video::-webkit-media-controls-panel {
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+}
+
+.video-container .main-video::-webkit-media-controls {
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+}
+
+/* Afficher les contrôles seulement en mode lecture */
+.video-container.playing .main-video::-webkit-media-controls {
+    opacity: 1 !important;
+}
+
+.video-container.playing .main-video::-webkit-media-controls-panel {
+    opacity: 1 !important;
+}
+
+/* Masquer après 3 secondes en lecture */
+.video-container.playing.auto-hide .main-video::-webkit-media-controls {
+    opacity: 0 !important;
+}
+
+.video-container.playing.auto-hide .main-video::-webkit-media-controls-panel {
+    opacity: 0 !important;
+}
+
+/* Réafficher temporairement en pause */
+.video-container.paused .main-video::-webkit-media-controls {
+    opacity: 1 !important;
+}
+
+.video-container.paused .main-video::-webkit-media-controls-panel {
+    opacity: 1 !important;
+}
+
+/* Masquer définitivement après 5 secondes de pause */
+.video-container.paused.hide-after-pause .main-video::-webkit-media-controls {
+    opacity: 0 !important;
+}
+
+.video-container.paused.hide-after-pause .main-video::-webkit-media-controls-panel {
+    opacity: 0 !important;
 }

@@ -1,7 +1,6 @@
 // Gestionnaire de panneau de contenu pour Mondes Immergés
 import { gsap } from 'gsap';
 
-
 export class ContentPanel {
     /**
      * Crée une instance du gestionnaire de panneau de contenu
@@ -21,13 +20,13 @@ export class ContentPanel {
         this.videoElement = options.videoElement;
         this.globeManager = options.globeManager;
         this.isVisible = false;
-        
+
         // Éléments pour le mode "informations complémentaires"
         this.drawerToggle = null;
         this.drawer = null;
         this.drawerContent = null;
         this.isDrawerOpen = false;
-        
+
         // Vérifier si les éléments requis existent avant d'initialiser
         if (this.panel && this.closeBtn && this.titleElement && this.descriptionElement) {
             this.init();
@@ -38,14 +37,14 @@ export class ContentPanel {
             this.update = () => {};
         }
     }
-    
+
     /**
      * Initialise le panneau de contenu
      */
     init() {
         // Appliquer la grille de design optimisée au panneau principal
         this.applyDesignSystem();
-        
+
         // Configurer le bouton de fermeture
         if (this.closeBtn) {
             this.closeBtn.addEventListener('click', () => {
@@ -53,27 +52,28 @@ export class ContentPanel {
                 this.globeManager.exitHotspotModeExternal();
             });
         }
-        
+
         // Configurer l'événement de chargement de la vidéo si l'élément existe
         if (this.videoElement) {
             this.videoElement.addEventListener('loadeddata', () => {
                 // Ajouter un effet de fade-in pour la vidéo
-                gsap.fromTo(this.videoElement, 
+                gsap.fromTo(
+                    this.videoElement,
                     { opacity: 0 },
-                    { opacity: 1, duration: 0.8, ease: "power2.out" }
+                    { opacity: 1, duration: 0.8, ease: 'power2.out' },
                 );
             });
-            
+
             // Gérer les erreurs de vidéo
             this.videoElement.addEventListener('error', () => {
                 this.videoElement.style.display = 'none';
             });
         }
-        
+
         // Créer le bouton de tiroir et le tiroir d'informations complémentaires
         this.createDrawerElements();
     }
-    
+
     /**
      * Applique le système de design au panneau
      * Suit une grille en 12 colonnes et respecte une hiérarchie typographique
@@ -83,7 +83,7 @@ export class ContentPanel {
         if (!this.panel) {
             return;
         }
-        
+
         // Appliquer des styles cohérents au panneau principal
         this.panel.style.cssText = `
             position: absolute;
@@ -101,7 +101,7 @@ export class ContentPanel {
             z-index: 10;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 204, 0, 0.2);
         `;
-        
+
         // Appliquer des styles à l'en-tête du panneau
         const header = this.panel.querySelector('.panel-header');
         if (header) {
@@ -114,7 +114,7 @@ export class ContentPanel {
                 border-bottom: 1px solid rgba(255, 204, 0, 0.5);
                 position: relative;
             `;
-            
+
             // Ajouter l'effet de ligne verticale
             const headerLine = document.createElement('div');
             headerLine.style.cssText = `
@@ -127,7 +127,7 @@ export class ContentPanel {
             `;
             header.insertBefore(headerLine, header.firstChild);
         }
-        
+
         // Ajuster les styles du titre pour la hiérarchie typographique
         if (this.titleElement) {
             this.titleElement.style.cssText = `
@@ -141,7 +141,7 @@ export class ContentPanel {
                 line-height: 1.3;
             `;
         }
-        
+
         // Améliorer les styles du bouton de fermeture
         if (this.closeBtn) {
             this.closeBtn.style.cssText = `
@@ -159,21 +159,21 @@ export class ContentPanel {
                 justify-content: center;
                 border-radius: 50%;
             `;
-            
+
             // Ajouter l'effet hover
             this.closeBtn.addEventListener('mouseenter', () => {
                 this.closeBtn.style.opacity = '1';
                 this.closeBtn.style.color = '#ffcc00';
                 this.closeBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
             });
-            
+
             this.closeBtn.addEventListener('mouseleave', () => {
                 this.closeBtn.style.opacity = '0.7';
                 this.closeBtn.style.color = '#ffffff';
                 this.closeBtn.style.backgroundColor = 'transparent';
             });
         }
-        
+
         // Améliorer le conteneur de contenu avec scrollbar stylisée
         const content = this.panel.querySelector('.panel-content');
         if (content) {
@@ -184,7 +184,7 @@ export class ContentPanel {
                 scrollbar-width: thin;
                 scrollbar-color: rgba(255, 204, 0, 0.7) rgba(0, 0, 0, 0.3);
             `;
-            
+
             // Ajouter des styles pour les scrollbars personnalisées
             const style = document.createElement('style');
             style.textContent = `
@@ -208,7 +208,7 @@ export class ContentPanel {
             `;
             document.head.appendChild(style);
         }
-        
+
         // Améliorer le conteneur vidéo avec ombre portée et bordure
         const videoContainer = this.panel.querySelector('#video-container');
         if (videoContainer) {
@@ -222,7 +222,7 @@ export class ContentPanel {
                 box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             `;
         }
-        
+
         // Améliorer l'aspect du lecteur vidéo
         if (this.videoElement) {
             this.videoElement.style.cssText = `
@@ -231,11 +231,11 @@ export class ContentPanel {
                 display: block;
                 background-color: #000;
             `;
-            
+
             // Ajouter des contrôles personnalisés
             this.videoElement.controls = true;
         }
-        
+
         // Améliorer la zone de description avec une typographie et des marges optimisées
         if (this.descriptionElement) {
             this.descriptionElement.style.cssText = `
@@ -244,7 +244,7 @@ export class ContentPanel {
                 color: #e0e0e0;
                 font-family: 'Merriweather Sans', 'Source Sans Pro', sans-serif;
             `;
-            
+
             // Changer les styles des paragraphes dans la description
             const descStyle = document.createElement('style');
             descStyle.textContent = `
@@ -285,7 +285,7 @@ export class ContentPanel {
             document.head.appendChild(descStyle);
         }
     }
-    
+
     /**
      * Crée les éléments de l'interface du tiroir
      */
@@ -294,7 +294,7 @@ export class ContentPanel {
         if (!this.panel) {
             return;
         }
-        
+
         // Créer le bouton de toggle du tiroir
         this.drawerToggle = document.createElement('div');
         this.drawerToggle.className = 'drawer-toggle';
@@ -319,7 +319,7 @@ export class ContentPanel {
             border-right: 1px solid rgba(255, 204, 0, 0.5);
             z-index: 101;
         `;
-        
+
         // Style pour la flèche améliorée
         const style = document.createElement('style');
         style.textContent = `
@@ -346,10 +346,10 @@ export class ContentPanel {
             }
         `;
         document.head.appendChild(style);
-        
+
         // Ajouter le bouton de toggle au panneau
         this.panel.appendChild(this.drawerToggle);
-        
+
         // Créer le tiroir d'informations complémentaires
         this.drawer = document.createElement('div');
         this.drawer.className = 'info-drawer';
@@ -374,7 +374,7 @@ export class ContentPanel {
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 204, 0, 0.7) rgba(0, 0, 0, 0.3);
         `;
-        
+
         // Contenu du tiroir dans une grille responsive
         this.drawerContent = document.createElement('div');
         this.drawerContent.className = 'drawer-content';
@@ -387,16 +387,16 @@ export class ContentPanel {
             grid-gap: 24px;
         `;
         this.drawer.appendChild(this.drawerContent);
-        
+
         // Ajouter le tiroir au document
         document.body.appendChild(this.drawer);
-        
+
         // Configurer l'événement du bouton toggle
         this.drawerToggle.addEventListener('click', () => {
             this.toggleDrawer();
         });
     }
-    
+
     /**
      * Bascule l'état du tiroir (ouvert/fermé)
      */
@@ -407,95 +407,95 @@ export class ContentPanel {
             this.openDrawer();
         }
     }
-    
+
     /**
      * Ouvre le tiroir d'informations complémentaires
      */
     openDrawer() {
         if (this.isDrawerOpen || !this.drawer) return;
-        
+
         this.isDrawerOpen = true;
         this.drawer.style.display = 'block';
-        
+
         // Animation d'ouverture avec ressort
         gsap.to(this.drawer, {
             y: 0,
             duration: 0.7,
-            ease: "back.out(1.2)"
+            ease: 'back.out(1.2)',
         });
-        
+
         // Changer la direction de la flèche
         const arrow = this.drawerToggle.querySelector('.arrow');
         if (arrow) {
             arrow.classList.remove('up');
             arrow.classList.add('down');
         }
-        
+
         // Déplacer le toggle en haut du tiroir
         if (this.drawerToggle) {
             gsap.to(this.drawerToggle, {
                 bottom: 'auto',
                 top: -28,
-                duration: 0.5
+                duration: 0.5,
             });
         }
-        
+
         // Réduire légèrement le panneau principal
         if (this.panel) {
             gsap.to(this.panel, {
                 scale: 0.95,
                 opacity: 0.85,
                 duration: 0.5,
-                ease: "power2.out"
+                ease: 'power2.out',
             });
         }
     }
-    
+
     /**
      * Ferme le tiroir d'informations complémentaires
      */
     closeDrawer() {
         if (!this.isDrawerOpen || !this.drawer) return;
-        
+
         this.isDrawerOpen = false;
-        
+
         // Animation de fermeture
         gsap.to(this.drawer, {
             y: '100%',
             duration: 0.5,
-            ease: "power3.in",
+            ease: 'power3.in',
             onComplete: () => {
                 this.drawer.style.display = 'none';
-            }
+            },
         });
-        
+
         // Changer la direction de la flèche
         const arrow = this.drawerToggle.querySelector('.arrow');
         if (arrow) {
             arrow.classList.remove('down');
             arrow.classList.add('up');
         }
-        
+
         // Replacer le toggle en bas du panneau
         if (this.drawerToggle) {
             gsap.to(this.drawerToggle, {
                 top: 'auto',
                 bottom: 0,
-                duration: 0.5
+                duration: 0.5,
             });
         }
-        
+
         // Restaurer le panneau principal
         if (this.panel) {
             gsap.to(this.panel, {
                 scale: 1,
                 opacity: 1,
                 duration: 0.5,
-                ease: "power2.out"
+                ease: 'power2.out',
             });
         }
     }
-    
+
     /**
      * Met à jour le contenu du panneau avec une disposition améliorée
      * @param {Object} content - Contenu à afficher
@@ -511,13 +511,13 @@ export class ContentPanel {
         if (!this.titleElement || !this.descriptionElement) {
             return;
         }
-        
+
         // Mettre à jour le titre
         this.titleElement.textContent = content.title || 'Information';
-        
+
         // Préparer la description avec les coordonnées GPS si disponibles
         let descriptionHTML = content.description || '';
-        
+
         if (content.coordinates) {
             descriptionHTML = `
                 <div class="coordinates">
@@ -527,10 +527,10 @@ export class ContentPanel {
                 ${descriptionHTML}
             `;
         }
-        
+
         // Mettre à jour la description
         this.descriptionElement.innerHTML = descriptionHTML;
-        
+
         // Mettre à jour la vidéo
         if (this.videoElement && content.videoSrc) {
             this.videoElement.style.display = 'block';
@@ -542,21 +542,21 @@ export class ContentPanel {
                 source.type = 'video/mp4';
                 this.videoElement.appendChild(source);
             }
-            
+
             // Recharger la vidéo
             this.videoElement.load();
         } else if (this.videoElement) {
             this.videoElement.style.display = 'none';
         }
-        
+
         // Mettre à jour le contenu du tiroir si des informations détaillées sont fournies
         if ((content.detailedInfo || content.links) && this.drawerContent) {
             // Créer le contenu HTML pour le tiroir avec mise en page en grille
             let drawerHTML = '';
-            
+
             // Titre principal
             drawerHTML += `<h3>INFORMATIONS COMPLÉMENTAIRES</h3>`;
-            
+
             // Ajouter les informations détaillées
             if (content.detailedInfo) {
                 drawerHTML += `
@@ -565,7 +565,7 @@ export class ContentPanel {
                     </div>
                 `;
             }
-            
+
             // Ajouter les liens externes
             if (content.links && content.links.length > 0) {
                 drawerHTML += `
@@ -573,20 +573,20 @@ export class ContentPanel {
                         <h4>RESSOURCES SCIENTIFIQUES</h4>
                         <ul>
                 `;
-                
-                content.links.forEach(link => {
+
+                content.links.forEach((link) => {
                     drawerHTML += `<li><a href="${link.url}" target="_blank">${link.title}</a></li>`;
                 });
-                
+
                 drawerHTML += `
                         </ul>
                     </div>
                 `;
             }
-            
+
             // Mettre à jour le contenu du tiroir
             this.drawerContent.innerHTML = drawerHTML;
-            
+
             // Afficher le bouton de toggle
             if (this.drawerToggle) {
                 this.drawerToggle.style.display = 'flex';
@@ -596,36 +596,37 @@ export class ContentPanel {
             this.drawerToggle.style.display = 'none';
         }
     }
-    
+
     /**
      * Affiche le panneau avec une animation améliorée
      */
     show() {
         if (this.isVisible || !this.panel) return;
-        
+
         this.isVisible = true;
         this.panel.classList.remove('hidden');
         this.panel.classList.add('visible');
-        
+
         // S'assurer que le tiroir est fermé
         this.closeDrawer();
-        
+
         // Animation d'entrée avec ressort
-        gsap.fromTo(this.panel,
-            { 
+        gsap.fromTo(
+            this.panel,
+            {
                 x: '100%',
                 opacity: 0,
-                scale: 0.95
+                scale: 0.95,
             },
             {
                 x: '0%',
                 opacity: 1,
                 scale: 1,
                 duration: 0.7,
-                ease: "back.out(1.2)"
-            }
+                ease: 'back.out(1.2)',
+            },
         );
-        
+
         // Ajouter un effet de flou sur le reste de l'interface pour mettre en valeur le panneau
         const mainContainer = document.getElementById('main-container');
         if (mainContainer) {
@@ -633,42 +634,42 @@ export class ContentPanel {
                 filter: 'blur(2px)',
                 opacity: 0.8,
                 duration: 0.5,
-                ease: "power2.out"
+                ease: 'power2.out',
             });
         }
     }
-    
+
     /**
      * Masque le panneau avec une animation améliorée
      */
     hide() {
         if (!this.isVisible || !this.panel) return;
-        
+
         this.isVisible = false;
-        
+
         // Fermer le tiroir s'il est ouvert
         if (this.isDrawerOpen) {
             this.closeDrawer();
         }
-        
+
         // Animation de sortie
         gsap.to(this.panel, {
             x: '100%',
             opacity: 0,
             scale: 0.95,
             duration: 0.5,
-            ease: "power3.in",
+            ease: 'power3.in',
             onComplete: () => {
                 this.panel.classList.remove('visible');
                 this.panel.classList.add('hidden');
-                
+
                 // Arrêter la vidéo si elle est en cours de lecture
                 if (this.videoElement) {
                     this.videoElement.pause();
                 }
-            }
+            },
         });
-        
+
         // Restaurer l'effet de flou sur le reste de l'interface
         const mainContainer = document.getElementById('main-container');
         if (mainContainer) {
@@ -676,7 +677,7 @@ export class ContentPanel {
                 filter: 'blur(0px)',
                 opacity: 1,
                 duration: 0.5,
-                ease: "power2.out"
+                ease: 'power2.out',
             });
         }
     }

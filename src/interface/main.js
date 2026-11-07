@@ -1,7 +1,13 @@
 // Point d'entrée principal de l'application Mondes Immergés - VERSION OPTIMISÉE
 import './styles/main.css';
+import { gsap } from 'gsap';
 import { initApp, getAppInstance } from './app.js';
 import { videoManager } from './utils/VideoManager.js';
+import { hotspots } from './data/hotspots.js';
+import { getRedirectUrl } from './data/redirect-config.js';
+import { initHud } from './hud.js';
+
+initHud();
 // ldrs (jelly loader) : enregistré par src/shared/loader.js
 
 // === DEBUG LOGGING ===
@@ -23,7 +29,7 @@ const APP_STATE = {
     webGLChecked: false,
     domReady: false,
     appStarted: false,
-    cleanupDone: false
+    cleanupDone: false,
 };
 
 /**
@@ -35,9 +41,13 @@ function checkWebGLCompatibility() {
 
     const canvas = document.createElement('canvas');
     let reason = '';
-    canvas.addEventListener('webglcontextcreationerror', (e) => {
-        reason = e.statusMessage || reason;
-    }, { once: true });
+    canvas.addEventListener(
+        'webglcontextcreationerror',
+        (e) => {
+            reason = e.statusMessage || reason;
+        },
+        { once: true },
+    );
 
     let gl = null;
     try {
@@ -59,43 +69,25 @@ function checkWebGLCompatibility() {
 }
 
 /**
- * Explique à l'utilisateur pourquoi le globe 3D ne peut pas s'afficher et comment y remédier.
+ * Mode sans WebGL : vidéo du globe en lecture simple + liste des lieux menant aux récits.
  */
 function showWebGLError(reason = '') {
     const loadingScreen = document.getElementById('loading-screen');
     if (!loadingScreen) return;
-    const detail = reason ? `<p style="display:block;opacity:.6;font-size:.8em;margin-top:12px;">Détail : ${reason}</p>` : '';
+    const base = import.meta.env.BASE_URL;
+    const links = hotspots.map((h) => `<li><a href="${getRedirectUrl(h.id)}">${h.title}</a></li>`).join('');
     loadingScreen.innerHTML = `
-        <div style="max-width:520px;padding:0 24px;text-align:center;color:#ffcc00;font-family:'Roboto Mono',monospace;line-height:1.5;">
-            <div style="font-size:3em;margin-bottom:16px;">⚠️</div>
-            <h2 style="display:block;font-size:1.4em;margin:0 0 16px;">Le globe 3D ne peut pas démarrer</h2>
-            <p style="display:block;color:#fff;margin:0 0 12px;">Votre navigateur a refusé de créer un contexte WebGL.</p>
-            <ul style="color:#fff;text-align:left;margin:0 0 20px;padding-left:20px;">
-                <li>Fermez complètement le navigateur puis rouvrez-le (Chrome bloque WebGL sur un site après un plantage du GPU).</li>
-                <li>Vérifiez que l'accélération matérielle est activée dans les réglages du navigateur.</li>
-                <li>Essayez un autre navigateur (Chrome, Firefox, Safari ou Edge récents).</li>
-            </ul>
-            <button onclick="location.reload()" style="background:#ffcc00;color:#000;border:none;padding:12px 24px;border-radius:6px;cursor:pointer;font-weight:bold;">Réessayer</button>
-            ${detail}
+        <div class="fallback">
+            <video class="fallback__globe" src="${base}videos/globe.webm" autoplay muted loop playsinline></video>
+            <div class="fallback__panel">
+                <h2>Explorer les mondes immergés</h2>
+                <p>Le globe 3D n'est pas disponible dans ce navigateur (WebGL désactivé). Choisissez un lieu :</p>
+                <ul>${links}</ul>
+                <p class="fallback__hint">Pour le globe interactif : activez l'accélération matérielle ou ouvrez le site dans Chrome, Firefox ou Safari.</p>
+            </div>
         </div>
     `;
-}
-
-/**
- * Initialise le spinner de chargement
- * NOTE: Le jelly loader est déjà dans le HTML, cette fonction n'est plus utilisée
- */
-function initLoadingSpinner() {
-    const loadingScreen = document.getElementById('loading-screen');
-    if (!loadingScreen) return;
-
-    // Supprimer l'ancien contenu
-    const oldSpinner = loadingScreen.querySelector('.spinner');
-    if (oldSpinner) {
-        oldSpinner.remove();
-    }
-
-    // Le jelly loader est déjà dans le HTML via <l-jelly>
+    loadingScreen.title = reason;
 }
 
 /**
@@ -150,10 +142,14 @@ function initCustomCursor() {
     rafId = requestAnimationFrame(animate);
 
     // Nettoyage
-    window.addEventListener('beforeunload', () => {
-        if (rafId) cancelAnimationFrame(rafId);
-        document.removeEventListener('mousemove', handleMouseMove);
-    }, { once: true });
+    window.addEventListener(
+        'beforeunload',
+        () => {
+            if (rafId) cancelAnimationFrame(rafId);
+            document.removeEventListener('mousemove', handleMouseMove);
+        },
+        { once: true },
+    );
 }
 
 /**
@@ -195,7 +191,7 @@ async function playTransitionVideo() {
             loop: false,
             muted: true,
             autoRetry: true,
-            name: 'transition-video-in'
+            name: 'transition-video-in',
         });
 
         // ÉTAPE 2: Préparer et lancer la vidéo
@@ -218,31 +214,40 @@ async function playTransitionVideo() {
             setTimeout(() => resolve(), 200);
         };
 
-        transitionVideo.play().then(() => {
-            // ÉTAPE 3: La vidéo joue → retirer le fond noir du loading-screen
-            // La vidéo (z-index: 99999) reste visible par-dessus le contenu
-            if (loadingScreen) {
-                loadingScreen.style.background = 'transparent';
-            }
+        transitionVideo
+            .play()
+            .then(() => {
+                // ÉTAPE 3: La vidéo joue → retirer le fond noir du loading-screen
+                // La vidéo (z-index: 99999) reste visible par-dessus le contenu
+                if (loadingScreen) {
+                    loadingScreen.style.background = 'transparent';
+                }
 
-            transitionVideo.addEventListener('ended', finish, { once: true });
-
-        }).catch(() => {
-            // Vidéo échouée : afficher directement
-            if (loadingScreen) {
-                loadingScreen.style.display = 'none';
-                loadingScreen.classList.add('hidden');
-            }
-            finish();
-        });
+                transitionVideo.addEventListener('ended', finish, { once: true });
+            })
+            .catch(() => {
+                // Vidéo échouée : afficher directement
+                if (loadingScreen) {
+                    loadingScreen.style.display = 'none';
+                    loadingScreen.classList.add('hidden');
+                }
+                finish();
+            });
 
         // Timeout de sécurité basé sur la durée de la vidéo
-        transitionVideo.addEventListener('loadedmetadata', function() {
-            const videoDuration = transitionVideo.duration;
-            setTimeout(() => {
-                if (!resolved) finish();
-            }, (videoDuration + 2) * 1000);
-        }, { once: true });
+        transitionVideo.addEventListener(
+            'loadedmetadata',
+            function () {
+                const videoDuration = transitionVideo.duration;
+                setTimeout(
+                    () => {
+                        if (!resolved) finish();
+                    },
+                    (videoDuration + 2) * 1000,
+                );
+            },
+            { once: true },
+        );
 
         // Fallback ultime : 15 secondes
         setTimeout(() => {
@@ -299,35 +304,10 @@ async function startApplication() {
         log('APP', 'Affichage éléments interface...');
         showInterfaceElements(app);
         log('APP', '=== APPLICATION PRÊTE ===');
-
     } catch (error) {
         logError('APP', 'ERREUR CRITIQUE:', error);
         showError(error);
     }
-}
-
-/**
- * Cache uniquement le spinner jelly, garde l'écran de chargement
- */
-function hideJellySpinner() {
-    const loadingScreen = document.getElementById('loading-screen');
-    if (!loadingScreen) return;
-
-    // Cacher juste le spinner jelly
-    const jellySpinner = loadingScreen.querySelector('l-jelly');
-    const fallbackSpinner = loadingScreen.querySelector('.spinner');
-
-    if (jellySpinner) {
-        jellySpinner.style.transition = 'opacity 0.3s ease';
-        jellySpinner.style.opacity = '0';
-        setTimeout(() => jellySpinner.remove(), 300);
-    }
-    if (fallbackSpinner) {
-        fallbackSpinner.style.transition = 'opacity 0.3s ease';
-        fallbackSpinner.style.opacity = '0';
-        setTimeout(() => fallbackSpinner.remove(), 300);
-    }
-
 }
 
 /**
@@ -355,7 +335,7 @@ function prepareMainContainer() {
         uiControls.style.pointerEvents = 'none';
     }
 
-    huds.forEach(hud => {
+    huds.forEach((hud) => {
         hud.style.opacity = '0';
     });
 
@@ -366,7 +346,6 @@ function prepareMainContainer() {
     if (scannerEffect) {
         scannerEffect.style.opacity = '0';
     }
-
 }
 
 /**
@@ -393,14 +372,14 @@ function showInterfaceElements(appInstance) {
         uiControls.style.pointerEvents = 'auto';
     }
 
-    // Utiliser GSAP pour l'animation si disponible, sinon CSS
-    if (window.gsap) {
+    // Réafficher l'interface
+    {
         if (uiControls) {
             gsap.to(uiControls, {
                 opacity: 1,
                 y: 0,
                 duration: 0.8,
-                ease: "power2.out"
+                ease: 'power2.out',
             });
         }
 
@@ -408,100 +387,16 @@ function showInterfaceElements(appInstance) {
         gsap.to([...huds, crosshair, scannerEffect].filter(Boolean), {
             opacity: 1,
             duration: 0.8,
-            ease: "power2.out"
+            ease: 'power2.out',
         });
 
         // Animer les hotspots ET leurs connector lines en même temps
         gsap.to([...hotspotLabels, ...connectorSvgs], {
             opacity: 1,
             duration: 0.8,
-            ease: "power2.out"
-        });
-    } else {
-        // Fallback CSS
-        if (uiControls) {
-            uiControls.style.transition = 'all 0.8s ease';
-            uiControls.style.opacity = '1';
-            uiControls.style.transform = 'translateY(0)';
-        }
-
-        huds.forEach(hud => {
-            hud.style.transition = 'opacity 0.8s ease';
-            hud.style.opacity = '1';
-        });
-
-        if (crosshair) {
-            crosshair.style.transition = 'opacity 0.8s ease';
-            crosshair.style.opacity = '1';
-        }
-
-        if (scannerEffect) {
-            scannerEffect.style.transition = 'opacity 0.8s ease';
-            scannerEffect.style.opacity = '1';
-        }
-
-        hotspotLabels.forEach(label => {
-            label.style.transition = 'opacity 0.8s ease';
-            label.style.opacity = '1';
-        });
-
-        connectorSvgs.forEach(svg => {
-            svg.style.transition = 'opacity 0.8s ease';
-            svg.style.opacity = '1';
+            ease: 'power2.out',
         });
     }
-}
-
-/**
- * Masque progressivement l'écran de chargement
- * La durée correspond à la durée de l'orbital loader (4s)
- * L'interface (globe) est affichée IMMÉDIATEMENT derrière le fond noir
- */
-function hideLoadingScreenGradually() {
-    const loadingScreen = document.getElementById('loading-screen');
-    const mainContainer = document.getElementById('main-container');
-
-    if (!loadingScreen) return;
-
-    // IMPORTANT: Afficher l'interface (globe, espace) IMMÉDIATEMENT
-    // Elle sera visible derrière le fond noir qui disparaît progressivement
-    if (mainContainer) {
-        mainContainer.style.opacity = '1';
-    }
-
-    // Transition progressive sur 2.5 secondes (durée réduite)
-    loadingScreen.style.transition = 'opacity 2.5s cubic-bezier(0.19, 1, 0.22, 1)';
-    loadingScreen.style.opacity = '0';
-
-    // Nettoyer après la transition complète
-    setTimeout(() => {
-        loadingScreen.style.display = 'none';
-        loadingScreen.classList.add('hidden');
-    }, 2500);
-}
-
-/**
- * Masque l'écran de chargement avec transition fluide (deprecated)
- */
-function hideLoadingScreen() {
-    // Cette fonction n'est plus utilisée mais conservée pour compatibilité
-    return Promise.resolve();
-}
-
-/**
- * Affiche le conteneur principal
- */
-function showMainContainer() {
-    const mainContainer = document.getElementById('main-container');
-    if (!mainContainer) return;
-
-    mainContainer.classList.remove('hidden');
-    mainContainer.style.transition = 'opacity 0.7s cubic-bezier(0.19, 1, 0.22, 1)';
-
-    // Force reflow pour la transition
-    mainContainer.offsetHeight;
-
-    mainContainer.style.opacity = '1';
 }
 
 /**
@@ -579,7 +474,7 @@ function initialize() {
 
     // Vérifier éléments DOM critiques
     const criticalElements = ['loading-screen', 'main-container', 'globe-container', 'app'];
-    criticalElements.forEach(id => {
+    criticalElements.forEach((id) => {
         const el = document.getElementById(id);
         if (!el) logWarn('INIT', `Élément manquant: #${id}`);
         else log('INIT', `#${id} OK`);
@@ -633,19 +528,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // UN SEUL écouteur d'erreurs global
-window.addEventListener('error', (e) => {
-    if (e.target !== window && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT')) {
-        logWarn('ERR', 'Ressource non chargée:', e.target.tagName, e.target.src || e.target.href);
-        return;
-    }
-    logError('ERR', 'Erreur globale:', e.message, e.filename, 'ligne', e.lineno);
-}, { once: false, capture: true });
+window.addEventListener(
+    'error',
+    (e) => {
+        if (e.target !== window && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT')) {
+            logWarn('ERR', 'Ressource non chargée:', e.target.tagName, e.target.src || e.target.href);
+            return;
+        }
+        logError('ERR', 'Erreur globale:', e.message, e.filename, 'ligne', e.lineno);
+    },
+    { once: false, capture: true },
+);
 
 // UN SEUL écouteur pour les promesses rejetées
-window.addEventListener('unhandledrejection', (e) => {
-    logError('PROMISE', 'Promise rejetée:', e.reason);
-    e.preventDefault();
-}, { once: false });
+window.addEventListener(
+    'unhandledrejection',
+    (e) => {
+        logError('PROMISE', 'Promise rejetée:', e.reason);
+        e.preventDefault();
+    },
+    { once: false },
+);
 
 // Nettoyage avant déchargement
 window.addEventListener('beforeunload', cleanup, { once: true });

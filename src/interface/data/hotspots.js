@@ -7,7 +7,7 @@ export const hotspots = [
         title: 'Grande Barrière de Corail',
         position: {
             lat: -18.2871,
-            lng: 147.6992
+            lng: 147.6992,
         },
         description: `
             <p>La Grande Barrière de Corail représente le plus grand récif corallien du monde. Située au large du Queensland en Australie, elle s'étend sur plus de 2 300 kilomètres et abrite une biodiversité exceptionnelle avec plus de 1 500 espèces de poissons et 400 types de coraux.</p>
@@ -21,7 +21,7 @@ export const hotspots = [
             area: '348,000 km²',
             discoveryYear: 1770,
             phValue: { min: 8.1, max: 8.4 },
-            salinity: '34-35‰'
+            salinity: '34-35‰',
         },
         detailedInfo: `
             <p>La Grande Barrière de Corail est le plus vaste écosystème corallien du monde. Elle abrite plus de 1 500 espèces de poissons, 4 000 types de mollusques, 240 espèces d'oiseaux et de nombreux mammifères marins en danger. Le réchauffement océanique a provoqué cinq épisodes massifs de blanchissement des coraux depuis 1998, dont trois entre 2016 et 2020, affectant gravement cet écosystème unique.</p>
@@ -34,29 +34,29 @@ export const hotspots = [
             { year: 2010, healthIndex: 0.72 },
             { year: 2015, healthIndex: 0.61 },
             { year: 2020, healthIndex: 0.47 },
-            { year: 2025, healthIndex: 0.43, projected: true }
+            { year: 2025, healthIndex: 0.43, projected: true },
         ],
         sources: [
-            { 
-                title: "État des récifs coralliens 2024 (UNESCO)",
-                url: "https://whc.unesco.org/en/list/154/"
+            {
+                title: 'État des récifs coralliens 2024 (UNESCO)',
+                url: 'https://whc.unesco.org/en/list/154/',
             },
-            { 
-                title: "Études sur le blanchissement des coraux (AIMS)",
-                url: "https://www.aims.gov.au/research-topics/coral-reefs"
+            {
+                title: 'Études sur le blanchissement des coraux (AIMS)',
+                url: 'https://www.aims.gov.au/research-topics/coral-reefs',
             },
-            { 
-                title: "Stratégies de conservation marine (GBRMPA)",
-                url: "https://www.gbrmpa.gov.au/"
-            }
-        ]
+            {
+                title: 'Stratégies de conservation marine (GBRMPA)',
+                url: 'https://www.gbrmpa.gov.au/',
+            },
+        ],
     },
     {
         id: 'abysses',
         title: 'Les Abysses',
         position: {
             lat: -10.9638,
-            lng: -176.6333
+            lng: -176.6333,
         },
         description: `
             <p>Les abysses constituent les zones les plus profondes des océans, situées entre 3 000 et 11 000 mètres de profondeur. Ces environnements extrêmes, caractérisés par une pression écrasante, l'absence de lumière et des températures avoisinant 2°C, abritent pourtant une vie extraordinaire.</p>
@@ -70,7 +70,7 @@ export const hotspots = [
             pressure: "Jusqu'à 1100 atmosphères",
             lightPenetration: 'Nulle',
             oxygenLevel: 'Très faible',
-            microbialDensity: 'Élevée dans certaines zones hydrothermales'
+            microbialDensity: 'Élevée dans certaines zones hydrothermales',
         },
         detailedInfo: `
             <p>Les abysses, zones des océans situées entre 3 000 et 11 000 mètres de profondeur, sont parmi les environnements les moins explorés de notre planète. La fosse des Mariannes, point le plus profond de la Terre (10 994 mètres), abrite une biodiversité étonnamment riche malgré une pression 1 100 fois supérieure à celle du niveau de la mer. Les créatures abyssales ont développé des adaptations uniques comme la bioluminescence pour communiquer et attirer leurs proies dans l'obscurité totale.</p>
@@ -83,29 +83,29 @@ export const hotspots = [
             { year: 2010, discoveryIndex: 0.19 },
             { year: 2015, discoveryIndex: 0.25 },
             { year: 2020, discoveryIndex: 0.32 },
-            { year: 2025, discoveryIndex: 0.38, projected: true }
+            { year: 2025, discoveryIndex: 0.38, projected: true },
         ],
         sources: [
-            { 
-                title: "Exploration des grands fonds (NOAA)",
-                url: "https://oceanexplorer.noaa.gov/explorations/deepwater-exploration.html"
+            {
+                title: 'Exploration des grands fonds (NOAA)',
+                url: 'https://oceanexplorer.noaa.gov/explorations/deepwater-exploration.html',
             },
-            { 
-                title: "Biodiversité des abysses (DOSI)",
-                url: "https://www.dosi-project.org/"
+            {
+                title: 'Biodiversité des abysses (DOSI)',
+                url: 'https://www.dosi-project.org/',
             },
-            { 
-                title: "Adaptations aux milieux extrêmes (MBARI)",
-                url: "https://www.mbari.org/science/seafloor-processes/"
-            }
-        ]
+            {
+                title: 'Adaptations aux milieux extrêmes (MBARI)',
+                url: 'https://www.mbari.org/science/seafloor-processes/',
+            },
+        ],
     },
     {
         id: 'arctique',
         title: 'Océan Arctique',
         position: {
             lat: 78.9634,
-            lng: 12.5847
+            lng: 12.5847,
         },
         description: `
             <p>L'océan Arctique, en grande partie recouvert de glace, constitue un écosystème unique abritant des espèces parfaitement adaptées aux conditions extrêmes, comme l'ours polaire, le phoque annelé et le narval.</p>
@@ -119,7 +119,7 @@ export const hotspots = [
             depth: { max: 5567, avg: 1038 },
             salinity: '30-34‰',
             iceThickness: { min: 0.5, max: 4, avg: 1.8 },
-            iceRetreatRate: '13% par décennie'
+            iceRetreatRate: '13% par décennie',
         },
         detailedInfo: `
             <p>L'Océan Arctique subit le réchauffement le plus rapide de la planète, avec des températures augmentant à un rythme deux fois plus élevé que la moyenne mondiale. La banquise estivale a diminué de 40% depuis 1979, ce qui modifie radicalement l'écosystème régional. Des espèces tempérées migrent vers le nord, entrant en compétition avec les espèces arctiques comme le phoque annelé, le narval et l'ours polaire, dont la survie dépend directement de la glace de mer.</p>
@@ -130,31 +130,31 @@ export const hotspots = [
             { year: 1980, iceExtent: 7.85 },
             { year: 1990, iceExtent: 6.74 },
             { year: 2000, iceExtent: 6.32 },
-            { year: 2010, iceExtent: 4.90 },
+            { year: 2010, iceExtent: 4.9 },
             { year: 2020, iceExtent: 3.74 },
-            { year: 2025, iceExtent: 3.20, projected: true }
+            { year: 2025, iceExtent: 3.2, projected: true },
         ],
         sources: [
-            { 
-                title: "Évolution de la banquise arctique (NSIDC)",
-                url: "https://nsidc.org/arcticseaicenews/"
+            {
+                title: 'Évolution de la banquise arctique (NSIDC)',
+                url: 'https://nsidc.org/arcticseaicenews/',
             },
-            { 
+            {
                 title: "Impact du changement climatique sur l'écosystème arctique (WWF)",
-                url: "https://arcticwwf.org/work/climate/"
+                url: 'https://arcticwwf.org/work/climate/',
             },
-            { 
+            {
                 title: "Rapport sur l'état de l'Arctique (NOAA)",
-                url: "https://arctic.noaa.gov/Report-Card"
-            }
-        ]
+                url: 'https://arctic.noaa.gov/Report-Card',
+            },
+        ],
     },
     {
         id: 'plastique',
         title: 'Pollution Plastique',
         position: {
             lat: 28.3699,
-            lng: -144.4089
+            lng: -144.4089,
         },
         description: `
             <p>Le "Great Pacific Garbage Patch" est une zone d'accumulation de déchets plastiques située dans le Pacifique Nord. Cette "soupe de plastique" s'étend sur une surface équivalente à trois fois la France et contient plus de 1,8 trillion de morceaux de plastique.</p>
@@ -168,7 +168,7 @@ export const hotspots = [
             microplasticConcentration: "Jusqu'à 1 million de particules/km²",
             originOfWaste: '80% terrestre, 20% maritime',
             degradationTime: '450 ans pour une bouteille plastique',
-            annualInput: '8 millions de tonnes/an'
+            annualInput: '8 millions de tonnes/an',
         },
         detailedInfo: `
             <p>Le "Great Pacific Garbage Patch" (vortex de déchets du Pacifique nord) est la plus grande des cinq zones d'accumulation de plastiques océaniques. D'une superficie de 1,6 million de km², elle contient environ 1,8 trillion de fragments plastiques. Plus de 80% de cette pollution provient d'activités terrestres. Les microplastiques (&lt;5mm) sont particulièrement dangereux car ils sont ingérés par les organismes marins et s'accumulent dans la chaîne alimentaire. On estime que d'ici 2050, il y aura plus de plastique que de poissons dans les océans (en poids).</p>
@@ -180,29 +180,29 @@ export const hotspots = [
             { year: 2000, plasticAmount: 1.5 },
             { year: 2010, plasticAmount: 2.8 },
             { year: 2020, plasticAmount: 4.5 },
-            { year: 2025, plasticAmount: 5.7, projected: true }
+            { year: 2025, plasticAmount: 5.7, projected: true },
         ],
         sources: [
-            { 
-                title: "Étude globale sur la pollution plastique (The Ocean Cleanup)",
-                url: "https://theoceancleanup.com/great-pacific-garbage-patch/"
+            {
+                title: 'Étude globale sur la pollution plastique (The Ocean Cleanup)',
+                url: 'https://theoceancleanup.com/great-pacific-garbage-patch/',
             },
-            { 
-                title: "Impact des microplastiques sur les écosystèmes marins (PNUE)",
-                url: "https://www.unep.org/explore-topics/oceans-seas/what-we-do/addressing-land-based-pollution/marine-plastics-issue"
+            {
+                title: 'Impact des microplastiques sur les écosystèmes marins (PNUE)',
+                url: 'https://www.unep.org/explore-topics/oceans-seas/what-we-do/addressing-land-based-pollution/marine-plastics-issue',
             },
-            { 
-                title: "Solutions pour réduire la pollution plastique (Plastic Pollution Coalition)",
-                url: "https://www.plasticpollutioncoalition.org/"
-            }
-        ]
+            {
+                title: 'Solutions pour réduire la pollution plastique (Plastic Pollution Coalition)',
+                url: 'https://www.plasticpollutioncoalition.org/',
+            },
+        ],
     },
     {
         id: 'triangle-corail',
         title: 'Triangle de Corail',
         position: {
             lat: 0.7893,
-            lng: 127.8641
+            lng: 127.8641,
         },
         description: `
             <p>Le Triangle de Corail, situé entre l'Indonésie, la Malaisie, les Philippines, la Papouasie-Nouvelle-Guinée, les Îles Salomon et le Timor-Leste, représente l'épicentre de la biodiversité marine mondiale.</p>
@@ -216,7 +216,7 @@ export const hotspots = [
             conservationStatus: 'En danger',
             coralSpecies: '605 (76% du total mondial)',
             fishSpecies: '2228+',
-            economicValue: '1,2 billion USD/an'
+            economicValue: '1,2 billion USD/an',
         },
         detailedInfo: `
             <p>Le Triangle de Corail, épicentre de la biodiversité marine mondiale, abrite 76% des espèces de coraux connues et plus de 2 200 espèces de poissons récifaux. Chaque année, 30% des espèces marines de ce triangle disparaissent à cause de la surpêche, de la pollution et du changement climatique. Cette région couvre seulement 1,5% de la surface océanique totale mais contient le plus grand nombre d'espèces marines par unité de surface au monde, ce qui en fait un véritable "Amazon de la mer".</p>
@@ -229,29 +229,29 @@ export const hotspots = [
             { year: 2010, coralCover: 0.58 },
             { year: 2015, coralCover: 0.53 },
             { year: 2020, coralCover: 0.49 },
-            { year: 2025, coralCover: 0.45, projected: true }
+            { year: 2025, coralCover: 0.45, projected: true },
         ],
         sources: [
-            { 
-                title: "Initiative pour le Triangle de Corail (CTI)",
-                url: "https://www.coraltriangleinitiative.org/"
+            {
+                title: 'Initiative pour le Triangle de Corail (CTI)',
+                url: 'https://www.coraltriangleinitiative.org/',
             },
-            { 
-                title: "Stratégies de conservation marine (WWF)",
-                url: "https://www.worldwildlife.org/places/coral-triangle"
+            {
+                title: 'Stratégies de conservation marine (WWF)',
+                url: 'https://www.worldwildlife.org/places/coral-triangle',
             },
-            { 
-                title: "Biodiversité du Triangle de Corail (Nature Conservancy)",
-                url: "https://www.nature.org/en-us/about-us/where-we-work/asia-pacific/asia-and-the-pacific-coral-triangle/"
-            }
-        ]
+            {
+                title: 'Biodiversité du Triangle de Corail (Nature Conservancy)',
+                url: 'https://www.nature.org/en-us/about-us/where-we-work/asia-pacific/asia-and-the-pacific-coral-triangle/',
+            },
+        ],
     },
     {
         id: 'requins',
         title: 'Requins en Danger',
         position: {
-            lat: 24.2870,
-            lng: -77.6843
+            lat: 24.287,
+            lng: -77.6843,
         },
         description: `
             <p>Les requins, prédateurs au sommet de la chaîne alimentaire marine depuis plus de 400 millions d'années, sont aujourd'hui gravement menacés. Plus d'un tiers des espèces de requins et de raies sont en danger d'extinction.</p>
@@ -263,9 +263,9 @@ export const hotspots = [
             temperature: { min: 4.0, max: 26.0, avg: 21.5 },
             biodiversity: 'Élevée',
             conservationStatus: 'En danger',
-            annualDeath: '~100 millions d\'individus',
-            evolutionTime: '450 millions d\'années',
-            threatLevel: '37% des espèces menacées'
+            annualDeath: "~100 millions d'individus",
+            evolutionTime: "450 millions d'années",
+            threatLevel: '37% des espèces menacées',
         },
         detailedInfo: `
             <p>Les requins, prédateurs au sommet des écosystèmes marins depuis plus de 400 millions d'années, sont aujourd'hui gravement menacés. Chaque année, environ 100 millions de requins sont tués, principalement pour leurs ailerons. Plus de 37% des espèces de requins et de raies dans le monde sont menacées d'extinction. En tant que régulateurs des populations de proies, leur disparition a un effet en cascade sur l'ensemble de l'écosystème marin, avec des conséquences sur les stocks de poissons commerciaux et la santé des récifs coralliens.</p>
@@ -278,23 +278,23 @@ export const hotspots = [
             { year: 2000, sharkPopulation: 0.68 },
             { year: 2010, sharkPopulation: 0.55 },
             { year: 2020, sharkPopulation: 0.44 },
-            { year: 2025, sharkPopulation: 0.39, projected: true }
+            { year: 2025, sharkPopulation: 0.39, projected: true },
         ],
         sources: [
-            { 
-                title: "État des populations de requins (IUCN Shark Specialist Group)",
-                url: "https://www.iucnssg.org/"
+            {
+                title: 'État des populations de requins (IUCN Shark Specialist Group)',
+                url: 'https://www.iucnssg.org/',
             },
-            { 
-                title: "Impact de la disparition des grands prédateurs marins (Shark Trust)",
-                url: "https://www.sharktrust.org/"
+            {
+                title: 'Impact de la disparition des grands prédateurs marins (Shark Trust)',
+                url: 'https://www.sharktrust.org/',
             },
-            { 
-                title: "Sanctuaires de requins et protection (PEW Charitable Trusts)",
-                url: "https://www.pewtrusts.org/en/projects/global-shark-conservation"
-            }
-        ]
-    }
+            {
+                title: 'Sanctuaires de requins et protection (PEW Charitable Trusts)',
+                url: 'https://www.pewtrusts.org/en/projects/global-shark-conservation',
+            },
+        ],
+    },
 ];
 
 /**
@@ -303,7 +303,7 @@ export const hotspots = [
  * @returns {Object|null} - Hotspot correspondant ou null si non trouvé
  */
 export function getHotspotById(id) {
-    return hotspots.find(hotspot => hotspot.id === id) || null;
+    return hotspots.find((hotspot) => hotspot.id === id) || null;
 }
 
 /**
@@ -314,25 +314,21 @@ export function getHotspotById(id) {
 export function getHotspotsByRegion(region) {
     // Correspondance des régions avec les plages de latitude
     const regionMapping = {
-        'arctic': [66, 90],        // Arctique
-        'north': [23, 66],         // Nord (tempéré)
-        'tropical': [-23, 23],     // Tropical
-        'south': [-66, -23],       // Sud (tempéré)
-        'antarctic': [-90, -66]    // Antarctique
+        arctic: [66, 90], // Arctique
+        north: [23, 66], // Nord (tempéré)
+        tropical: [-23, 23], // Tropical
+        south: [-66, -23], // Sud (tempéré)
+        antarctic: [-90, -66], // Antarctique
     };
-    
+
     // Si région par nom d'océan
     if (!regionMapping[region.toLowerCase()]) {
-        return hotspots.filter(hotspot => 
-            hotspot.description.toLowerCase().includes(region.toLowerCase())
-        );
+        return hotspots.filter((hotspot) => hotspot.description.toLowerCase().includes(region.toLowerCase()));
     }
-    
+
     // Si région par latitude
     const [minLat, maxLat] = regionMapping[region.toLowerCase()];
-    return hotspots.filter(hotspot => 
-        hotspot.position.lat >= minLat && hotspot.position.lat <= maxLat
-    );
+    return hotspots.filter((hotspot) => hotspot.position.lat >= minLat && hotspot.position.lat <= maxLat);
 }
 
 /**
@@ -341,10 +337,11 @@ export function getHotspotsByRegion(region) {
  * @returns {Array} - Tableau de hotspots correspondants
  */
 export function getHotspotsByConservationStatus(status) {
-    return hotspots.filter(hotspot => 
-        hotspot.scientificData && 
-        hotspot.scientificData.conservationStatus && 
-        hotspot.scientificData.conservationStatus.toLowerCase().includes(status.toLowerCase())
+    return hotspots.filter(
+        (hotspot) =>
+            hotspot.scientificData &&
+            hotspot.scientificData.conservationStatus &&
+            hotspot.scientificData.conservationStatus.toLowerCase().includes(status.toLowerCase()),
     );
 }
 
@@ -357,12 +354,14 @@ export function getHotspotsByConservationStatus(status) {
 export function calculateDistanceBetweenHotspots(id1, id2) {
     const hotspot1 = getHotspotById(id1);
     const hotspot2 = getHotspotById(id2);
-    
+
     if (!hotspot1 || !hotspot2) return -1;
-    
+
     return calculateDistance(
-        hotspot1.position.lat, hotspot1.position.lng,
-        hotspot2.position.lat, hotspot2.position.lng
+        hotspot1.position.lat,
+        hotspot1.position.lng,
+        hotspot2.position.lat,
+        hotspot2.position.lng,
     );
 }
 
@@ -376,14 +375,16 @@ export function calculateDistanceBetweenHotspots(id1, id2) {
  */
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Rayon de la Terre en km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    
-    const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-    
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
 }

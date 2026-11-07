@@ -8,7 +8,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --base /Mondes-immerges/",
-    "check": "node scripts/check-links.mjs"
+    "check": "node scripts/check-links.mjs",
+    "lint": "eslint .",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "gsap": "^3.13.0",
@@ -16,6 +18,10 @@
     "three": "^0.163.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^15.15.0",
+    "prettier": "^3.9.10",
     "vite": "^5.4.0"
   },
   "repository": {
