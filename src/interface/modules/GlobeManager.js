@@ -404,7 +404,7 @@ export class GlobeManager {
     createSkybox() {
         return new Promise((resolve, reject) => {
             const loader = new THREE.TextureLoader();
-            const skyTexturePath = `${import.meta.env.BASE_URL}images/night-sky.jpg`;
+            const skyTexturePath = `${import.meta.env.BASE_URL}images/night-sky.png`;
             glog('SKYBOX', 'Chargement texture:', skyTexturePath);
 
             let resolved = false;
@@ -425,6 +425,17 @@ export class GlobeManager {
                     if (!resolved) {
                         try {
                             glog('SKYBOX', 'Texture chargée OK, dimensions:', texture.image.width, 'x', texture.image.height);
+                            // Le PNG fait 8192×4096 (~128 Mo de VRAM) : on le réduit à 4096×2048 avant l'envoi au GPU
+                            const img = texture.image;
+                            if (img.width > 4096) {
+                                const c = document.createElement('canvas');
+                                c.width = 4096;
+                                c.height = 2048;
+                                c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                                texture.image = c;
+                                texture.needsUpdate = true;
+                            }
+
                             this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
                             this.renderer.toneMappingExposure = 0.6;
 
