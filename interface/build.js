@@ -246,7 +246,7 @@ async function postBuildChecks() {
     // Vérifier le contenu de index.html
     const indexContent = fs.readFileSync('dist/index.html', 'utf8');
     
-    if (!indexContent.includes('/mondes-immerges/interface/')) {
+    if (!indexContent.includes('/Mondes-immerges/interface/')) {
         console.warn('⚠️  Base URL GitHub Pages non détectée dans index.html');
     } else {
         console.log('✅ Base URL GitHub Pages correctement configurée');
@@ -439,7 +439,7 @@ async function validateForDeployment() {
     const criticalChecks = [
         () => fs.existsSync('dist/index.html'),
         () => fs.existsSync('dist/assets'),
-        () => fs.readFileSync('dist/index.html', 'utf8').includes('/mondes-immerges/interface/'),
+        () => fs.readFileSync('dist/index.html', 'utf8').includes('/Mondes-immerges/interface/'),
         () => {
             const assets = fs.readdirSync('dist/assets');
             return assets.some(f => f.endsWith('.js')) && assets.some(f => f.endsWith('.css'));

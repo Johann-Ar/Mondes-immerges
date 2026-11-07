@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:github": "vite build --base=/mondes-immerges/",
+    "build:github": "vite build --base=/Mondes-immerges/",
     "build:safe": "node build.js",
     "preview": "vite preview",
     "deploy": "npm run build:safe && gh-pages -d dist -r https://github.com/Holosene/mondes-immerges.git",
@@ -49,7 +49,7 @@
     "url": "https://github.com/Holosene/mondes-immerges.git"
   },
   "bugs": {
-    "url": "https://github.com/Holosene/mondes-immerges/issues"
+    "url": "https://github.com/Holosene/Mondes-immerges/issues"
   },
   "engines": {
     "node": ">=18.0.0",

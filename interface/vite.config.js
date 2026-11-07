@@ -12,7 +12,7 @@ export default defineConfig({
 
   // IMPORTANT: Pour GitHub Pages - Chemin complet avec le dossier interface
   base: process.env.NODE_ENV === 'production'
-    ? '/mondes-immerges/interface/'
+    ? '/Mondes-immerges/interface/'
     : '/',
   
   // Configuration du serveur de développement

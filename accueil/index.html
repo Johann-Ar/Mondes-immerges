@@ -1595,14 +1595,14 @@
                             if (document.body.classList.contains('redirected')) return;
                             document.body.classList.add('redirected');
                             transitionVideo.classList.add('freeze-last-frame');
-                            window.location.href = '/mondes-immerges/interface/';
+                            window.location.href = '/Mondes-immerges/interface/';
                         }, { once: true });
                     }).catch(() => {
                         // En cas d'erreur, redirection immédiate
                         if (!document.body.classList.contains('redirected')) {
                             document.body.classList.add('redirected');
                             transitionVideo.classList.add('freeze-last-frame');
-                            window.location.href = '/mondes-immerges/interface/';
+                            window.location.href = '/Mondes-immerges/interface/';
                         }
                     });
 
@@ -1611,7 +1611,7 @@
                         if (!document.body.classList.contains('redirected')) {
                             document.body.classList.add('redirected');
                             transitionVideo.classList.add('freeze-last-frame');
-                            window.location.href = '/mondes-immerges/interface/';
+                            window.location.href = '/Mondes-immerges/interface/';
                         }
                     }, 15000);
                 });

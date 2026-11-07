@@ -297,7 +297,7 @@ function initReturnExploration() {
 
         // Redirection après courte animation
         setTimeout(() => {
-            window.location.href = '/mondes-immerges/interface/';
+            window.location.href = '/Mondes-immerges/interface/';
         }, 150);
     });
     
