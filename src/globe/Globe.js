@@ -20,6 +20,7 @@ import {
 } from 'three/tsl';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Currents } from './Currents.js';
+import { createSky } from './Sky.js';
 import { toVector } from './geo.js';
 
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
@@ -54,7 +55,7 @@ export class Globe {
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.75 : 2));
         this.renderer.setClearColor(0x000000, 1);
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+        this.camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
         this.camera.position.copy(toVector(20, 10, 4.2));
 
         this.controls = new OrbitControls(this.camera, canvas);
@@ -138,30 +139,12 @@ export class Globe {
         this.surface = new THREE.Mesh(new THREE.SphereGeometry(1, 256, 160), surface);
 
         // Pas de halo ni de bloom : la seule lumière est celle des courants, posée sur la surface
-        this.scene.add(this.surface, this.currents.splats, this.stars());
+        this.scene.add(this.surface, this.currents.splats, createSky({ count: this.mobile ? 2500 : 5000 }));
 
         await this.currents.start(this.renderer);
         this.resize();
         window.addEventListener('resize', () => this.resize());
         this.renderer.setAnimationLoop(() => this.frame());
-    }
-
-    stars(count = 1800) {
-        const positions = new Float32Array(count * 3);
-        const v = new THREE.Vector3();
-        for (let i = 0; i < count; i++) {
-            v.randomDirection().multiplyScalar(30 + Math.random() * 20);
-            positions.set([v.x, v.y, v.z], i * 3);
-        }
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        const material = new THREE.PointsNodeMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0.45,
-            depthWrite: false,
-        });
-        return new THREE.Points(geometry, material);
     }
 
     /** L'utilisateur prend la main : la rotation automatique s'arrête un moment. */
