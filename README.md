@@ -23,15 +23,15 @@ Toutes les données (lieu, coordonnées, synopsis, chiffres clés, visages, gale
 ## Le parcours
 
 1. **Accueil** : le titre, une phrase, un seul bouton. Le globe tourne déjà, décalé à droite.
-2. **Globe** (même page, l'adresse devient `/globe/`) : on fait tourner la planète, chaque film est un cadre jaune ; au survol il s'ouvre sur une image du film, au clic il se referme sur l'écran.
+2. **Globe** (même page, l'adresse devient `/globe/`) : on fait tourner la planète (glisser ou molette, pincer pour zoomer), chaque film est un cadre jaune : au survol il penche vers la droite puis s'ouvre en fenêtre sur une image choisie du film ; au clic, le cadre se referme sur l'écran.
 3. **Documentaire** : le film, ses visages, sa galerie, comment agir, le monde suivant. Le retour ramène le globe face au film.
 
-Les transitions de page reprennent le cadre jaune : il se referme autour de l'élément cliqué, puis s'ouvre sur la page suivante ([`src/shared/transition.js`](src/shared/transition.js)). « Les films », dans la barre, donne accès direct à la liste.
+Les transitions de page reprennent le cadre jaune : il se referme autour de l'élément cliqué, puis s'ouvre sur la page suivante ([`src/shared/transition.js`](src/shared/transition.js)). Pas de barre de menu : le logo National Geographic et le cadre penché de Mondes Immergés flottent en haut de l'écran. Le cadre qui penche et devient fenêtre est le motif de tout le projet.
 
 ## Le globe
 
 - **WebGPU** (three.js r187, `three/webgpu` et TSL), avec repli automatique sur WebGL 2. Sans l'un ni l'autre, la liste des films devient la page.
-- **Courants réels** ([`src/globe/Currents.js`](src/globe/Currents.js)) : le champ de vitesse NASA/JPL OSCAR (1/3°) est rangé dans une texture. Jusqu'à 240 000 particules y sont advectées par un compute shader ; chacune laisse une traînée dans une texture équirectangulaire qui s'efface lentement, plaquée sur le globe. Les particules des courants rapides sont aussi dessinées en taches gaussiennes au-dessus de l'océan (splatting), et un bloom fait briller les grands courants (Gulf Stream, Kuroshio, Agulhas, courant circumpolaire).
+- **Courants réels** ([`src/globe/Currents.js`](src/globe/Currents.js)) : le champ de vitesse NASA/JPL OSCAR (1/3°) est rangé dans une texture. Jusqu'à 240 000 particules y sont advectées par un compute shader ; chacune laisse une traînée dans une texture équirectangulaire qui s'efface lentement, plaquée sur le globe. Les particules des courants rapides sont aussi dessinées en micro-splats dorés posés sur la surface : la lumière reste sur les courants, sans halo ni volume.
 - **Relief** : ETOPO1 (NOAA) ombré, terres couleur pierre, océan noir.
 - **Interaction** ([`src/globe/Globe.js`](src/globe/Globe.js)) : rotation libre, zoom, rotation automatique au repos, vols de caméra. Les marqueurs sont en HTML, recalés à chaque image, masqués derrière la planète, étiquettes qui se chevauchent effacées.
 - **Textures** : [`scripts/textures.py`](scripts/textures.py) les refabrique depuis le serveur ERDDAP de la NOAA (numpy, scipy, pillow).

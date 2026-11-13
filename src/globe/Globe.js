@@ -9,7 +9,6 @@ import {
     mix,
     normalWorld,
     normalize,
-    pass,
     positionWorld,
     pow,
     smoothstep,
@@ -19,13 +18,13 @@ import {
     vec3,
     vec4,
 } from 'three/tsl';
-import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Currents } from './Currents.js';
 import { toVector } from './geo.js';
 
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 const YELLOW = new THREE.Color('#ffcc00');
+const UP = new THREE.Vector3(0, 1, 0);
 
 const load = (url, colorSpace) =>
     new THREE.TextureLoader().loadAsync(url).then((t) => {
@@ -36,7 +35,7 @@ const load = (url, colorSpace) =>
 
 /**
  * Le globe : WebGPU (repli automatique sur WebGL 2), relief ETOPO, courants NASA OSCAR simulés sur le GPU,
- * halo lumineux (bloom), marqueurs HTML recalés à chaque image.
+ * micro-splats dorés, marqueurs HTML recalés à chaque image.
  */
 export class Globe {
     static async create(options) {
@@ -63,7 +62,7 @@ export class Globe {
             enableDamping: true,
             dampingFactor: 0.07,
             enablePan: false,
-            minDistance: 1.7,
+            minDistance: 2.15, // au-delà, le relief (4096 px) devient flou
             maxDistance: 5.5,
             rotateSpeed: 0.4,
             zoomSpeed: 0.6,
@@ -71,6 +70,21 @@ export class Globe {
             autoRotateSpeed: 0.25,
         });
         this.controls.addEventListener('start', () => this.hold());
+
+        // La molette fait tourner le globe ; le pincement (pavé tactile, écran) zoome
+        this.spin = 0;
+        addEventListener(
+            'wheel',
+            (e) => {
+                if (e.ctrlKey || e.target.closest?.('dialog')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+                this.spin += d * (e.deltaMode === 1 ? 16 : 1) * 0.0009;
+                this.hold(6);
+            },
+            { capture: true, passive: false },
+        );
 
         this.shift = { target: 0, current: 0 };
         this.flight = null;
@@ -108,45 +122,23 @@ export class Globe {
             const ground = texture(relief, uv()).rgb;
             const light = float(0.48).add(max(dot(n, this.uSun), 0).mul(0.42));
             const trail = texture(this.currents.target.texture, uv());
+            const sea = smoothstep(0.45, 0.85, texture(field, uv()).b).mul(this.uCurrents); // jamais sur les terres
             const glow = float(1)
                 .sub(exp(trail.r.mul(-1.1)))
                 .mul(smoothstep(0.03, 0.18, trail.r))
-                .mul(this.uCurrents);
-            const hot = smoothstep(0.25, 1.6, trail.g).mul(this.uCurrents);
+                .mul(sea);
+            const hot = smoothstep(0.25, 1.6, trail.g).mul(sea);
             let color = ground.mul(light).mul(0.82);
             color = color.add(vec3(YELLOW.r, YELLOW.g, YELLOW.b).mul(glow).mul(1.1));
             color = color.add(vec3(1, 0.96, 0.8).mul(hot).mul(0.9));
-            const rim = pow(float(1).sub(max(dot(n, view), 0)), 4);
-            color = mix(color, vec3(0.55, 0.52, 0.45), rim.mul(0.18));
+            const rim = pow(float(1).sub(max(dot(n, view), 0)), 5);
+            color = mix(color, vec3(0.42, 0.4, 0.36), rim.mul(0.12));
             return vec4(color, 1);
         })();
         this.surface = new THREE.Mesh(new THREE.SphereGeometry(1, 256, 160), surface);
 
-        // Halo : une fine couronne pâle autour de la planète
-        const halo = new THREE.MeshBasicNodeMaterial({
-            side: THREE.BackSide,
-            transparent: true,
-            depthWrite: false,
-            blending: THREE.AdditiveBlending,
-        });
-        halo.colorNode = Fn(() => {
-            const view = normalize(cameraPosition.sub(positionWorld));
-            const d = dot(normalize(normalWorld), view);
-            const g = pow(smoothstep(0, -0.55, d), 3).mul(0.32);
-            return vec4(vec3(0.95, 0.9, 0.75).mul(g), g);
-        })();
-        this.scene.add(
-            this.surface,
-            new THREE.Mesh(new THREE.SphereGeometry(1.08, 128, 64), halo),
-            this.currents.splats,
-            this.stars(),
-        );
-
-        // Post-traitement : halo lumineux sur les courants
-        this.pipeline = new THREE.RenderPipeline(this.renderer);
-        const scenePass = pass(this.scene, this.camera);
-        const color = scenePass.getTextureNode('output');
-        this.pipeline.outputNode = color.add(bloom(color, this.mobile ? 0.45 : 0.55, 0.4, 0.9));
+        // Pas de halo ni de bloom : la seule lumière est celle des courants, posée sur la surface
+        this.scene.add(this.surface, this.currents.splats, this.stars());
 
         await this.currents.start(this.renderer);
         this.resize();
@@ -249,13 +241,17 @@ export class Globe {
     frame() {
         if (document.hidden) return;
         this.clock.update();
-        const delta = this.clock.getDelta();
+        const delta = Math.min(this.clock.getDelta(), 1 / 20); // retour sur un onglet caché : pas de saut
         if (this.flight) this.flight();
+        if (Math.abs(this.spin) > 1e-5) {
+            this.camera.position.applyAxisAngle(UP, this.spin * 0.12);
+            this.spin *= 0.88;
+        }
         this.applyShift();
         this.controls.update(delta);
         this.uSun.value.set(-0.4, 0.5, 0.75).normalize().applyQuaternion(this.camera.quaternion);
         this.currents.step(this.renderer, this.reducedMotion ? delta * 0.3 : delta);
-        this.pipeline.render();
+        this.renderer.render(this.scene, this.camera);
         this.placeMarkers();
     }
 

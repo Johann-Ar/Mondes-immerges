@@ -7,15 +7,14 @@ const $ = (id) => document.getElementById(id);
 const body = document.body;
 const filmUrl = (film) => `${BASE}documentaire/?film=${film.slug}`;
 const mobile = matchMedia('(max-width: 760px)').matches;
+const touch = matchMedia('(hover: none)').matches;
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-$('bar').innerHTML = header(
-    BASE,
-    '<button class="bar-link" id="index-open" type="button">Les films</button>',
-);
+$('bar').innerHTML = header(BASE);
 enter();
 bind();
 
-// Liste des films (accès direct, et seul affichage si le navigateur ne peut pas dessiner le globe)
+// Liste des films : seul affichage si le navigateur ne peut pas dessiner le globe
 $('index-list').innerHTML = FILMS.map(
     (film, i) => `
     <li>
@@ -27,7 +26,6 @@ $('index-list').innerHTML = FILMS.map(
     </li>`,
 ).join('');
 const index = $('index');
-$('index-open').addEventListener('click', () => index.showModal());
 $('index-close').addEventListener('click', () => index.close());
 index.addEventListener('click', (e) => e.target === index && index.close());
 
@@ -38,11 +36,26 @@ const markers = FILMS.map((film) => {
     element.href = filmUrl(film);
     element.tabIndex = -1;
     element.innerHTML = `
-        <span class="marker-frame"><img src="${image(film.hero, 360)}" alt="" loading="lazy" /></span>
+        <span class="marker-frame"><img src="${image(film.thumb[0], 480)}" alt="" style="object-position: ${film.thumb[1]}" /></span>
         <span class="marker-label"><strong>${film.title}</strong><span>${film.world} · ${film.place}</span></span>`;
-    element.addEventListener('click', (e) => {
+    element.addEventListener('click', async (e) => {
         e.preventDefault();
-        leave(element.href, element.querySelector('.marker-frame').getBoundingClientRect());
+        // Écran tactile (pas de survol) : la fenêtre s'ouvre d'abord, puis on part
+        if (!element.matches(':hover, :focus-visible') || touch) {
+            element.classList.add('is-open');
+            globe?.hold(10);
+            await new Promise((r) => setTimeout(r, reducedMotion ? 0 : 800));
+        }
+        // la fenêtre est penchée : on garde son centre et sa vraie taille, pas sa boîte englobante
+        const frame = element.querySelector('.marker-frame');
+        const r = frame.getBoundingClientRect();
+        const [w, h] = [frame.offsetWidth, frame.offsetHeight];
+        leave(element.href, {
+            left: r.left + (r.width - w) / 2,
+            top: r.top + (r.height - h) / 2,
+            width: w,
+            height: h,
+        });
     });
     $('markers').append(element);
     return { element, lat: film.lat, lng: film.lng };
@@ -50,7 +63,7 @@ const markers = FILMS.map((film) => {
 
 let globe = null;
 const VIEW = {
-    intro: { shift: mobile ? 0 : 0.2, distance: mobile ? 5.6 : 4.7 },
+    intro: { shift: mobile ? 0 : 0.25, distance: mobile ? 5.6 : 4.7 },
     explore: { shift: 0, distance: mobile ? 4.6 : 3.7 },
 };
 

@@ -33,6 +33,7 @@ export const FILMS = [
             { value: '95 %', label: 'de l’eau du delta vient des hauts plateaux angolais' },
         ],
         hero: 'intotheokavango_hero_e8b99097.jpeg',
+        thumb: ['intotheokavango_ngm_42_1be68c4f.jpeg', '45% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
             [
                 'intotheokavango_ngm_42_1be68c4f.jpeg',
@@ -118,6 +119,7 @@ export const FILMS = [
             { value: 'Sundance', label: 'prix du public 2019' },
         ],
         hero: 'sos-1900x792_2b2a5bbd.png',
+        thumb: ['sos-1900x792_2b2a5bbd.png', '40% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
             [
                 'sos_07_45526f12.jpeg',
@@ -238,6 +240,7 @@ export const FILMS = [
             { value: 'Pristine Seas', label: 'le programme de National Geographic pour protéger les océans' },
         ],
         hero: 'the-last-ice_bg_desktop_79a50875.jpeg',
+        thumb: ['thelastice_aleqatsiaq_peary_d6259274.jpeg', '55% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
             [
                 '86059484ca1e2e52789192510cf4702f_4096x2304_8dc4b471.jpeg',
@@ -318,6 +321,7 @@ export const FILMS = [
             { value: '27', label: 'hommes d’équipage, tous revenus vivants' },
         ],
         hero: 'ng_endurance_desktop_1920x792_1f8a7b66.png',
+        thumb: ['endurance_004_9e394935.jpeg', '50% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
             [
                 'endurance_004_9e394935.jpeg',
@@ -410,6 +414,7 @@ export const FILMS = [
             { value: 'Calypso', label: 'le navire de toutes ses expéditions' },
         ],
         hero: 'cousteau-big-bg_cc204399.png',
+        thumb: ['becomingcousteau_00015811_83bb0930.jpeg', '55% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
             [
                 '4fe70020f3ad75f9d4543ea0fdafcdbb_3813x4096_edc45d06.jpeg',
@@ -521,6 +526,7 @@ export const FILMS = [
             { value: '4 km', label: 'de galeries, en partie noyées, jusqu’au groupe' },
         ],
         hero: 'signal-2021-09-27-144025_001_db43b4b2.jpeg',
+        thumb: ['therescue_sg_016_de7a36d3.jpeg', '45% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
             ['therescue_sg_001_6b421197.jpeg', 'Un plongeur dans une grotte noyée.', 'National Geographic'],
             [
@@ -609,6 +615,7 @@ export const FILMS = [
             { value: 'Oscars', label: 'nommé au meilleur documentaire en 2023' },
         ],
         hero: 'ng_fol_desktop_1920x792_e1f116a6.jpeg',
+        thumb: ['fireoflove_kkrafft_01_285f3a97.jpeg', '72% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
             [
                 'fireoflove_film_still_1b_16936eca.jpeg',
@@ -675,6 +682,7 @@ export const FILMS = [
             { value: 'Caméra', label: 'en partie tenue par les Uru-eu-wau-wau' },
         ],
         hero: 'bitate-cropped_709c37fc.png',
+        thumb: ['the_territory_33_9f17ff2b.jpeg', '58% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
             [
                 'the_territory_27_378bb26d.jpeg',

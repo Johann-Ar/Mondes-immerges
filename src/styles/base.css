@@ -35,6 +35,8 @@
     --display: 'Abyss', 'Arial Black', sans-serif;
     --text: 'Geograph', 'Helvetica Neue', Arial, sans-serif;
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --tilt: 9deg;
     --gutter: clamp(20px, 5vw, 64px);
     --bar: 64px;
     color-scheme: dark;
@@ -112,61 +114,49 @@ button {
     box-shadow: 0 0 0 300vmax var(--yellow);
 }
 
-/* Barre du haut, à la manière d'une rubrique du site National Geographic */
+/* En-tête flottant : deux logos, aucune barre */
 .bar {
     position: fixed;
     inset: 0 0 auto;
     z-index: 50;
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 22px;
     height: var(--bar);
     padding: 0 var(--gutter);
-    background: var(--black);
-    border-bottom: 1px solid var(--line);
+    pointer-events: none;
+}
+.bar a {
+    pointer-events: auto;
 }
 .natgeo img {
-    width: 112px;
+    width: 104px;
     height: auto;
-}
-.bar-rule {
-    width: 1px;
-    height: 28px;
-    background: var(--line);
 }
 .brand {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
     text-decoration: none;
 }
+/* Le motif du projet : le cadre penché vers la droite */
 .brand-mark {
-    width: 18px;
+    width: 17px;
     height: auto;
+    rotate: var(--tilt);
+    transition: rotate 0.5s var(--spring);
 }
-.brand-name {
-    font-family: var(--display);
-    font-size: 13px;
-    line-height: 1;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+.brand:hover .brand-mark {
+    rotate: calc(var(--tilt) * 2.2);
 }
-.bar-space {
-    flex: 1;
-}
-.bar-link {
-    padding: 8px 0;
-    border: 0;
-    background: none;
+.brand-label {
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    text-decoration: none;
-    cursor: pointer;
     transition: color 0.2s;
 }
-.bar-link:hover {
+.brand:hover .brand-label {
     color: var(--yellow);
 }
 
@@ -237,10 +227,7 @@ button {
 
 @media (max-width: 560px) {
     .natgeo img {
-        width: 92px;
-    }
-    .brand-name {
-        display: none;
+        width: 88px;
     }
 }
 

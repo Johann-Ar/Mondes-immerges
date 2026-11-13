@@ -13,10 +13,7 @@ const next = FILMS[(index + 1) % FILMS.length];
 const [still, stillCaption, stillCredit] = film.gallery.at(-1);
 
 document.title = `${film.title} · Mondes Immergés`;
-$('bar').innerHTML = header(
-    BASE,
-    `<a class="bar-link" href="${BASE}globe/?from=${film.slug}" data-transition>← Le globe</a>`,
-);
+$('bar').innerHTML = header(`${BASE}globe/?from=${film.slug}`, BASE, '← Le globe');
 
 const SECTIONS = [];
 const section = (id, kicker, title, body, cls = '') => {

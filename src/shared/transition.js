@@ -6,6 +6,7 @@
  */
 const KEY = 'mi:transition';
 const RATIO = 0.72; // proportions du cadre (logo)
+const TILT = '9deg'; // l'inclinaison du cadre, motif du projet
 const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function curtain() {
@@ -45,7 +46,12 @@ export async function leave(url, from) {
     const cy = r.top + r.height / 2;
     const w = Math.max(r.width, 26);
     const h = Math.max(r.height, w / RATIO);
-    const frames = [cover(), box(cx - w / 2, cy - h / 2, w, h), point(cx, cy)];
+    // le cadre se referme en penchant vers la droite, comme le cadre du logo
+    const frames = [
+        { ...cover(), rotate: '0deg' },
+        { ...box(cx - w / 2, cy - h / 2, w, h), rotate: TILT },
+        { ...point(cx, cy), rotate: TILT },
+    ];
     await hole.animate(frames, { duration: 820, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' })
         .finished;
     location.assign(url);
@@ -68,12 +74,18 @@ export function enter() {
     const hole = curtain();
     Object.assign(hole.style, point(innerWidth / 2, innerHeight / 2));
     root.classList.remove('is-entering');
-    const animation = hole.animate([point(innerWidth / 2, innerHeight / 2), cover()], {
-        duration: 900,
-        delay: 120,
-        easing: 'cubic-bezier(0.7, 0, 0.2, 1)',
-        fill: 'forwards',
-    });
+    const animation = hole.animate(
+        [
+            { ...point(innerWidth / 2, innerHeight / 2), rotate: TILT },
+            { ...cover(), rotate: '0deg' },
+        ],
+        {
+            duration: 900,
+            delay: 120,
+            easing: 'cubic-bezier(0.7, 0, 0.2, 1)',
+            fill: 'forwards',
+        },
+    );
     animation.finished.then(() => hole.parentElement.remove());
 }
 

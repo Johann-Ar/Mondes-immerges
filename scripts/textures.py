@@ -40,8 +40,8 @@ def currents(src, out):
     lat = f.variables['latitude'][:]   # 80..-80
     u = np.nanmean(np.where(np.isfinite(u), u, np.nan), axis=0)
     v = np.nanmean(np.where(np.isfinite(v), v, np.nan), axis=0)
-    # drop duplicate column, roll to -180..180
-    u, v, lon = u[:, :1200], v[:, :1200], lon[:1200]
+    # les données couvrent 20..420° : on garde un seul tour (1080 colonnes de 1/3°), ramené à -180..180
+    u, v, lon = u[:, :1080], v[:, :1080], lon[:1080]
     L = ((lon + 180) % 360) - 180
     order = np.argsort(L); u, v, L = u[:, order], v[:, order], L[order]
     W, H = 1440, 720

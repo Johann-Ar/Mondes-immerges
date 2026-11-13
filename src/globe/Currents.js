@@ -35,8 +35,7 @@ const LIMIT = 1.6; // m/s : plage d'encodage du champ (voir scripts/textures.py)
  * Des centaines de milliers de particules sont advectées sur le GPU (compute shader) par le champ de vitesse réel.
  * 1. Chaque particule laisse une traînée dans une texture équirectangulaire qui s'efface lentement :
  *    c'est elle qui est plaquée sur le globe (lignes fines, nettes à toutes les distances).
- * 2. Les particules des courants rapides sont aussi dessinées en 3D, en taches gaussiennes au-dessus de l'océan
- *    (splatting) : elles donnent du volume et de la lumière aux grands courants.
+ * 2. Les particules des courants rapides sont aussi dessinées en micro-splats dorés posés sur la surface.
  */
 export class Currents {
     constructor({ field, count, resolution }) {
@@ -101,27 +100,35 @@ export class Currents {
         const head = state.toAttribute();
         const strength = smoothstep(0.02, 0.9, head.w);
 
-        const trailMaterial = new THREE.SpriteNodeMaterial({
-            side: THREE.DoubleSide,
-            transparent: true,
-            depthTest: false,
-            depthWrite: false,
-            blending: THREE.AdditiveBlending,
-        });
-        trailMaterial.positionNode = vec3(head.x, head.y, 0);
-        trailMaterial.scaleNode = vec2(1.4 / resolution, 2.8 / resolution);
         const g = (() => {
             const d = uv().sub(0.5).mul(2);
             return exp(d.dot(d).mul(-2.5));
         })();
-        const amount = life(instanceIndex).mul(float(0.016).add(strength.mul(strength).mul(0.22)));
-        trailMaterial.colorNode = vec4(vec3(amount, amount.mul(strength), 0), 1);
-        trailMaterial.opacityNode = g;
-        this.trails = new THREE.Sprite(trailMaterial);
-        this.trails.count = count;
-        this.trails.frustumCulled = false;
+        const amount = life(instanceIndex).mul(float(0.006).add(strength.mul(strength).mul(0.22)));
+        // Deux passes : la traînée, et sa copie de l'autre côté du méridien 180° (aucune couture visible)
+        const trail = (shift) => {
+            const material = new THREE.SpriteNodeMaterial({
+                side: THREE.DoubleSide, // la caméra retournée inverse le sens des faces
+                transparent: true,
+                depthTest: false,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending,
+            });
+            material.positionNode = vec3(
+                shift ? head.x.add(head.x.lessThan(0.5).select(1, -1)) : head.x,
+                head.y,
+                0,
+            );
+            material.scaleNode = vec2(1.4 / resolution, 2.8 / resolution);
+            material.colorNode = vec4(vec3(amount, amount.mul(strength), 0), 1);
+            material.opacityNode = g;
+            const sprite = new THREE.Sprite(material);
+            sprite.count = count;
+            sprite.frustumCulled = false;
+            return sprite;
+        };
         this.trailScene = new THREE.Scene();
-        this.trailScene.add(this.trails);
+        this.trailScene.add(trail(false), trail(true));
         this.trailCamera = new THREE.OrthographicCamera(0, 1, 1, 0, -1, 1);
 
         const fadeMaterial = new THREE.MeshBasicNodeMaterial({
@@ -133,7 +140,8 @@ export class Currents {
         fadeMaterial.opacityNode = this.uFade;
         this.fade = new THREE.QuadMesh(fadeMaterial);
 
-        // Taches lumineuses en volume au-dessus des grands courants
+        // Micro-splats : chaque particule des courants rapides est un minuscule point doré posé sur la surface.
+        // Ils bougent avec le courant ; la lumière reste sur eux (testés en profondeur, aucun halo en volume).
         const splatMaterial = new THREE.SpriteNodeMaterial({
             transparent: true,
             depthWrite: false,
@@ -141,26 +149,27 @@ export class Currents {
         });
         const lon = head.x.mul(TWO_PI);
         const theta = float(1).sub(head.y).mul(PI);
-        const radius = float(1.003).add(hash(instanceIndex.toFloat().add(31)).mul(0.005));
         const normal = vec3(lon.cos().negate().mul(sin(theta)), cos(theta), lon.sin().mul(sin(theta)));
-        splatMaterial.positionNode = normal.mul(radius);
-        const facing = smoothstep(0.15, 0.45, normal.dot(cameraPosition.normalize()));
-        const fast = smoothstep(0.25, 0.9, head.w);
-        splatMaterial.scaleNode = vec2(float(0.012).add(fast.mul(0.016)));
-        splatMaterial.colorNode = vec4(mix(vec3(1, 0.78, 0.1), vec3(1, 0.95, 0.75), fast), 1);
-        splatMaterial.opacityNode = g.mul(fast).mul(facing).mul(life(instanceIndex)).mul(0.07);
+        splatMaterial.positionNode = normal.mul(1.0012);
+        const facing = smoothstep(0.05, 0.3, normal.dot(cameraPosition.normalize()));
+        const fast = smoothstep(0.2, 0.8, head.w);
+        splatMaterial.scaleNode = vec2(float(0.0026).add(fast.mul(0.0022)));
+        splatMaterial.colorNode = vec4(mix(vec3(1, 0.72, 0.08), vec3(1, 0.93, 0.62), fast), 1);
+        splatMaterial.opacityNode = exp(uv().sub(0.5).mul(2).dot(uv().sub(0.5).mul(2)).mul(-3.2))
+            .mul(fast)
+            .mul(facing)
+            .mul(life(instanceIndex))
+            .mul(0.85);
         this.splats = new THREE.Sprite(splatMaterial);
-        this.splats.count = Math.floor(count * 0.35);
+        this.splats.count = Math.floor(count * 0.6);
         this.splats.frustumCulled = false;
         this.splats.renderOrder = 2;
     }
 
     async start(renderer) {
-        // WebGPU range les textures de rendu origine en haut, WebGL origine en bas : on garde le nord en v = 1
-        if (renderer.backend.isWebGPUBackend) {
-            Object.assign(this.trailCamera, { top: 0, bottom: 1 });
-            this.trailCamera.updateProjectionMatrix();
-        }
+        // Les textures de rendu sont lues origine en haut (WebGPU, et le repli WebGL l'imite) : nord en v = 1
+        Object.assign(this.trailCamera, { top: 0, bottom: 1 });
+        this.trailCamera.updateProjectionMatrix();
         await renderer.computeAsync(this.init);
         renderer.setRenderTarget(this.target);
         renderer.setClearColor(0x000000, 0);
