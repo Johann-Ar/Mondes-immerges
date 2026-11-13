@@ -2,105 +2,69 @@
 <html lang="fr">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>National Géographique | Mondes Immergés</title>
-        <link rel="icon" type="image/png" href="/images/ng-favicon.png" />
-        <link rel="stylesheet" href="/src/accueil/accueil.css" />
-        <script type="module" src="/src/shared/loader.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <title>Mondes Immergés · Huit documentaires National Geographic</title>
+        <meta
+            name="description"
+            content="Faites tourner le globe des courants marins et plongez dans huit documentaires National Geographic : océans, glaces, forêts, volcans."
+        />
+        <meta name="theme-color" content="#061325" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="preconnect" href="https://lumiere-a.akamaihd.net" />
+        <link rel="stylesheet" href="/src/styles/base.css" />
+        <link rel="stylesheet" href="/src/styles/home.css" />
+        <script type="module" src="/src/pages/home.js"></script>
     </head>
     <body>
-        <!-- Curseur personnalisé -->
-        <div class="cursor"></div>
-        <div class="cursor-follower"></div>
-
-        <!-- Top Navigation -->
-        <div class="top-nav">
-            <div class="top-nav-left">
-                <a href="#">Magazines</a>
-                <a href="#">Télévision</a>
-            </div>
-            <div class="top-nav-right">
-                <a href="#">Disney+</a>
-            </div>
-        </div>
-
-        <!-- Header -->
-        <header>
-            <div class="header-container">
-                <div class="logo">
-                    <img src="/images/logo-national-geographic.png" alt="National Géographique" />
+        <section class="opening">
+            <canvas class="flow" id="flow" aria-hidden="true"></canvas>
+            <div class="opening-content">
+                <div class="opening-logo" id="logo"></div>
+                <h1>Mondes<br />Immergés</h1>
+                <p>
+                    Huit documentaires National Geographic, huit mondes à explorer au fil des courants marins.
+                </p>
+                <div class="opening-actions">
+                    <a class="button" id="explore" href="./globe/"
+                        >Explorer le globe <span class="arrow">→</span></a
+                    >
+                    <a class="button button-ghost" href="#mondes">Voir les films</a>
                 </div>
-                <ul class="nav-menu">
-                    <li><a href="#">Histoire</a></li>
-                    <li><a href="#">Animaux</a></li>
-                    <li><a href="#">Sciences</a></li>
-                    <li><a href="#">Environnement</a></li>
-                    <li><a href="#immerse">Immergés</a></li>
-                    <li><a href="#">Voyage &amp; Aventure</a></li>
-                </ul>
-            </div>
-        </header>
-
-        <!-- Navigation verticale avec style page-collection -->
-        <nav class="side-nav">
-            <ul>
-                <li><a href="#immerse" class="nav-link active">Accueil</a></li>
-                <li><a href="#" class="nav-link">Documentaire</a></li>
-                <li><a href="#" class="nav-link">Expédition</a></li>
-                <li><a href="#" class="nav-link">Galerie</a></li>
-                <li><a href="#" class="nav-link">Sciences</a></li>
-                <li><a href="#" class="nav-link">Documentation</a></li>
-                <li><a href="#" class="nav-link">Équipe</a></li>
-            </ul>
-        </nav>
-
-        <!-- Mondes Immergés Section -->
-        <section id="immerse" class="immerse-section">
-            <div class="immerse-background">
-                <!-- Vidéo de fond en boucle - LAZY LOADING -->
-                <video
-                    class="bg-video"
-                    muted
-                    loop
-                    playsinline
-                    preload="none"
-                    id="backgroundVideo"
-                    data-src="videos/accueil-fond.webm"
-                >
-                    <!-- Source chargée dynamiquement après logo video -->
-                    Votre navigateur ne supporte pas les vidéos HTML5.
-                </video>
-
-                <!-- Vidéo du logo -->
-                <video class="logo-video" autoplay muted playsinline preload="auto" id="logoVideo">
-                    <source src="/videos/logo-anim.webm" type="video/webm" />
-                    Votre navigateur ne supporte pas les vidéos HTML5.
-                </video>
-
-                <div class="video-overlay"></div>
-            </div>
-
-            <div class="immerse-content">
-                <div style="position: relative">
-                    <h1 class="immerse-title">MONDES<br />IMMERGÉS</h1>
-                    <div class="title-separator"></div>
-                    <p class="immerse-subtitle">Exploration des milieux aquatiques en disparition</p>
-                </div>
-
-                <button class="explore-globe-btn" id="exploreBtn">Cliquer pour Explorer</button>
             </div>
         </section>
 
-        <!-- Vidéo de transition pour la redirection -->
-        <video class="transition-video" muted playsinline preload="none" id="transitionVideo">
-            <source src="/videos/logo-transition.webm" type="video/webm" />
-            Votre navigateur ne supporte pas les vidéos HTML5.
-        </video>
+        <section class="steps" aria-label="Comment ça marche">
+            <ol>
+                <li class="reveal">
+                    <span>01</span><strong>Tournez le globe</strong>Il suffit de le faire glisser, à la souris
+                    ou du bout du doigt.
+                </li>
+                <li class="reveal">
+                    <span>02</span><strong>Suivez les courants</strong>Chauds, froids ou profonds, ils relient
+                    tous les océans du monde.
+                </li>
+                <li class="reveal">
+                    <span>03</span><strong>Plongez dans un film</strong>Chaque point lumineux ouvre l’histoire
+                    d’un documentaire.
+                </li>
+            </ol>
+        </section>
 
-        <!-- Écran de chargement après transition -->
-        <div id="loading-overlay" class="loading-overlay">
-            <l-jelly size="60" speed="0.9" color="#ffcc00"></l-jelly>
-        </div>
-        <script type="module" src="/src/accueil/main.js"></script>
+        <section class="worlds" id="mondes">
+            <header class="reveal">
+                <p class="kicker">La sélection</p>
+                <h2>Huit mondes</h2>
+            </header>
+            <ul class="cards" id="cards"></ul>
+        </section>
+
+        <footer class="footer">
+            <p>
+                Projet étudiant non officiel, réalisé pour un portfolio. Films, photos et informations :
+                <a href="https://films.nationalgeographic.com/" target="_blank" rel="noopener"
+                    >National Geographic Documentary Films</a
+                >. Tracés des courants simplifiés d’après la NOAA.
+            </p>
+        </footer>
     </body>
 </html>

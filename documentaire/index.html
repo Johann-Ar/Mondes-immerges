@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <title>Documentaire · Mondes Immergés</title>
+        <meta
+            name="description"
+            content="Un documentaire National Geographic à découvrir : le film, ses visages, ses images et comment agir."
+        />
+        <meta name="theme-color" content="#f7f2e8" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="preconnect" href="https://lumiere-a.akamaihd.net" />
+        <link rel="stylesheet" href="/src/styles/base.css" />
+        <link rel="stylesheet" href="/src/styles/film.css" />
+        <script type="module" src="/src/pages/film.js"></script>
+    </head>
+    <body>
+        <header class="bar" id="bar">
+            <div id="brand"></div>
+            <nav class="bar-links" aria-label="Sections">
+                <a href="#film">Le film</a>
+                <a href="#visages">Les visages</a>
+                <a href="#galerie">Galerie</a>
+                <a href="#agir">Agir</a>
+            </nav>
+            <a class="bar-back" id="back" href="../globe/">← Le globe</a>
+        </header>
+        <main id="page"></main>
+        <dialog class="lightbox" id="lightbox" aria-label="Photo agrandie">
+            <button class="lightbox-close" id="lightbox-close" aria-label="Fermer">×</button>
+            <button class="lightbox-arrow prev" id="lightbox-prev" aria-label="Photo précédente">←</button>
+            <figure>
+                <img id="lightbox-img" alt="" />
+                <figcaption id="lightbox-caption"></figcaption>
+            </figure>
+            <button class="lightbox-arrow next" id="lightbox-next" aria-label="Photo suivante">→</button>
+        </dialog>
+    </body>
+</html>

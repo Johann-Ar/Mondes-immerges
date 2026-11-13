@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <title>Le globe · Mondes Immergés</title>
+        <meta
+            name="description"
+            content="Faites tourner le globe des courants marins et partez à la découverte de huit documentaires National Geographic."
+        />
+        <meta name="theme-color" content="#061325" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="preconnect" href="https://lumiere-a.akamaihd.net" />
+        <link rel="stylesheet" href="/src/styles/base.css" />
+        <link rel="stylesheet" href="/src/styles/globe.css" />
+        <script type="module" src="/src/pages/globe.js"></script>
+    </head>
+    <body>
+        <header class="topbar">
+            <div id="brand"></div>
+            <button class="legend-toggle" id="legend-toggle" aria-expanded="false" aria-controls="legend">
+                <span class="legend-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                Les courants
+            </button>
+        </header>
+
+        <main class="stage" id="stage">
+            <canvas id="globe" aria-label="Globe terrestre interactif montrant les courants marins"></canvas>
+            <div class="markers" id="markers"></div>
+
+            <div class="intro" id="intro">
+                <p class="kicker">8 documentaires National Geographic</p>
+                <h1>Choisissez<br />un monde</h1>
+                <p class="hint">Faites tourner le globe, puis touchez un point lumineux.</p>
+            </div>
+
+            <aside class="legend" id="legend" hidden>
+                <h2>Les fleuves de l’océan</h2>
+                <p>
+                    Comme de gigantesques fleuves invisibles, les courants marins font circuler l’eau, la
+                    chaleur et la vie tout autour de la planète.
+                </p>
+                <ul id="legend-list"></ul>
+                <label class="switch">
+                    <input type="checkbox" id="currents-switch" checked />
+                    <span>Afficher les courants</span>
+                </label>
+            </aside>
+
+            <article class="panel" id="panel" aria-live="polite" hidden></article>
+        </main>
+
+        <nav class="strip" aria-label="Les documentaires">
+            <ol id="strip"></ol>
+        </nav>
+
+        <p class="credit">Photos et films © National Geographic · Projet étudiant non officiel</p>
+    </body>
+</html>

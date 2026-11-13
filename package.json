@@ -1,8 +1,8 @@
 {
   "name": "mondes-immerges",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
-  "description": "Mondes Immergés : expérience web immersive sur les milieux aquatiques en disparition (projet étudiant, contenu fictif inspiré de National Geographic)",
+  "description": "Mondes Immergés : globe interactif des courants marins et huit documentaires National Geographic (projet étudiant non officiel)",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,8 +13,6 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "gsap": "^3.13.0",
-    "ldrs": "^1.1.7",
     "three": "^0.163.0"
   },
   "devDependencies": {

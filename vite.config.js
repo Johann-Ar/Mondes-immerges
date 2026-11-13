@@ -14,17 +14,16 @@ export default defineConfig(({ command }) => ({
     build: {
         outDir: 'dist',
         emptyOutDir: true,
-        target: 'es2020',
-        chunkSizeWarningLimit: 800, // three.js pèse ~600 ko minifié
+        target: 'es2022', // await au premier niveau (chargement différé du globe)
+        chunkSizeWarningLimit: 700, // three.js pèse ~600 ko minifié
         rollupOptions: {
             input: {
                 accueil: page('index.html'),
-                interface: page('interface/index.html'),
-                ombres: page('interface/les-ombres-de-la-mer/index.html'),
-                okavango: page('interface/into-the-okavango/index.html'),
+                globe: page('globe/index.html'),
+                documentaire: page('documentaire/index.html'),
             },
             output: {
-                manualChunks: { three: ['three'], gsap: ['gsap'] },
+                manualChunks: { three: ['three'] },
             },
         },
     },
