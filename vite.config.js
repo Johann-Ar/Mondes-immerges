@@ -15,7 +15,7 @@ export default defineConfig(({ command }) => ({
         outDir: 'dist',
         emptyOutDir: true,
         target: 'es2022', // await au premier niveau (chargement différé du globe)
-        chunkSizeWarningLimit: 700, // three.js pèse ~600 ko minifié
+        chunkSizeWarningLimit: 1400, // three.js (WebGPU + TSL) pèse ~1,2 Mo minifié
         rollupOptions: {
             input: {
                 accueil: page('index.html'),
@@ -23,7 +23,7 @@ export default defineConfig(({ command }) => ({
                 documentaire: page('documentaire/index.html'),
             },
             output: {
-                manualChunks: { three: ['three'] },
+                manualChunks: { three: ['three', 'three/webgpu', 'three/tsl'] },
             },
         },
     },

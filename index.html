@@ -6,65 +6,59 @@
         <title>Mondes Immergés · Huit documentaires National Geographic</title>
         <meta
             name="description"
-            content="Faites tourner le globe des courants marins et plongez dans huit documentaires National Geographic : océans, glaces, forêts, volcans."
+            content="Huit documentaires National Geographic, huit mondes reliés par les courants de l'océan. Une expérience immersive autour d'un globe animé par les courants réels mesurés par la NASA."
         />
-        <meta name="theme-color" content="#061325" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="theme-color" content="#000000" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="preconnect" href="https://lumiere-a.akamaihd.net" />
+        <script>
+            try {
+                if (sessionStorage.getItem('mi:transition'))
+                    document.documentElement.classList.add('is-entering');
+            } catch (e) {}
+        </script>
         <link rel="stylesheet" href="/src/styles/base.css" />
-        <link rel="stylesheet" href="/src/styles/home.css" />
-        <script type="module" src="/src/pages/home.js"></script>
+        <link rel="stylesheet" href="/src/styles/experience.css" />
+        <script type="module" src="/src/pages/experience.js"></script>
     </head>
-    <body>
-        <section class="opening">
-            <canvas class="flow" id="flow" aria-hidden="true"></canvas>
-            <div class="opening-content">
-                <div class="opening-logo" id="logo"></div>
-                <h1>Mondes<br />Immergés</h1>
-                <p>
-                    Huit documentaires National Geographic, huit mondes à explorer au fil des courants marins.
-                </p>
-                <div class="opening-actions">
-                    <a class="button" id="explore" href="./globe/"
-                        >Explorer le globe <span class="arrow">→</span></a
-                    >
-                    <a class="button button-ghost" href="#mondes">Voir les films</a>
-                </div>
-            </div>
-        </section>
+    <body data-mode="intro">
+        <header class="bar" id="bar"></header>
 
-        <section class="steps" aria-label="Comment ça marche">
-            <ol>
-                <li class="reveal">
-                    <span>01</span><strong>Tournez le globe</strong>Il suffit de le faire glisser, à la souris
-                    ou du bout du doigt.
-                </li>
-                <li class="reveal">
-                    <span>02</span><strong>Suivez les courants</strong>Chauds, froids ou profonds, ils relient
-                    tous les océans du monde.
-                </li>
-                <li class="reveal">
-                    <span>03</span><strong>Plongez dans un film</strong>Chaque point lumineux ouvre l’histoire
-                    d’un documentaire.
-                </li>
-            </ol>
-        </section>
+        <main class="stage" id="stage">
+            <canvas id="globe" aria-label="Globe terrestre animé par les courants océaniques"></canvas>
+            <div class="markers" id="markers"></div>
+        </main>
 
-        <section class="worlds" id="mondes">
-            <header class="reveal">
-                <p class="kicker">La sélection</p>
-                <h2>Huit mondes</h2>
-            </header>
-            <ul class="cards" id="cards"></ul>
-        </section>
-
-        <footer class="footer">
-            <p>
-                Projet étudiant non officiel, réalisé pour un portfolio. Films, photos et informations :
-                <a href="https://films.nationalgeographic.com/" target="_blank" rel="noopener"
-                    >National Geographic Documentary Films</a
-                >. Tracés des courants simplifiés d’après la NOAA.
+        <section class="intro" id="intro" aria-labelledby="intro-title">
+            <p class="kicker">National Geographic · Documentaires</p>
+            <h1 class="intro-title" id="intro-title">Mondes<br />Immergés</h1>
+            <p class="intro-lede">
+                Huit documentaires, huit mondes. Tous reliés par les courants de l'océan.
             </p>
-        </footer>
+            <button class="cta" id="enter" type="button">
+                Explorer le globe <span class="arrow" aria-hidden="true">→</span>
+            </button>
+        </section>
+
+        <aside class="guide" id="guide">
+            <p class="guide-hint">
+                <span class="guide-frame" aria-hidden="true"></span>Faites tourner le globe et choisissez un
+                cadre jaune.
+            </p>
+            <p class="guide-data">
+                En jaune, les courants de surface, mesurés par satellite.
+                <span>Données NASA&nbsp;OSCAR · relief NOAA&nbsp;ETOPO</span>
+            </p>
+        </aside>
+
+        <dialog class="index" id="index" aria-labelledby="index-title">
+            <div class="index-head">
+                <h2 class="kicker" id="index-title">Les huit films</h2>
+                <button class="index-close" id="index-close" type="button" aria-label="Fermer">×</button>
+            </div>
+            <ol class="index-list" id="index-list"></ol>
+        </dialog>
+
+        <p class="credit">Projet étudiant non officiel · Films et photos © National Geographic</p>
     </body>
 </html>

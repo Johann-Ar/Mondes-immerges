@@ -1,16 +1,16 @@
 # Mondes Immergés
 
-Huit documentaires National Geographic à explorer sur un globe 3D, au fil des grands courants marins. Fleuve, océan, banquise, grotte noyée, volcan, forêt : chaque point lumineux ouvre la fiche d'un film.
+Un site d'immersion autour de huit documentaires National Geographic : un globe animé par les vrais courants de surface mesurés par satellite (NASA OSCAR), sur lequel chaque cadre jaune ouvre un film. Direction artistique National Geographic : noir, jaune, blanc.
 
 > Projet étudiant non officiel. Les films, photos et marques appartiennent à National Geographic. Les textes sont des résumés rédigés pour ce projet, à partir des pages officielles de chaque documentaire.
 
 **En ligne :** https://johann-ar.github.io/Mondes-immerges/
 
-| Page         | URL                                                        |
-| ------------ | ---------------------------------------------------------- |
-| Accueil      | `/Mondes-immerges/`                                        |
-| Globe        | `/Mondes-immerges/globe/` (`?film=<slug>` ouvre une fiche) |
-| Documentaire | `/Mondes-immerges/documentaire/?film=<slug>`               |
+| Page         | URL                                                         |
+| ------------ | ----------------------------------------------------------- |
+| Accueil      | `/Mondes-immerges/`                                         |
+| Globe        | `/Mondes-immerges/globe/` (`?from=<slug>` : face à ce film) |
+| Documentaire | `/Mondes-immerges/documentaire/?film=<slug>`                |
 
 Les anciennes adresses (`/interface/`, `/interface/into-the-okavango/`, `/interface/les-ombres-de-la-mer/`, `/accueil/`) redirigent vers les nouvelles.
 
@@ -20,13 +20,21 @@ Into the Okavango · Sea of Shadows · The Last Ice · Endurance · Becoming Cou
 
 Toutes les données (lieu, coordonnées, synopsis, chiffres clés, visages, galerie, presse, liens pour agir, générique) sont dans [`src/data/films.js`](src/data/films.js). Ajouter un film, c'est ajouter une entrée : le globe, l'accueil et la page documentaire suivent.
 
+## Le parcours
+
+1. **Accueil** : le titre, une phrase, un seul bouton. Le globe tourne déjà, décalé à droite.
+2. **Globe** (même page, l'adresse devient `/globe/`) : on fait tourner la planète, chaque film est un cadre jaune ; au survol il s'ouvre sur une image du film, au clic il se referme sur l'écran.
+3. **Documentaire** : le film, ses visages, sa galerie, comment agir, le monde suivant. Le retour ramène le globe face au film.
+
+Les transitions de page reprennent le cadre jaune : il se referme autour de l'élément cliqué, puis s'ouvre sur la page suivante ([`src/shared/transition.js`](src/shared/transition.js)). « Les films », dans la barre, donne accès direct à la liste.
+
 ## Le globe
 
-- **Surface** : un shader dessine une carte stylisée à partir d'une seule texture (`public/textures/earth.png` : R = eau, G = relief, B = plateaux continentaux). Le résultat : océan bleu nuit qui s'éclaircit en turquoise sur les plateaux, terres couleur sable ombrées par le relief, pôles nacrés, trait de côte crème.
-- **Courants** ([`src/globe/currents.js`](src/globe/currents.js)) : 23 courants chauds, froids et profonds tracés en latitude/longitude. Chaque tracé est lissé (Catmull-Rom) puis rangé dans une texture flottante.
-- **Rendu en volume** ([`src/globe/CurrentsLayer.js`](src/globe/CurrentsLayer.js)) : des dizaines de milliers de traînées instanciées, étirées à l'écran entre leur queue et leur tête, réparties en largeur et en altitude. S'y ajoutent des nappes gaussiennes diffuses (splatting) qui donnent du corps au flux. Les courants profonds passent sous la surface.
-- **Interaction** ([`src/globe/GlobeView.js`](src/globe/GlobeView.js)) : rotation libre, zoom, rotation automatique au repos. La caméra vole vers le lieu choisi, et le globe se décale pour laisser la place au titre ou à la fiche. Les marqueurs sont en HTML, recalés à chaque image et masqués derrière la planète.
-- **Sans WebGL 2**, la page reste utilisable : le bandeau des films et les fiches fonctionnent.
+- **WebGPU** (three.js r187, `three/webgpu` et TSL), avec repli automatique sur WebGL 2. Sans l'un ni l'autre, la liste des films devient la page.
+- **Courants réels** ([`src/globe/Currents.js`](src/globe/Currents.js)) : le champ de vitesse NASA/JPL OSCAR (1/3°) est rangé dans une texture. Jusqu'à 240 000 particules y sont advectées par un compute shader ; chacune laisse une traînée dans une texture équirectangulaire qui s'efface lentement, plaquée sur le globe. Les particules des courants rapides sont aussi dessinées en taches gaussiennes au-dessus de l'océan (splatting), et un bloom fait briller les grands courants (Gulf Stream, Kuroshio, Agulhas, courant circumpolaire).
+- **Relief** : ETOPO1 (NOAA) ombré, terres couleur pierre, océan noir.
+- **Interaction** ([`src/globe/Globe.js`](src/globe/Globe.js)) : rotation libre, zoom, rotation automatique au repos, vols de caméra. Les marqueurs sont en HTML, recalés à chaque image, masqués derrière la planète, étiquettes qui se chevauchent effacées.
+- **Textures** : [`scripts/textures.py`](scripts/textures.py) les refabrique depuis le serveur ERDDAP de la NOAA (numpy, scipy, pillow).
 
 ## Développement
 
@@ -45,23 +53,25 @@ Node 20.11 ou plus récent. Chaque push sur `main` est déployé sur GitHub Page
 ## Structure
 
 ```
-index.html                 accueil (animation de flux 2D, sélection des films)
-globe/index.html           le globe
+index.html                 accueil (globe en mode intro)
+globe/index.html           le globe (même script, mode explore)
 documentaire/index.html    la fiche d'un film
 src/data/films.js          contenu des huit films
-src/globe/                 moteur du globe (three.js)
+src/globe/                 globe WebGPU et simulation des courants
+scripts/                   fabrication des textures, vérification des liens
 src/pages/                 un script par page
-src/shared/                logo, apparitions au défilement, détection WebGL
+src/shared/                en-tête, transitions, apparitions au défilement
 src/styles/                base commune + une feuille par page
-public/                    polices (Abyss, Geograph), texture, favicon, redirections
+public/                    polices (Abyss, Geograph), textures, logos, favicon, redirections
 ```
 
 ## Accessibilité
 
-Navigation au clavier (marqueurs, bandeau, fiche, Échap pour fermer), focus visible, lightbox en `<dialog>`, textes alternatifs. Avec `prefers-reduced-motion`, les animations sont coupées ou ralenties.
+Navigation au clavier (marqueurs, liste des films, fiche, Échap pour fermer), focus visible, lightbox en `<dialog>`, textes alternatifs. Avec `prefers-reduced-motion`, les animations sont coupées ou ralenties.
 
 ## Crédits
 
 - Films, photos et textes de référence : [National Geographic Documentary Films](https://films.nationalgeographic.com/). Les photos sont chargées depuis leur CDN, avec leur crédit.
-- Texture de la Terre : dérivée des images NASA Blue Marble (via les exemples de three-globe).
+- Courants : NASA/JPL OSCAR (Ocean Surface Current Analysis Real-time), via NOAA CoastWatch ERDDAP.
+- Relief : NOAA ETOPO1, via NOAA CoastWatch ERDDAP.
 - Polices : Abyss, Geograph.

@@ -8,33 +8,40 @@
             name="description"
             content="Un documentaire National Geographic à découvrir : le film, ses visages, ses images et comment agir."
         />
-        <meta name="theme-color" content="#f7f2e8" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="theme-color" content="#000000" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="preconnect" href="https://lumiere-a.akamaihd.net" />
+        <script>
+            try {
+                if (sessionStorage.getItem('mi:transition'))
+                    document.documentElement.classList.add('is-entering');
+            } catch (e) {}
+        </script>
         <link rel="stylesheet" href="/src/styles/base.css" />
         <link rel="stylesheet" href="/src/styles/film.css" />
         <script type="module" src="/src/pages/film.js"></script>
     </head>
     <body>
-        <header class="bar" id="bar">
-            <div id="brand"></div>
-            <nav class="bar-links" aria-label="Sections">
-                <a href="#film">Le film</a>
-                <a href="#visages">Les visages</a>
-                <a href="#galerie">Galerie</a>
-                <a href="#agir">Agir</a>
-            </nav>
-            <a class="bar-back" id="back" href="../globe/">← Le globe</a>
-        </header>
+        <header class="bar" id="bar"></header>
+        <nav class="dots" id="dots" aria-label="Sections du documentaire"></nav>
         <main id="page"></main>
         <dialog class="lightbox" id="lightbox" aria-label="Photo agrandie">
-            <button class="lightbox-close" id="lightbox-close" aria-label="Fermer">×</button>
-            <button class="lightbox-arrow prev" id="lightbox-prev" aria-label="Photo précédente">←</button>
+            <button class="lightbox-close" id="lightbox-close" type="button" aria-label="Fermer">×</button>
+            <button
+                class="lightbox-arrow prev"
+                id="lightbox-prev"
+                type="button"
+                aria-label="Photo précédente"
+            >
+                ←
+            </button>
             <figure>
                 <img id="lightbox-img" alt="" />
                 <figcaption id="lightbox-caption"></figcaption>
             </figure>
-            <button class="lightbox-arrow next" id="lightbox-next" aria-label="Photo suivante">→</button>
+            <button class="lightbox-arrow next" id="lightbox-next" type="button" aria-label="Photo suivante">
+                →
+            </button>
         </dialog>
     </body>
 </html>

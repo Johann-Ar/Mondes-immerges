@@ -1,6 +1,7 @@
 import { FILMS, SOURCE, filmBySlug, image } from '../data/films.js';
-import { brand } from '../shared/logo.js';
+import { header } from '../shared/logo.js';
 import { reveal } from '../shared/reveal.js';
+import { bind, enter } from '../shared/transition.js';
 
 const BASE = import.meta.env.BASE_URL;
 const $ = (id) => document.getElementById(id);
@@ -9,20 +10,26 @@ const slug = new URLSearchParams(location.search).get('film');
 const film = filmBySlug(slug) || FILMS[0];
 const index = FILMS.indexOf(film);
 const next = FILMS[(index + 1) % FILMS.length];
+const [still, stillCaption, stillCredit] = film.gallery.at(-1);
 
 document.title = `${film.title} · Mondes Immergés`;
-document.documentElement.style.setProperty('--accent', film.accent);
-$('brand').innerHTML = brand(BASE);
-$('back').href = `${BASE}globe/?film=${film.slug}`;
+$('bar').innerHTML = header(
+    BASE,
+    `<a class="bar-link" href="${BASE}globe/?from=${film.slug}" data-transition>← Le globe</a>`,
+);
 
-const section = (id, kicker, title, body, cls = '') => `
+const SECTIONS = [];
+const section = (id, kicker, title, body, cls = '') => {
+    SECTIONS.push([id, title]);
+    return `
     <section class="section ${cls}" id="${id}">
         <header class="section-head reveal">
             <p class="kicker">${kicker}</p>
-            <h2>${title}</h2>
+            <h2 class="title">${title}</h2>
         </header>
         ${body}
     </section>`;
+};
 
 const people = film.people
     .map(
@@ -30,7 +37,7 @@ const people = film.people
         <li class="person reveal">
             ${
                 p.photo
-                    ? `<img src="${image(p.photo, 400)}" alt="${p.name}" loading="lazy" width="400" height="400" />`
+                    ? `<img src="${image(p.photo, 200)}" alt="${p.name}" loading="lazy" width="88" height="88" />`
                     : `<span class="person-initials" aria-hidden="true">${p.name
                           .split(' ')
                           .map((w) => w[0])
@@ -114,7 +121,13 @@ $('page').innerHTML = `
         'Le documentaire',
         'L’histoire',
         `<div class="story">
-            ${film.synopsis.map((p, i) => `<p class="reveal ${i === 0 ? 'lead' : ''}">${p}</p>`).join('')}
+            <div class="story-text">
+                ${film.synopsis.map((p, i) => `<p class="reveal ${i === 0 ? 'lead' : ''}">${p}</p>`).join('')}
+            </div>
+            <figure class="story-frame reveal">
+                <img src="${image(still, 1200)}" alt="${stillCaption}" loading="lazy" />
+                <figcaption>© ${stillCredit}</figcaption>
+            </figure>
         </div>
         <ul class="facts">
             ${film.facts.map((f) => `<li class="reveal"><strong>${f.value}</strong><span>${f.label}</span></li>`).join('')}
@@ -137,7 +150,7 @@ $('page').innerHTML = `
         'section-credits',
     )}
 
-    <a class="next-film" href="${BASE}documentaire/?film=${next.slug}" style="--next:${next.accent}">
+    <a class="next-film" href="${BASE}documentaire/?film=${next.slug}" data-transition>
         <img src="${image(next.hero, 1600)}" alt="" loading="lazy" />
         <span class="next-label">Monde suivant</span>
         <span class="next-title">${next.title}</span>
@@ -146,15 +159,29 @@ $('page').innerHTML = `
 
     <footer class="footer">
         <p>Mondes Immergés est un projet étudiant non officiel. Films, photos et informations : <a href="${SOURCE}" target="_blank" rel="noopener">National Geographic Documentary Films</a>. Textes adaptés en français.</p>
-        <a href="${BASE}globe/">Retour au globe</a>
+        <a href="${BASE}globe/?from=${film.slug}" data-transition>Retour au globe</a>
     </footer>`;
 
 reveal();
+enter();
+bind();
 
-// Barre du haut : opaque dès qu'on quitte l'image d'ouverture
-const bar = $('bar');
-new IntersectionObserver(([e]) => bar.classList.toggle('is-solid', !e.isIntersecting), {
-    rootMargin: '-80px 0px 0px 0px',
+// Navigation latérale : un repère par section, le repère actif suit la lecture
+const dots = $('dots');
+dots.innerHTML = SECTIONS.map(([id, title]) => `<a href="#${id}"><span>${title}</span></a>`).join('');
+const links = [...dots.children];
+const visible = new IntersectionObserver(
+    (entries) => {
+        for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            links.forEach((a) => a.classList.toggle('is-active', a.hash === `#${e.target.id}`));
+        }
+    },
+    { rootMargin: '-45% 0px -50% 0px' },
+);
+SECTIONS.forEach(([id]) => visible.observe($(id)));
+new IntersectionObserver(([e]) => dots.classList.toggle('is-shown', !e.isIntersecting), {
+    threshold: 0.6,
 }).observe(document.querySelector('.hero'));
 
 // Visionneuse de la galerie

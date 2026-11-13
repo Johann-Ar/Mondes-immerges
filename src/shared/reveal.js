@@ -17,11 +17,3 @@ export function reveal(root = document) {
     );
     items.forEach((el) => observer.observe(el));
 }
-
-export const hasWebGL = () => {
-    try {
-        return Boolean(document.createElement('canvas').getContext('webgl2'));
-    } catch {
-        return false;
-    }
-};
