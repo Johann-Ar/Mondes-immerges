@@ -30,8 +30,8 @@ import {
 } from 'three/tsl';
 
 const LIMIT = 1.6; // m/s : plage d'encodage du champ (voir scripts/textures.py)
-const RIVER = 0.45; // vitesse des splats fluviaux, dans la même unité
-const RIVER_SHARE = 0.07; // part des particules qui naissent sur les fleuves
+const RIVER = 0.12; // vitesse des splats fluviaux, dans la même unité
+const RIVER_SHARE = 0.32; // part des particules qui naissent sur les fleuves
 
 /**
  * Les courants de surface, à partir des mesures satellite NASA OSCAR.
@@ -67,7 +67,8 @@ export class Currents {
 
         const state = instancedArray(count, 'vec4'); // x, y : position (uv) · z : âge · w : vitesse (m/s)
         this.state = state;
-        const kicks = instancedArray(count, 'vec2'); // rebond contre une côte (m/s), amorti en une demi-seconde
+        // en mer : rebond contre une côte (m/s), amorti en une demi-seconde · sur un fleuve : vitesse moyenne récente
+        const kicks = instancedArray(count, 'vec2');
         const sample = (p) => texture(field, p).level(0);
         // Trait de côte fin (bathymétrie ETOPO, 2048 × 1024) : 1 en mer, 0 sur les terres. Le champ OSCAR
         // (1/3°) est trop grossier pour la côte : il laisserait passer les splats sur les isthmes et les rivages
@@ -206,7 +207,11 @@ export class Currents {
             // ce pas-ci glisse le long de la côte. Seuls les splats des fleuves entrent dans les terres.
             const slide = toUv(sea.sub(off.mul(sea.dot(off))).add(off.mul(0.05)));
             const wall = (m) => land.not().and(ocean(vec2(fract(p.x.add(m.x)), p.y.add(m.y))).lessThan(0.5));
-            kick.mulAssign(float(1).sub(this.uDelta.mul(2.5)).max(0));
+            If(land, () => {
+                kick.assign(mix(kick, v, 0.04));
+            }).Else(() => {
+                kick.mulAssign(float(1).sub(this.uDelta.mul(2.5)).max(0));
+            });
             If(wall(move), () => {
                 kick.addAssign(off.mul(abs(sea.dot(off)).mul(1.5).add(0.04)));
                 If(wall(slide).not(), () => {
@@ -225,6 +230,8 @@ export class Currents {
                 // contre la côte, une petite chance de renaître au large : aucun amas lumineux sur les rivages
                 .or(coast.greaterThan(0.15).and(hash(instanceIndex.add(this.uSeed.mul(3))).lessThan(0.01)))
                 .or(land.and(length(g).lessThan(0.06))) // là où le sens du fleuve se perd : pas d'entassement
+                // une particule de fleuve qui fait du sur-place (va-et-vient dans un piège) renaît ailleurs
+                .or(land.and(p.z.greaterThan(1.5)).and(length(kick).lessThan(RIVER * 0.4)))
                 .or(abs(p.y.sub(0.5)).greaterThan(0.44));
             If(dead, () => {
                 spawn(p, instanceIndex.toFloat().add(this.uSeed));
@@ -257,6 +264,11 @@ export class Currents {
         const head = state.toAttribute();
         const strength = smoothstep(0.02, 0.9, head.w);
 
+        // B : l'eau des fleuves. Chaque splat fluvial mouille la terre là où il passe ; cette trace s'étale et
+        // sèche en quelques secondes. Le globe y dessine le lit en noir : un fleuve n'existe que si l'eau y coule
+        const wet = life(instanceIndex)
+            .mul(fluvial(instanceIndex).select(float(0.03), float(0)))
+            .mul(float(1).sub(ocean(head.xy)));
         const g = (() => {
             const d = uv().sub(0.5).mul(2);
             return exp(d.dot(d).mul(-2.5));
@@ -281,7 +293,7 @@ export class Currents {
                 0,
             );
             material.scaleNode = vec2(1.4 / resolution, 2.8 / resolution);
-            material.colorNode = vec4(vec3(amount, amount.mul(strength), 0), 1);
+            material.colorNode = vec4(vec3(amount, amount.mul(strength), wet), 1);
             material.opacityNode = g;
             const sprite = new THREE.Sprite(material);
             sprite.count = count;
@@ -314,7 +326,16 @@ export class Currents {
                 .sub(this.uFade)
                 .mul(max(ocean(at), smoothstep(0.01, 0.1, bank(at))));
             // R : l'encre s'étale · G : les cœurs restent nets
-            return vec4(mix(c.r, blur.r, this.uDiffuse).mul(keep), mix(c.g, blur.g, 0.06).mul(keep), 0, 1);
+            // B : l'eau des fleuves s'étale largement (bords en fondu) et sèche lentement, hors de l'océan
+            const dry = float(1)
+                .sub(this.uDelta.mul(0.3))
+                .mul(float(1).sub(ocean(at)));
+            return vec4(
+                mix(c.r, blur.r, this.uDiffuse).mul(keep),
+                mix(c.g, blur.g, 0.06).mul(keep),
+                mix(c.b, blur.b, 0.1).min(1).mul(dry),
+                1,
+            );
         })();
         this.ink = new THREE.QuadMesh(inkMaterial);
 
@@ -364,7 +385,7 @@ export class Currents {
             .add(fast.mul(0.0032))
             .mul(seed.mul(0.7).add(0.6))
             .mul(cell.select(hash(instanceIndex.add(91)).mul(1.2).add(1.8), 1))
-            .mul(inRiver.select(1.1, 1)); // les splats des fleuves : lisibles sur le lit noir
+            .mul(inRiver.select(0.85, 1)); // les splats des fleuves : lisibles sur le lit noir
         splatMaterial.scaleNode = vec2(size);
         // jaune #ffcc00 ; sur les fleuves, un or plus soutenu qui se détache du blanc des terres
         splatMaterial.colorNode = vec4(
@@ -378,7 +399,7 @@ export class Currents {
         // les cellules n'apparaissent que sur la touche Espace, pleines
         splatMaterial.opacityNode = cell
             .select(disc.mul(0.55).mul(this.uFill), dot)
-            .mul(inRiver.select(0.8, fast.mul(0.75).add(0.25)))
+            .mul(inRiver.select(0.6, fast.mul(0.75).add(0.25)))
             .mul(facing)
             .mul(afloat)
             .mul(float(1).sub(pull.mul(0.6))) // sous le doigt, l’eau écartée les estompe : la fumée mène

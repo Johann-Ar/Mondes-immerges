@@ -75,7 +75,7 @@ export class Globe {
         });
         this.controls.addEventListener('start', () => this.hold());
 
-        // La molette fait voyager la caméra sur une orbite elliptique (voir orbit) ; le pincement zoome
+        // La molette fait tourner la caméra autour du globe sans changer le zoom (voir orbit) ; le pincement zoome
         this.spin = 0;
         addEventListener(
             'wheel',
@@ -178,10 +178,19 @@ export class Globe {
             const limb = mix(float(0.5), float(1), pow(facing, 0.45));
             // trait de côte fin (bathymétrie), le même que celui de la simulation
             const water = smoothstep(0.012, 0.045, texture(depthMap, uv()).r);
-            // Fleuves : le lit seul (scripts/hydro.py) ; ce sont les micro-éléments qui y coulent et leur encre
-            // qui les dessinent, aucun trait peint
-            const rv = texture(rivers, uv());
-            const bed = smoothstep(0.01, 0.22, rv.r).mul(float(1).sub(water));
+            // Fleuves : aucun tracé fixe, ce sont les micro-éléments qui y coulent qui les dessinent
+            // le lit n'est que la trace de l'eau laissée par les splats des fleuves (canal B de l'encre) : il
+            // apparaît, s'étale en fondu et s'efface avec leur passage, comme les rivages
+            // la forme exacte vient de la carte des fleuves (adoucie entre deux niveaux de détail : pas de pixels
+            // en escalier), le noir n'y apparaît que là où passent les splats
+            // épaisseur adaptée au zoom : le niveau de détail choisi par la carte graphique selon la taille à
+            // l'écran, renforcé, garde chaque grand fleuve lisible de loin ; de près, le tracé fin domine
+            const fine = texture(rivers, uv()).level(0).r;
+            const course = max(fine, texture(rivers, uv()).r.mul(1.15).min(1));
+            // les grands fleuves restent toujours visibles ; les petites rivières n'apparaissent qu'au passage des splats
+            const bed = smoothstep(0.62, 0.93, course)
+                .mul(max(smoothstep(0.03, 0.25, trail.b), smoothstep(0.7, 0.95, course)))
+                .mul(float(1).sub(water));
             const sea = water.add(bed.mul(0.3)).mul(this.uCurrents);
             // Profondeur : plus l'eau est profonde, plus elle est sombre et dense ; les plateaux restent clairs
             const depth = texture(depthMap, uv()).r;
@@ -205,10 +214,10 @@ export class Globe {
             // Terres : un blanc clinique, à peine froid, comme une planche d'anatomie ; le relief n'y est
             // qu'un modelé doux, éclairé à part (les terres ne plongent pas dans la nuit des océans)
             const shade = dot(ground, vec3(0.3, 0.59, 0.11));
-            const white = vec3(0.8, 0.83, 0.865).mul(smoothstep(0.05, 0.75, shade).mul(0.5).add(0.42));
-            const land = white.mul(limb).mul(mix(float(0.62), float(0.95), diffuse));
+            const white = vec3(0.86, 0.885, 0.91).mul(smoothstep(0.05, 0.75, shade).mul(0.38).add(0.58));
+            const land = white.mul(limb).mul(mix(float(0.74), float(1), diffuse));
             // le lit des fleuves : de l'eau noire, comme l'océan, où coulent les micro-éléments
-            let color = mix(land, vec3(0.012, 0.014, 0.02), bed);
+            let color = mix(land, vec3(0.004, 0.005, 0.008), bed);
             color = mix(color, deep, water);
             const Y = vec3(YELLOW.r, YELLOW.g, YELLOW.b);
             // jaune National Geographic posé tel quel (lumière propre : l'encre ne passe pas dans l'ombre),
@@ -227,22 +236,15 @@ export class Globe {
     }
 
     /**
-     * Défilement : la caméra suit une orbite elliptique qui précesse. En plus de tourner autour du globe,
-     * elle s'approche et s'éloigne (une boucle par ~15 crans de molette) tout en montant et descendant à une
-     * autre cadence (×0,62) : le point le plus proche ne tombe jamais deux fois au même endroit.
-     * Les trois mouvements dérivent d'une même phase : revenir en arrière refait le chemin à l'envers.
+     * Défilement : la caméra tourne autour du globe en montant et descendant doucement en latitude, sans
+     * changer de distance : le zoom reste celui que l'on a choisi. Revenir en arrière refait le chemin à l'envers.
      */
     orbit(d) {
         this.spin *= 0.88;
         this.phase = (this.phase ?? 0) + d * 4;
         const p = this.camera.position;
         p.applyAxisAngle(UP, d);
-        const { minDistance, maxDistance } = this.controls;
-        const r = THREE.MathUtils.clamp(
-            p.length() * Math.exp(-d * 0.42 * Math.cos(this.phase)),
-            minDistance,
-            maxDistance,
-        );
+        const r = p.length(); // le zoom choisi (pincement, Ctrl + molette) reste tel quel
         const lat = THREE.MathUtils.clamp(
             Math.asin(p.y / p.length()) + d * 0.7 * Math.cos(this.phase * 0.62),
             -1.05,
@@ -302,14 +304,19 @@ export class Globe {
     eddy(delta, hit) {
         const c = this.currents;
         const k = (rate) => Math.min(1, delta * rate);
+        // un geste rapide n'imprime qu'un effet léger ; c'est le doigt posé, immobile, qui creuse le tourbillon
+        const calm = 1 / (1 + (c.uPointerVel.value.length() / 0.02) ** 2);
         const on = c.uEddyOn.value;
-        c.uEddyOn.value = on + ((hit ? 1 : 0) - on) * k(hit ? 6 : 2.5);
+        c.uEddyOn.value = on + ((hit ? 0.35 + 0.65 * calm : 0) - on) * k(hit ? 6 : 2.5);
         // le tourbillon se creuse de plus en plus vite tant que le doigt reste : doux au contact, puis
         // exponentiel (sens horaire seulement, plafonné pour ne jamais devenir illisible)
-        this.dwell = hit ? (this.dwell ?? 0) + delta : 0;
+        this.dwell = hit ? ((this.dwell ?? 0) + delta) * (calm > 0.5 ? 1 : 1 - k(3)) : 0;
         if (!hit && c.uEddyOn.value < 0.01) this.uTwist.value = 0;
         else if (hit && !this.reducedMotion)
-            this.uTwist.value = Math.min(4, this.uTwist.value + delta * 0.2 * Math.exp(this.dwell * 0.6)); // le doigt plonge : vite, puis de plus en plus lentement
+            this.uTwist.value = Math.min(
+                4,
+                this.uTwist.value + delta * 0.2 * calm * Math.exp(this.dwell * 0.6),
+            ); // le doigt plonge : vite, puis de plus en plus lentement
         // sillage : la vitesse du geste, lissée comme une eau qui suit puis se repose
         const wake = this.reducedMotion
             ? new THREE.Vector2()
