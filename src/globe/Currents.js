@@ -32,7 +32,7 @@ import {
 
 const LIMIT = 1.6; // m/s : plage d'encodage du champ (voir scripts/textures.py)
 const RIVER = 0.45; // vitesse des splats fluviaux, dans la même unité
-const RIVER_SHARE = 0.1; // part des particules qui naissent sur les fleuves
+const RIVER_SHARE = 0.22; // part des particules qui naissent sur les fleuves
 
 /**
  * Les courants de surface, à partir des mesures satellite NASA OSCAR.
@@ -192,22 +192,35 @@ export class Currents {
             const v = land.select(along.mul(RIVER).add(across), sea);
             const lat = p.y.sub(0.5).mul(PI);
             const step = this.uDelta.mul(this.uSpeed);
-            p.x.assign(fract(p.x.add(v.x.mul(step).div(max(cos(lat), 0.12).mul(TWO_PI)))));
-            p.y.addAssign(v.y.mul(step).div(PI));
+            const toUv = (w) => vec2(w.x.div(max(cos(lat), 0.12).mul(TWO_PI)), w.y.div(PI)).mul(step);
             // mouvement brownien : un pas aléatoire d'environ un demi-texel à chaque image
             const jitter = vec2(
                 hash(instanceIndex.add(this.uSeed.mul(7))),
                 hash(instanceIndex.add(this.uSeed.mul(13)).add(5e5)),
-            ).sub(0.5);
-            p.x.assign(fract(p.x.add(jitter.x.mul(0.00016))));
-            p.y.addAssign(jitter.y.mul(0.00011));
+            )
+                .sub(0.5)
+                .mul(vec2(0.00016, 0.00011));
+            const move = toUv(v).add(jitter);
+            // Les terres sont les parois d'un bocal : un pas qui y entrerait glisse le long de la côte
+            // (seule la part parallèle au rivage reste), et s'il bute encore, la particule reste contre la paroi
+            const slide = toUv(sea.sub(off.mul(sea.dot(off))).add(off.mul(0.05)));
+            const wall = (m) => land.not().and(ocean(vec2(fract(p.x.add(m.x)), p.y.add(m.y))).lessThan(0.5));
+            If(wall(move), () => {
+                If(wall(slide).not(), () => {
+                    p.x.assign(fract(p.x.add(slide.x)));
+                    p.y.addAssign(slide.y);
+                });
+            }).Else(() => {
+                p.x.assign(fract(p.x.add(move.x)));
+                p.y.addAssign(move.y);
+            });
             p.z.addAssign(this.uDelta);
-            p.w.assign(land.select(0.05, speed)); // fleuves : splats minuscules, presque sans encre
+            p.w.assign(land.select(0.18, speed)); // fleuves : de l'encre aussi, qui dessine le lit
             const dead = p.z
                 .greaterThan(lifeOf(instanceIndex))
                 .or(wet.lessThan(0.5).and(land.not())) // échouée à terre, hors d'un fleuve
                 // contre la côte, une petite chance de renaître au large : aucun amas lumineux sur les rivages
-                .or(coast.greaterThan(0.15).and(hash(instanceIndex.add(this.uSeed.mul(3))).lessThan(0.15)))
+                .or(coast.greaterThan(0.15).and(hash(instanceIndex.add(this.uSeed.mul(3))).lessThan(0.04)))
                 .or(land.and(length(g).lessThan(0.06))) // là où le sens du fleuve se perd : pas d'entassement
                 .or(abs(p.y.sub(0.5)).greaterThan(0.44));
             If(dead, () => spawn(p, instanceIndex.toFloat().add(this.uSeed)));
@@ -286,7 +299,10 @@ export class Currents {
                 .add(read(vec2(0, 1)))
                 .add(read(vec2(0, -1)))
                 .mul(0.25);
-            const keep = float(1).sub(this.uFade);
+            // l'encre ne vit qu'en mer et dans le lit des fleuves : elle ne déborde jamais sur les terres
+            const keep = float(1)
+                .sub(this.uFade)
+                .mul(max(ocean(at), smoothstep(0.01, 0.1, bank(at))));
             // R : l'encre s'étale · G : les cœurs restent nets
             return vec4(mix(c.r, blur.r, this.uDiffuse).mul(keep), mix(c.g, blur.g, 0.06).mul(keep), 0, 1);
         })();
@@ -294,10 +310,10 @@ export class Currents {
 
         // Micro-splats : chaque particule des courants rapides est un minuscule point doré posé sur la surface.
         // Ils bougent avec le courant ; la lumière reste sur eux (testés en profondeur, aucun halo en volume).
+        // fondu normal (pas additif) : sur les terres blanches, un jaune additif disparaîtrait dans le blanc
         const splatMaterial = new THREE.SpriteNodeMaterial({
             transparent: true,
             depthWrite: false,
-            blending: THREE.AdditiveBlending,
         });
         // Profondeur : chaque splat flotte à sa propre hauteur (les courants rapides plus haut), et le tourbillon
         // du survol les entraîne en spirale vers le fond, comme une matière liquide aspirée
@@ -336,7 +352,11 @@ export class Currents {
             .mul(cell.select(hash(instanceIndex.add(91)).mul(1.2).add(1.8), 1))
             .mul(inRiver.select(0.75, 1)); // les splats des fleuves : petits
         splatMaterial.scaleNode = vec2(size);
-        splatMaterial.colorNode = vec4(mix(vec3(1, 0.6, 0), vec3(1, 0.88, 0.4), fast.mul(fast)), 1); // jaune #ffcc00
+        // jaune #ffcc00 ; sur les fleuves, un or plus soutenu qui se détache du blanc des terres
+        splatMaterial.colorNode = vec4(
+            inRiver.select(vec3(0.95, 0.66, 0), mix(vec3(1, 0.6, 0), vec3(1, 0.88, 0.4), fast.mul(fast))),
+            1,
+        );
         const d = uv().sub(0.5).mul(2);
         const r = length(d);
         const dot = exp(d.dot(d).mul(-4.5));
@@ -372,7 +392,7 @@ export class Currents {
         const core = exp(q.mul(-0.9));
         const on = this.uEddyOn;
         const turn = this.uTwist.mul(swirl).mul(on).mul(s); // sens horaire à l'écran, jamais l'inverse
-        const spread = float(1).sub(core.mul(0.45).mul(on).mul(s)); // l'eau écartée par le doigt
+        const spread = float(1).sub(core.mul(0.22).mul(on).mul(s)); // l'eau écartée par le doigt
         const c = cos(turn);
         const n = sin(turn);
         const wake = this.uWake

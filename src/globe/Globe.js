@@ -1,14 +1,11 @@
 import * as THREE from 'three/webgpu';
 import {
     Fn,
-    atan,
     cameraPosition,
     cos,
     dot,
-    exp,
     float,
     fract,
-    length,
     max,
     mix,
     normalWorld,
@@ -17,7 +14,6 @@ import {
     pow,
     smoothstep,
     texture,
-    time,
     uniform,
     uv,
     vec2,
@@ -180,13 +176,17 @@ export class Globe {
             const limb = mix(float(0.5), float(1), pow(facing, 0.45));
             // trait de côte fin (bathymétrie), le même que celui de la simulation
             const water = smoothstep(0.012, 0.045, texture(depthMap, uv()).r);
-            const sea = water.mul(this.uCurrents);
+            // Fleuves : le lit seul (scripts/hydro.py) ; ce sont les micro-éléments qui y coulent et leur encre
+            // qui les dessinent, aucun trait peint
+            const rv = texture(rivers, uv());
+            const bed = smoothstep(0.02, 0.3, rv.r).mul(float(1).sub(water));
+            const sea = water.add(bed.mul(0.45)).mul(this.uCurrents);
             // Profondeur : plus l'eau est profonde, plus elle est sombre et dense ; les plateaux restent clairs
             const depth = texture(depthMap, uv()).r;
             // encre : un voile translucide là où elle est diluée, dense et lumineuse dans les filaments ;
             // un peu étouffée au-dessus des abysses, comme vue à travers une eau épaisse
             // sous le doigt, l'eau est écartée : un léger creux dans l'encre
-            const ink = smoothstep(0.03, 0.95, trail.r).mul(float(1).sub(core.mul(0.55)));
+            const ink = smoothstep(0.03, 0.95, trail.r).mul(float(1).sub(core.mul(0.3)));
             const glow = pow(ink, 0.8)
                 .mul(1.15)
                 .mul(sea)
@@ -194,29 +194,23 @@ export class Globe {
             // cœurs chauds : seulement au large (contre les côtes, ils faisaient des points blancs)
             const hot = smoothstep(0.15, 1.2, trail.g)
                 .min(0.6)
-                .mul(sea)
+                .mul(water)
+                .mul(this.uCurrents)
                 .mul(smoothstep(0.03, 0.18, depth));
             // mers d'autant plus noires et froides qu'elles sont profondes
             const abyss = mix(vec3(1.25, 1.22, 1.15), vec3(0.32, 0.36, 0.46), pow(depth, 0.8));
-            // terres claires, d'un gris de pierre à peine bleuté
-            const land = ground.mul(vec3(0.9, 0.93, 1)).mul(1.3);
-            const night = mix(land, ground.mul(0.55).mul(abyss), water);
-            let color = night.mul(light).mul(limb).mul(0.62);
+            const deep = ground.mul(0.55).mul(abyss).mul(light).mul(limb).mul(0.62);
+            // Terres : un blanc clinique, à peine froid, comme une planche d'anatomie ; le relief n'y est
+            // qu'un modelé doux, éclairé à part (les terres ne plongent pas dans la nuit des océans)
+            const shade = dot(ground, vec3(0.3, 0.59, 0.11));
+            const white = vec3(0.8, 0.83, 0.865).mul(smoothstep(0.05, 0.75, shade).mul(0.5).add(0.42));
+            const land = white.mul(limb).mul(mix(float(0.62), float(0.95), diffuse));
+            // le lit des fleuves : un sillon gris-bleu très léger, où coulent les micro-éléments
+            let color = mix(land, vec3(0.55, 0.62, 0.7).mul(limb).mul(0.7), bed.mul(0.35));
+            color = mix(color, deep, water);
             const Y = vec3(YELLOW.r, YELLOW.g, YELLOW.b);
             // jaune National Geographic posé tel quel (lumière propre : l'encre ne passe pas dans l'ombre),
             // cœur des courants rapides jaune clair
-            // Fleuves et rivières : un trait fin et continu, où l'encre descend vers la mer par vagues
-            // (phase = distance à la mer le long du réseau, voir scripts/hydro.py)
-            const rv = texture(rivers, uv());
-            const line = smoothstep(0.02, 0.28, rv.r).mul(float(1).sub(water)).mul(this.uCurrents);
-            const ph = vec2(rv.g, rv.b).mul(2).sub(1);
-            const wave = fract(
-                atan(ph.x, ph.y)
-                    .div(Math.PI * 2)
-                    .add(time.mul(0.18)),
-            );
-            const pulse = exp(wave.sub(0.5).mul(5).pow(2).negate()).mul(smoothstep(0.3, 0.7, length(ph)));
-            color = mix(color, Y.mul(0.9), line.mul(pulse.mul(0.5).add(0.5)));
             color = mix(color, Y, glow.mul(1.25).min(1)).add(vec3(1, 0.9, 0.35).mul(hot).mul(0.9));
             return vec4(dither(color), 1);
         })();
@@ -308,13 +302,16 @@ export class Globe {
         const k = (rate) => Math.min(1, delta * rate);
         const on = c.uEddyOn.value;
         c.uEddyOn.value = on + ((hit ? 1 : 0) - on) * k(hit ? 6 : 2.5);
+        // le tourbillon se creuse de plus en plus vite tant que le doigt reste : doux au contact, puis
+        // exponentiel (sens horaire seulement, plafonné pour ne jamais devenir illisible)
+        this.dwell = hit ? (this.dwell ?? 0) + delta : 0;
         if (!hit && c.uEddyOn.value < 0.01) this.uTwist.value = 0;
         else if (hit && !this.reducedMotion)
-            this.uTwist.value += delta * 4.5 * Math.max(0, 1 - this.uTwist.value / 5.5); // le doigt plonge : vite, puis de plus en plus lentement
+            this.uTwist.value = Math.min(9, this.uTwist.value + delta * 0.35 * Math.exp(this.dwell * 0.8)); // le doigt plonge : vite, puis de plus en plus lentement
         // sillage : la vitesse du geste, lissée comme une eau qui suit puis se repose
         const wake = this.reducedMotion
             ? new THREE.Vector2()
-            : c.uPointerVel.value.clone().multiplyScalar(0.5);
+            : c.uPointerVel.value.clone().multiplyScalar(0.3);
         c.uWake.value.lerp(hit ? wake : new THREE.Vector2(), k(4));
         if (hit) {
             const e = this.uEddy.value;
