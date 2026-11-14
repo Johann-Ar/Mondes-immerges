@@ -161,7 +161,9 @@ export class Globe {
         const oy = uv().y.sub(this.uEddy.y);
         const { shift, core } = c.finger(ox, oy, 1);
         const lens = uv().add(vec2(shift.x.div(max(k, 0.05)), shift.y));
-        const trail = mix(c.trailNode, c.reader(lens), c.uEddyOn);
+        // seulement en mer : l'encre des fleuves n'est jamais déformée
+        const still = smoothstep(0.012, 0.045, texture(depthMap, uv()).r);
+        const trail = mix(c.trailNode, c.reader(lens), c.uEddyOn.mul(still));
         const surface = new THREE.MeshBasicNodeMaterial();
         surface.colorNode = Fn(() => {
             const n = normalize(normalWorld);
@@ -179,14 +181,14 @@ export class Globe {
             // Fleuves : le lit seul (scripts/hydro.py) ; ce sont les micro-éléments qui y coulent et leur encre
             // qui les dessinent, aucun trait peint
             const rv = texture(rivers, uv());
-            const bed = smoothstep(0.02, 0.3, rv.r).mul(float(1).sub(water));
-            const sea = water.add(bed.mul(0.45)).mul(this.uCurrents);
+            const bed = smoothstep(0.01, 0.22, rv.r).mul(float(1).sub(water));
+            const sea = water.add(bed.mul(0.3)).mul(this.uCurrents);
             // Profondeur : plus l'eau est profonde, plus elle est sombre et dense ; les plateaux restent clairs
             const depth = texture(depthMap, uv()).r;
             // encre : un voile translucide là où elle est diluée, dense et lumineuse dans les filaments ;
             // un peu étouffée au-dessus des abysses, comme vue à travers une eau épaisse
             // sous le doigt, l'eau est écartée : un léger creux dans l'encre
-            const ink = smoothstep(0.03, 0.95, trail.r).mul(float(1).sub(core.mul(0.3)));
+            const ink = smoothstep(0.03, 0.95, trail.r).mul(float(1).sub(core.mul(0.2).mul(still)));
             const glow = pow(ink, 0.8)
                 .mul(1.15)
                 .mul(sea)
@@ -205,8 +207,8 @@ export class Globe {
             const shade = dot(ground, vec3(0.3, 0.59, 0.11));
             const white = vec3(0.8, 0.83, 0.865).mul(smoothstep(0.05, 0.75, shade).mul(0.5).add(0.42));
             const land = white.mul(limb).mul(mix(float(0.62), float(0.95), diffuse));
-            // le lit des fleuves : un sillon gris-bleu très léger, où coulent les micro-éléments
-            let color = mix(land, vec3(0.55, 0.62, 0.7).mul(limb).mul(0.7), bed.mul(0.35));
+            // le lit des fleuves : de l'eau noire, comme l'océan, où coulent les micro-éléments
+            let color = mix(land, vec3(0.012, 0.014, 0.02), bed);
             color = mix(color, deep, water);
             const Y = vec3(YELLOW.r, YELLOW.g, YELLOW.b);
             // jaune National Geographic posé tel quel (lumière propre : l'encre ne passe pas dans l'ombre),
@@ -307,11 +309,11 @@ export class Globe {
         this.dwell = hit ? (this.dwell ?? 0) + delta : 0;
         if (!hit && c.uEddyOn.value < 0.01) this.uTwist.value = 0;
         else if (hit && !this.reducedMotion)
-            this.uTwist.value = Math.min(9, this.uTwist.value + delta * 0.35 * Math.exp(this.dwell * 0.8)); // le doigt plonge : vite, puis de plus en plus lentement
+            this.uTwist.value = Math.min(4, this.uTwist.value + delta * 0.2 * Math.exp(this.dwell * 0.6)); // le doigt plonge : vite, puis de plus en plus lentement
         // sillage : la vitesse du geste, lissée comme une eau qui suit puis se repose
         const wake = this.reducedMotion
             ? new THREE.Vector2()
-            : c.uPointerVel.value.clone().multiplyScalar(0.3);
+            : c.uPointerVel.value.clone().multiplyScalar(0.2);
         c.uWake.value.lerp(hit ? wake : new THREE.Vector2(), k(4));
         if (hit) {
             const e = this.uEddy.value;

@@ -92,7 +92,7 @@ img = np.stack([R * net, ps * 0.5 + 0.5, pc * 0.5 + 0.5], -1)  # tracé : fleuve
 Image.fromarray(u8(np.clip(img, 0, 1))).save(f'{out}/rivers.png', optimize=True)
 
 # Points de départ des splats fluviaux : sur les fleuves atteints depuis la mer, répartis sur tout le réseau
-w = (R * (dist >= 0)).ravel().astype('f8')
+w = ((R > 0.06) * (dist >= 0)).ravel().astype("f8")  # uniforme sur le réseau : les affluents aussi
 idx = np.random.default_rng(7).choice(w.size, 32768, p=w / w.sum())
 sy, sx = np.divmod(idx, W)
 seeds = np.stack([(sx + 0.5) / W, 1 - (sy + 0.5) / H], -1)  # uv, nord en v = 1

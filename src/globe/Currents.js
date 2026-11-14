@@ -16,7 +16,6 @@ import {
     instancedArray,
     length,
     max,
-    min,
     mix,
     mx_noise_float,
     sin,
@@ -32,7 +31,7 @@ import {
 
 const LIMIT = 1.6; // m/s : plage d'encodage du champ (voir scripts/textures.py)
 const RIVER = 0.45; // vitesse des splats fluviaux, dans la même unité
-const RIVER_SHARE = 0.22; // part des particules qui naissent sur les fleuves
+const RIVER_SHARE = 0.07; // part des particules qui naissent sur les fleuves
 
 /**
  * Les courants de surface, à partir des mesures satellite NASA OSCAR.
@@ -68,6 +67,7 @@ export class Currents {
 
         const state = instancedArray(count, 'vec4'); // x, y : position (uv) · z : âge · w : vitesse (m/s)
         this.state = state;
+        const kicks = instancedArray(count, 'vec2'); // rebond contre une côte (m/s), amorti en une demi-seconde
         const sample = (p) => texture(field, p).level(0);
         // Trait de côte fin (bathymétrie ETOPO, 2048 × 1024) : 1 en mer, 0 sur les terres. Le champ OSCAR
         // (1/3°) est trop grossier pour la côte : il laisserait passer les splats sur les isthmes et les rivages
@@ -166,8 +166,7 @@ export class Currents {
             // la turbulence suit l'énergie du courant, mais ne s'éteint jamais : l'eau calme frémit aussi
             // le curseur ne touche jamais la simulation : sa réaction est purement visuelle (globe.js)
             const drift = base.add(swirl.mul(speed.mul(0.9).add(0.18)));
-            // Les terres sont solides : près d'une côte, la part du mouvement qui va vers la terre est retirée
-            // et une légère poussée ramène au large ; les particules glissent le long du rivage
+            // Les terres sont les parois d'un bocal : les particules de mer y rebondissent (voir plus bas)
             const e = 1.5 / 2048;
             const shore = vec2(
                 ocean(p.xy.add(vec2(e, 0))).sub(ocean(p.xy.sub(vec2(e, 0)))),
@@ -175,7 +174,8 @@ export class Currents {
             );
             const coast = smoothstep(0.03, 0.3, length(shore));
             const off = shore.div(max(length(shore), 1e-4)); // vers le large
-            const sea = drift.sub(off.mul(min(drift.dot(off), 0)).mul(coast)).add(off.mul(coast.mul(0.5)));
+            const kick = kicks.element(instanceIndex);
+            const sea = drift.add(kick);
             // Sur les terres, seuls les fleuves portent : le fil de l'eau vers l'aval, et une attraction en
             // travers du lit (jamais le long : elle créerait des pièges où tout s'entasse)
             const g = downstream(p.xy);
@@ -201,11 +201,14 @@ export class Currents {
                 .sub(0.5)
                 .mul(vec2(0.00016, 0.00011));
             const move = toUv(v).add(jitter);
-            // Les terres sont les parois d'un bocal : un pas qui y entrerait glisse le long de la côte
-            // (seule la part parallèle au rivage reste), et s'il bute encore, la particule reste contre la paroi
+            // Rebond : un pas de mer qui entrerait dans une terre est réfléchi sur le rivage. L'élan renvoyé au
+            // large (la composante vers la terre, retournée et un peu amplifiée) persiste puis s'amortit ;
+            // ce pas-ci glisse le long de la côte. Seuls les splats des fleuves entrent dans les terres.
             const slide = toUv(sea.sub(off.mul(sea.dot(off))).add(off.mul(0.05)));
             const wall = (m) => land.not().and(ocean(vec2(fract(p.x.add(m.x)), p.y.add(m.y))).lessThan(0.5));
+            kick.mulAssign(float(1).sub(this.uDelta.mul(2.5)).max(0));
             If(wall(move), () => {
+                kick.addAssign(off.mul(abs(sea.dot(off)).mul(1.5).add(0.04)));
                 If(wall(slide).not(), () => {
                     p.x.assign(fract(p.x.add(slide.x)));
                     p.y.addAssign(slide.y);
@@ -215,15 +218,18 @@ export class Currents {
                 p.y.addAssign(move.y);
             });
             p.z.addAssign(this.uDelta);
-            p.w.assign(land.select(0.18, speed)); // fleuves : de l'encre aussi, qui dessine le lit
+            p.w.assign(land.select(0.04, speed)); // fleuves : de l'encre aussi, qui dessine le lit
             const dead = p.z
                 .greaterThan(lifeOf(instanceIndex))
                 .or(wet.lessThan(0.5).and(land.not())) // échouée à terre, hors d'un fleuve
                 // contre la côte, une petite chance de renaître au large : aucun amas lumineux sur les rivages
-                .or(coast.greaterThan(0.15).and(hash(instanceIndex.add(this.uSeed.mul(3))).lessThan(0.04)))
+                .or(coast.greaterThan(0.15).and(hash(instanceIndex.add(this.uSeed.mul(3))).lessThan(0.01)))
                 .or(land.and(length(g).lessThan(0.06))) // là où le sens du fleuve se perd : pas d'entassement
                 .or(abs(p.y.sub(0.5)).greaterThan(0.44));
-            If(dead, () => spawn(p, instanceIndex.toFloat().add(this.uSeed)));
+            If(dead, () => {
+                spawn(p, instanceIndex.toFloat().add(this.uSeed));
+                kick.assign(vec2(0));
+            });
         })().compute(count);
 
         // Traînées (texture équirectangulaire)
@@ -255,7 +261,11 @@ export class Currents {
             const d = uv().sub(0.5).mul(2);
             return exp(d.dot(d).mul(-2.5));
         })();
-        const amount = life(instanceIndex).mul(float(0.006).add(strength.mul(strength).mul(0.42)));
+        // sur les terres, l'encre n'est pas emportée par un courant : elle s'accumulerait sur place en un trait
+        // plein. Les fleuves n'en déposent qu'un voile, ce sont leurs micro-éléments qui les dessinent
+        const amount = life(instanceIndex)
+            .mul(float(0.006).add(strength.mul(strength).mul(0.42)))
+            .mul(mix(float(0.06), float(1), ocean(head.xy)));
         // Deux passes : la traînée, et sa copie de l'autre côté du méridien 180° (aucune couture visible)
         const trail = (shift) => {
             const material = new THREE.SpriteNodeMaterial({
@@ -320,7 +330,11 @@ export class Currents {
         const k = max(cos(head.y.sub(0.5).mul(PI)), 0.05).mul(2);
         const ox = fract(head.x.sub(this.uEddy.x).add(0.5)).sub(0.5).mul(k);
         const oy = head.y.sub(this.uEddy.y);
-        const { shift: moved, core: pull } = this.finger(ox, oy, -1);
+        const { shift, core } = this.finger(ox, oy, -1);
+        // le survol n'agit que sur la mer : les fleuves continuent de couler, intacts
+        const stir = smoothstep(0.3, 0.7, ocean(head.xy));
+        const moved = shift.mul(stir);
+        const pull = core.mul(stir);
         const ex = this.uEddy.x.add(ox.add(moved.x).div(k));
         const ey = this.uEddy.y.add(oy.add(moved.y));
         const lon = ex.mul(TWO_PI);
@@ -350,7 +364,7 @@ export class Currents {
             .add(fast.mul(0.0032))
             .mul(seed.mul(0.7).add(0.6))
             .mul(cell.select(hash(instanceIndex.add(91)).mul(1.2).add(1.8), 1))
-            .mul(inRiver.select(0.75, 1)); // les splats des fleuves : petits
+            .mul(inRiver.select(1.1, 1)); // les splats des fleuves : lisibles sur le lit noir
         splatMaterial.scaleNode = vec2(size);
         // jaune #ffcc00 ; sur les fleuves, un or plus soutenu qui se détache du blanc des terres
         splatMaterial.colorNode = vec4(
@@ -364,7 +378,7 @@ export class Currents {
         // les cellules n'apparaissent que sur la touche Espace, pleines
         splatMaterial.opacityNode = cell
             .select(disc.mul(0.55).mul(this.uFill), dot)
-            .mul(inRiver.select(1.1, fast.mul(0.75).add(0.25)))
+            .mul(inRiver.select(0.8, fast.mul(0.75).add(0.25)))
             .mul(facing)
             .mul(afloat)
             .mul(float(1).sub(pull.mul(0.6))) // sous le doigt, l’eau écartée les estompe : la fumée mène
@@ -392,7 +406,7 @@ export class Currents {
         const core = exp(q.mul(-0.9));
         const on = this.uEddyOn;
         const turn = this.uTwist.mul(swirl).mul(on).mul(s); // sens horaire à l'écran, jamais l'inverse
-        const spread = float(1).sub(core.mul(0.22).mul(on).mul(s)); // l'eau écartée par le doigt
+        const spread = float(1).sub(core.mul(0.15).mul(on).mul(s)); // l'eau écartée par le doigt
         const c = cos(turn);
         const n = sin(turn);
         const wake = this.uWake
