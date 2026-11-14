@@ -1,19 +1,23 @@
 import * as THREE from 'three/webgpu';
 import {
     Fn,
+    atan,
     cameraPosition,
     cos,
     dot,
     float,
     fract,
+    length,
     max,
     mix,
     normalWorld,
     normalize,
     positionWorld,
     pow,
+    sin,
     smoothstep,
     texture,
+    time,
     uniform,
     uv,
     vec2,
@@ -187,11 +191,11 @@ export class Globe {
             // l'écran, renforcé, garde chaque grand fleuve lisible de loin ; de près, le tracé fin domine
             const fine = texture(rivers, uv()).level(0).r;
             const course = max(fine, texture(rivers, uv()).r.mul(1.15).min(1));
-            // les grands fleuves restent toujours visibles ; les petites rivières n'apparaissent qu'au passage des splats
+            // le lit n'est noir que là où passent les splats : pas de noir sans jaune
             const bed = smoothstep(0.62, 0.93, course)
-                .mul(max(smoothstep(0.03, 0.25, trail.b), smoothstep(0.7, 0.95, course)))
+                .mul(smoothstep(0.004, 0.06, trail.b))
                 .mul(float(1).sub(water));
-            const sea = water.add(bed.mul(0.3)).mul(this.uCurrents);
+            const sea = water.add(bed.mul(0.9)).mul(this.uCurrents); // l'encre brille aussi dans le lit des fleuves
             // Profondeur : plus l'eau est profonde, plus elle est sombre et dense ; les plateaux restent clairs
             const depth = texture(depthMap, uv()).r;
             // encre : un voile translucide là où elle est diluée, dense et lumineuse dans les filaments ;
@@ -216,10 +220,26 @@ export class Globe {
             const shade = dot(ground, vec3(0.3, 0.59, 0.11));
             const white = vec3(0.86, 0.885, 0.91).mul(smoothstep(0.05, 0.75, shade).mul(0.38).add(0.58));
             const land = white.mul(limb).mul(mix(float(0.74), float(1), diffuse));
-            // le lit des fleuves : de l'eau noire, comme l'océan, où coulent les micro-éléments
-            let color = mix(land, vec3(0.004, 0.005, 0.008), bed);
+            // fleuves : seul le jaune des micro-éléments et de leur encre, sans lit noir
+            let color = land;
             color = mix(color, deep, water);
             const Y = vec3(YELLOW.r, YELLOW.g, YELLOW.b);
+            // Fleuves vivants : une lueur jaune qui enfle et retombe en descendant vers la mer, lentement, sans
+            // clignoter. La phase de l'écoulement (rivers.png G B, distance à la mer enroulée) porte des vagues
+            // de lumière d'environ 3,5° qui avancent vers l'aval ; les bassins fermés gardent une lueur calme.
+            const ph = texture(rivers, uv()).level(0).yz.mul(2).sub(1);
+            const flowing = smoothstep(0.15, 0.5, length(ph));
+            const swell = pow(
+                sin(atan(ph.x, ph.y).add(time.mul(1.1)))
+                    .mul(0.5)
+                    .add(0.5),
+                2.5,
+            );
+            const lit = smoothstep(0.35, 0.9, course)
+                .mul(float(1).sub(water))
+                .mul(this.uCurrents)
+                .mul(mix(float(0.4), mix(float(0.18), float(1), swell), flowing));
+            color = mix(color, Y, lit.mul(0.8));
             // jaune National Geographic posé tel quel (lumière propre : l'encre ne passe pas dans l'ombre),
             // cœur des courants rapides jaune clair
             color = mix(color, Y, glow.mul(1.25).min(1)).add(vec3(1, 0.9, 0.35).mul(hot).mul(0.9));
@@ -299,7 +319,7 @@ export class Globe {
      * La main dans l'eau. Le tourbillon apparaît dès que le curseur touche le globe, le suit avec un léger
      * retard (l'inertie d'un liquide) et s'enroule dans le sens horaire, vite puis de plus en plus lentement.
      * Le geste entraîne l'eau dans sa direction. Quand le curseur quitte le globe, rien ne se déroule à
-     * l'envers : le tourbillon se fond dans le dessin d'origine.
+     * l'envers : le tourbillon se fond lentement (quelques secondes) dans le dessin d'origine.
      */
     eddy(delta, hit) {
         const c = this.currents;
@@ -307,7 +327,8 @@ export class Globe {
         // un geste rapide n'imprime qu'un effet léger ; c'est le doigt posé, immobile, qui creuse le tourbillon
         const calm = 1 / (1 + (c.uPointerVel.value.length() / 0.02) ** 2);
         const on = c.uEddyOn.value;
-        c.uEddyOn.value = on + ((hit ? 0.35 + 0.65 * calm : 0) - on) * k(hit ? 6 : 2.5);
+        // après le passage du doigt, l'eau met quelques secondes à se remettre : l'empreinte se résorbe lentement
+        c.uEddyOn.value = on + ((hit ? 0.35 + 0.65 * calm : 0) - on) * k(hit ? 6 : 0.75);
         // le tourbillon se creuse de plus en plus vite tant que le doigt reste : doux au contact, puis
         // exponentiel (sens horaire seulement, plafonné pour ne jamais devenir illisible)
         this.dwell = hit ? ((this.dwell ?? 0) + delta) * (calm > 0.5 ? 1 : 1 - k(3)) : 0;
@@ -321,7 +342,7 @@ export class Globe {
         const wake = this.reducedMotion
             ? new THREE.Vector2()
             : c.uPointerVel.value.clone().multiplyScalar(0.2);
-        c.uWake.value.lerp(hit ? wake : new THREE.Vector2(), k(4));
+        c.uWake.value.lerp(hit ? wake : new THREE.Vector2(), k(hit ? 4 : 0.9));
         if (hit) {
             const e = this.uEddy.value;
             if (on < 0.02) e.copy(hit);

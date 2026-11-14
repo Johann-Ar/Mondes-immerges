@@ -142,7 +142,7 @@ while q:
             q.append((yy, xx))
 # Bassins fermés (Okavango, Amou-Daria, fleuves qui finissent dans un lac sans issue) : chaque morceau du réseau
 # non relié à la mer s'écoule vers son point le plus bas, pour que tous les grands fleuves soient dessinés
-to_sea = dist >= 0  # seuls ces tronçons reçoivent des splats : ailleurs, ils s'entasseraient au point bas
+to_sea = dist >= 0
 lab, n = label(bridge & (dist < 0), structure=np.ones((3, 3)))
 if n:
     low = minimum_position(z, lab, range(1, n + 1))
@@ -170,7 +170,7 @@ img = np.stack([soft, ps * 0.5 + 0.5, pc * 0.5 + 0.5], -1)  # tracé des fleuves
 Image.fromarray(u8(np.clip(img, 0, 1))).save(f'{out}/rivers.png', optimize=True)
 
 # Points de départ des splats fluviaux : sur les fleuves atteints depuis la mer, répartis sur tout le réseau
-w = ((R > 0.06) * to_sea).ravel().astype("f8")  # uniforme sur le réseau relié à la mer, affluents compris
+w = ((R > 0.06) * net).ravel().astype("f8")  # uniforme sur tout le réseau, bassins fermés compris : tout lit noir a ses splats
 idx = np.random.default_rng(7).choice(w.size, 32768, p=w / w.sum())
 sy, sx = np.divmod(idx, W)
 seeds = np.stack([(sx + 0.5) / W, 1 - (sy + 0.5) / H], -1)  # uv, nord en v = 1

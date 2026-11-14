@@ -267,7 +267,7 @@ export class Currents {
         // B : l'eau des fleuves. Chaque splat fluvial mouille la terre là où il passe ; cette trace s'étale et
         // sèche en quelques secondes. Le globe y dessine le lit en noir : un fleuve n'existe que si l'eau y coule
         const wet = life(instanceIndex)
-            .mul(fluvial(instanceIndex).select(float(0.03), float(0)))
+            .mul(fluvial(instanceIndex).select(float(0.06), float(0)))
             .mul(float(1).sub(ocean(head.xy)));
         const g = (() => {
             const d = uv().sub(0.5).mul(2);
@@ -277,7 +277,13 @@ export class Currents {
         // plein. Les fleuves n'en déposent qu'un voile, ce sont leurs micro-éléments qui les dessinent
         const amount = life(instanceIndex)
             .mul(float(0.006).add(strength.mul(strength).mul(0.42)))
-            .mul(mix(float(0.06), float(1), ocean(head.xy)));
+            .mul(mix(float(0.06), float(1), ocean(head.xy)))
+            // les splats des fleuves laissent un filet d'encre jaune bien visible dans le lit noir
+            .add(
+                life(instanceIndex)
+                    .mul(fluvial(instanceIndex).select(float(0.05), float(0)))
+                    .mul(float(1).sub(ocean(head.xy))),
+            );
         // Deux passes : la traînée, et sa copie de l'autre côté du méridien 180° (aucune couture visible)
         const trail = (shift) => {
             const material = new THREE.SpriteNodeMaterial({
@@ -328,7 +334,7 @@ export class Currents {
             // R : l'encre s'étale · G : les cœurs restent nets
             // B : l'eau des fleuves s'étale largement (bords en fondu) et sèche lentement, hors de l'océan
             const dry = float(1)
-                .sub(this.uDelta.mul(0.3))
+                .sub(this.uDelta.mul(0.12))
                 .mul(float(1).sub(ocean(at)));
             return vec4(
                 mix(c.r, blur.r, this.uDiffuse).mul(keep),
@@ -385,7 +391,7 @@ export class Currents {
             .add(fast.mul(0.0032))
             .mul(seed.mul(0.7).add(0.6))
             .mul(cell.select(hash(instanceIndex.add(91)).mul(1.2).add(1.8), 1))
-            .mul(inRiver.select(0.85, 1)); // les splats des fleuves : lisibles sur le lit noir
+            .mul(inRiver.select(1.2, 1)); // les splats des fleuves : bien lisibles sur le lit noir
         splatMaterial.scaleNode = vec2(size);
         // jaune #ffcc00 ; sur les fleuves, un or plus soutenu qui se détache du blanc des terres
         splatMaterial.colorNode = vec4(
@@ -399,7 +405,7 @@ export class Currents {
         // les cellules n'apparaissent que sur la touche Espace, pleines
         splatMaterial.opacityNode = cell
             .select(disc.mul(0.55).mul(this.uFill), dot)
-            .mul(inRiver.select(0.6, fast.mul(0.75).add(0.25)))
+            .mul(inRiver.select(0.95, fast.mul(0.75).add(0.25)))
             .mul(facing)
             .mul(afloat)
             .mul(float(1).sub(pull.mul(0.6))) // sous le doigt, l’eau écartée les estompe : la fumée mène
