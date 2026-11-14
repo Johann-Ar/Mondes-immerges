@@ -11,6 +11,21 @@
         <meta name="theme-color" content="#000000" />
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="preconnect" href="https://lumiere-a.akamaihd.net" />
+        <!-- les textures du globe partent dès le HTML, en parallèle du JavaScript (three.js) -->
+        <link
+            rel="preload"
+            as="image"
+            href="/textures/relief.jpg"
+            fetchpriority="high"
+            crossorigin="anonymous"
+        />
+        <link
+            rel="preload"
+            as="image"
+            href="/textures/currents.png"
+            fetchpriority="high"
+            crossorigin="anonymous"
+        />
         <script>
             try {
                 if (sessionStorage.getItem('mi:transition'))
@@ -41,27 +56,11 @@
         </section>
 
         <aside class="guide" id="guide">
-            <p class="guide-hint">
-                <span class="guide-frame" aria-hidden="true"></span>Faites tourner le globe (glisser, molette)
-                et ouvrez un cadre jaune.
-            </p>
+            <p class="guide-hint">Faites tourner le globe (glisser, molette) et ouvrez un cadre jaune.</p>
             <p class="guide-data">
                 En jaune, les courants de surface, mesurés par satellite.
-                <span>Données NASA&nbsp;OSCAR · relief NOAA&nbsp;ETOPO</span>
+                <span>Données NASA&nbsp;OSCAR · relief NOAA&nbsp;ETOPO · eaux douces WWF&nbsp;GLWD</span>
             </p>
-            <label class="tone">
-                <span>Or</span>
-                <input
-                    type="range"
-                    id="tone"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value="0.75"
-                    aria-label="Teinte des courants, de l'or au jaune National Geographic"
-                />
-                <span>Jaune</span>
-            </label>
         </aside>
 
         <dialog class="index" id="index" aria-labelledby="index-title">

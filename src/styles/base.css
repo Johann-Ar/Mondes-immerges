@@ -229,9 +229,9 @@ button {
         background-position-x: calc(var(--d) * -2);
     }
 }
+/* au survol, le globe grossit seulement : sa rotation continue sans à-coup (changer la durée la ferait sauter) */
 .to-globe:hover .orb {
-    scale: 1.1;
-    animation-duration: 6s;
+    scale: 1.12;
 }
 .to-globe:hover {
     color: var(--yellow);

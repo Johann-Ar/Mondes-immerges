@@ -116,14 +116,7 @@ body {
     font-size: var(--fs-m);
     font-weight: 500;
 }
-.guide-frame {
-    flex: none;
-    width: 12px;
-    height: 16px;
-    border: 3px solid var(--yellow);
-}
 .guide-data {
-    padding-left: 24px;
     color: var(--muted);
     font-size: var(--fs-s);
     line-height: 1.5;
@@ -134,57 +127,6 @@ body {
     font-size: var(--fs-xs);
     letter-spacing: 0.06em;
     text-transform: uppercase;
-}
-
-/* Curseur de teinte : de l'or au jaune National Geographic */
-.tone {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 14px 0 0 24px;
-    color: #8a8a8a;
-    font-size: var(--fs-xs);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-.tone input {
-    width: 120px;
-    height: 18px;
-    margin: 0;
-    background: none;
-    accent-color: var(--yellow);
-    cursor: pointer;
-    -webkit-appearance: none;
-    appearance: none;
-}
-.tone input::-webkit-slider-runnable-track {
-    height: 2px;
-    background: linear-gradient(90deg, #b8860b, var(--yellow));
-}
-.tone input::-moz-range-track {
-    height: 2px;
-    background: linear-gradient(90deg, #b8860b, var(--yellow));
-}
-.tone input::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 10px;
-    height: 14px;
-    margin-top: -6px;
-    border: 2px solid var(--yellow);
-    background: #000;
-    rotate: var(--tilt);
-}
-.tone input::-moz-range-thumb {
-    width: 6px;
-    height: 10px;
-    border: 2px solid var(--yellow);
-    border-radius: 0;
-    background: #000;
-    rotate: var(--tilt);
-}
-.tone input:focus-visible {
-    outline: 2px solid #fff;
-    outline-offset: 4px;
 }
 
 .credit {
@@ -237,11 +179,8 @@ body {
     width: 16px;
     height: 24px;
     border: 3px solid var(--yellow);
-    background: rgb(0 0 0 / 0.35);
     overflow: hidden;
-    box-shadow:
-        0 0 18px rgb(255 204 0 / 0.3),
-        0 18px 40px -12px rgb(0 0 0 / 0.8);
+    box-shadow: 0 0 18px rgb(255 204 0 / 0.3);
 }
 .marker-frame img {
     width: 100%;
@@ -254,11 +193,10 @@ body {
     opacity: 1;
     transition: opacity 0.4s 0.15s;
 }
-/* L'étiquette se tient du côté opposé à la chute : à gauche (texte calé à droite), ou à droite en miroir.
-   Pendant la chute elle descend jusqu'au coin bas du cadre couché (translate animé dans experience.js). */
+/* L'étiquette : toujours à droite du cadre, centrée sur son axe, immobile pendant l'animation */
 .marker-label {
     position: absolute;
-    right: 14px;
+    left: 22px;
     top: 0;
     display: grid;
     gap: 2px;
@@ -268,14 +206,8 @@ body {
     background: rgb(0 0 0 / 0.78);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
-    text-align: right;
     transform: translateY(-50%);
     transition: opacity 0.3s;
-}
-.marker.is-flip .marker-label {
-    right: auto;
-    left: 14px;
-    text-align: left;
 }
 .marker-label strong {
     font-size: var(--fs-xs);

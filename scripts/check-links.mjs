@@ -24,7 +24,7 @@ for (const file of pages) {
     const dir = path.dirname(file);
     for (const m of text.matchAll(REF)) {
         const ref = m[1] || m[2] || m[3];
-        if (/^(https?:|data:|mailto:|javascript:|\/\/)/.test(ref) || ref.includes('${')) continue;
+        if (/^(https?:|data:|mailto:|javascript:|\/\/|%23)/.test(ref) || ref.includes('${')) continue;
         let target;
         if (ref.startsWith(BASE)) target = path.join(DIST, ref.slice(BASE.length));
         else if (ref.startsWith('/')) {

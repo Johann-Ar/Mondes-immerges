@@ -28,88 +28,60 @@ const index = $('index');
 $('index-close').addEventListener('click', () => index.close());
 index.addEventListener('click', (e) => e.target === index && index.close());
 
-// Un cadre jaune par film (portrait 2:3, comme l'affiche). Au survol, en un seul mouvement :
-// 1. le cadre tombe à 90° sur son coin bas (il se couche en paysage), rebondit, se pose ;
-// 2. pendant la chute, l'étiquette (titre + infos) descend : son coin haut vient se caler pile sur le coin
-//    bas du cadre couché, et arrive en même temps que lui, rebond compris ;
-// 3. le cadre grandit vers le haut et vers l'extérieur, ancré sur ce coin : l'affiche apparaît,
-//    le titre reste en diagonale basse. Près du bord gauche de l'écran, tout est en miroir.
+// Un cadre jaune par film (portrait 2:3, comme l'affiche), son titre toujours à droite, immobile. Au survol :
+// 1. le cadre tombe à 90° en tournant sur son centre : il se couche en paysage sans quitter l'axe du titre,
+//    avec l'accélération d'une chute et un petit rebond ;
+// 2. il grandit vers la gauche (à l'opposé du titre), autant vers le haut que vers le bas, et l'affiche apparaît.
 const POSTER = mobile ? 132 : 196; // largeur de l'affiche ouverte (hauteur : ×1,5)
-const FALL = 600;
+const FALL = 560;
 const ease = 'cubic-bezier(0.22, 1, 0.36, 1)';
 const spring = 'cubic-bezier(0.3, 1.45, 0.55, 1)';
 const REST = { left: '-8px', top: '-12px', width: '16px', height: '24px', borderWidth: '3px' };
+const LANDED = { left: '-12px', top: '-8px', width: '24px', height: '16px', borderWidth: '3px' };
 const M = 16; // marge à l'écran
 
 function open(element) {
     if (element.opening) return element.opening;
     const frame = element.querySelector('.marker-frame');
-    const label = element.querySelector('.marker-label');
     const img = frame.querySelector('img');
-    const dir = element.classList.contains('is-flip') ? -1 : 1; // 1 : tombe à droite, grandit à gauche
     const { left: x, top: y } = element.getBoundingClientRect();
     const ratio = img.naturalWidth ? img.naturalHeight / img.naturalWidth : 1.5;
-    // la place : vers le haut (sous l'en-tête) et vers l'extérieur, à partir du coin d'ancrage
-    const bar = document.getElementById('bar').offsetHeight || 64;
-    const up = y + 12 - (bar + M);
-    const side = dir > 0 ? x + 32 - M : innerWidth - (x - 32) - M;
-    const w = Math.round(Math.max(72, Math.min(POSTER, side, up / ratio)));
+    // la place : vers la gauche depuis le bord droit du cadre couché, et symétrique en hauteur autour du titre
+    const top = document.getElementById('bar').offsetHeight || 64;
+    const half = Math.min(y - (top + M), innerHeight - M - y);
+    const w = Math.round(Math.max(64, Math.min(POSTER, x + 12 - M, (2 * half) / ratio)));
     const h = Math.round(w * ratio);
     const big = {
-        left: dir > 0 ? `${32 - w}px` : '-32px',
-        top: `${12 - h}px`,
+        left: `${12 - w}px`,
+        top: `${-h / 2}px`,
         width: `${w}px`,
         height: `${h}px`,
         borderWidth: mobile ? '4px' : '5px',
     };
-    const landed = {
-        left: dir > 0 ? '8px' : '-32px',
-        top: '-4px',
-        width: '24px',
-        height: '16px',
-        borderWidth: '3px',
-    };
-    // l'étiquette : son coin haut (droit, ou gauche en miroir) vient sur le coin bas du cadre couché
-    const lift = { translate: `${22 * dir}px ${12 + label.offsetHeight / 2}px` };
 
     $('markers').classList.add('has-open');
     globe?.hold(8);
     element.classList.add('is-open');
     frame.getAnimations().forEach((a) => a.cancel());
-    label.getAnimations().forEach((a) => a.cancel());
-    frame.style.transformOrigin = dir > 0 ? 'right bottom' : 'left bottom';
     element.opening = (async () => {
-        if (reducedMotion) {
-            label.animate([lift, lift], { duration: 1, fill: 'forwards' });
-        } else {
-            // même horloge, mêmes appuis : accélération de la chute, impact à 60 %, petit rebond, repos
-            const gravity = 'cubic-bezier(0.55, 0, 1, 0.6)';
+        if (!reducedMotion) {
             const fall = frame.animate(
                 [
-                    { rotate: '0deg', easing: gravity },
-                    { rotate: `${90 * dir}deg`, offset: 0.6, easing: 'ease-out' },
-                    { rotate: `${80 * dir}deg`, offset: 0.78, easing: 'ease-in' },
-                    { rotate: `${90 * dir}deg` },
+                    { rotate: '0deg', easing: 'cubic-bezier(0.55, 0, 1, 0.6)' },
+                    { rotate: '90deg', offset: 0.62, easing: 'ease-out' },
+                    { rotate: '80deg', offset: 0.8, easing: 'ease-in' },
+                    { rotate: '90deg' },
                 ],
                 { duration: FALL },
-            );
-            const bounce = { translate: `${22 * dir}px ${8 + label.offsetHeight / 2}px` };
-            label.animate(
-                [
-                    { translate: '0 0', easing: gravity },
-                    { ...lift, offset: 0.6, easing: 'ease-out' },
-                    { ...bounce, offset: 0.78, easing: 'ease-in' },
-                    lift,
-                ],
-                { duration: FALL, fill: 'forwards' },
             );
             await fall.finished;
             fall.cancel();
         }
         if (!element.opening) return;
-        Object.assign(frame.style, big, { transformOrigin: '' });
+        // couché en paysage, puis la fenêtre s'ouvre vers la gauche, centrée sur l'axe du titre
+        Object.assign(frame.style, big);
         element.classList.add('is-landed');
-        if (!reducedMotion) await frame.animate([landed, big], { duration: 680, easing: spring }).finished;
+        if (!reducedMotion) await frame.animate([LANDED, big], { duration: 640, easing: spring }).finished;
     })().catch(() => {}); // interrompu par close()
     return element.opening;
 }
@@ -118,7 +90,6 @@ function close(element) {
     if (!element.opening) return;
     element.opening = null;
     const frame = element.querySelector('.marker-frame');
-    const label = element.querySelector('.marker-label');
     const cs = getComputedStyle(frame);
     const now = {
         left: cs.left,
@@ -128,24 +99,11 @@ function close(element) {
         borderWidth: cs.borderTopWidth,
         rotate: cs.rotate === 'none' ? '0deg' : cs.rotate,
     };
-    const origin = cs.transformOrigin;
-    const at = getComputedStyle(label).translate;
     frame.getAnimations().forEach((a) => a.cancel());
-    label.getAnimations().forEach((a) => a.cancel());
-    Object.assign(frame.style, {
-        left: '',
-        top: '',
-        width: '',
-        height: '',
-        borderWidth: '',
-        transformOrigin: origin,
-    });
+    Object.assign(frame.style, { left: '', top: '', width: '', height: '', borderWidth: '' });
     element.classList.remove('is-open', 'is-landed');
     if (!document.querySelector('.marker.is-open')) $('markers').classList.remove('has-open');
-    if (reducedMotion) return;
-    frame.animate([now, { ...REST, rotate: '0deg' }], { duration: 360, easing: ease });
-    if (at && at !== 'none')
-        label.animate([{ translate: at }, { translate: '0 0' }], { duration: 360, easing: ease });
+    if (!reducedMotion) frame.animate([now, { ...REST, rotate: '0deg' }], { duration: 340, easing: ease });
 }
 
 const markers = FILMS.map((film) => {
@@ -154,7 +112,7 @@ const markers = FILMS.map((film) => {
     element.href = filmUrl(film);
     element.tabIndex = -1;
     element.innerHTML = `
-        <span class="marker-frame"><img src="${image(film.poster, 420)}" alt="" /></span>
+        <span class="marker-frame"><img src="${image(film.poster, 420)}" alt="" decoding="async" /></span>
         <span class="marker-label"><strong>${film.title}</strong><span>${film.world} · ${film.place}</span></span>`;
     let going = false;
     element.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && open(element));
@@ -214,22 +172,6 @@ if (supported()) {
         globe.face(from?.lat ?? 22, from?.lng ?? (mode === 'intro' ? -25 : 10), VIEW[mode].distance);
         setMode(mode, { instant: true });
         if (from) globe.hold(6);
-        // Curseur de teinte des courants (or ↔ jaune National Geographic), mémorisé pour ce navigateur
-        const tone = $('tone');
-        try {
-            tone.value = localStorage.getItem('mi:tone') ?? tone.value;
-        } catch {
-            /* stockage indisponible */
-        }
-        globe.setTone(Number(tone.value));
-        tone.addEventListener('input', () => {
-            globe.setTone(Number(tone.value));
-            try {
-                localStorage.setItem('mi:tone', tone.value);
-            } catch {
-                /* rien */
-            }
-        });
         if (import.meta.env.DEV) window.__globe = globe; // inspection en développement
         requestAnimationFrame(() => body.classList.add('is-ready'));
     } catch (error) {

@@ -1,4 +1,3 @@
-import { SOURCE } from '../data/films.js';
 import { MARK, MARK_BOX, NAME, NAME_BOX, VIEW } from './logo-paths.js';
 
 /**
@@ -47,15 +46,12 @@ export function logo(options = {}) {
     return svg({ x: 0, y: 0, w: VIEW.w, h: VIEW.h }, markPath(o) + namePath(o), 'full');
 }
 
-/** En-tête flottant : National Geographic à gauche, Mondes Immergés (accueil) à droite, même hauteur optique. */
-export const header = (base) => `
-    <a class="natgeo" href="${SOURCE}" target="_blank" rel="noopener" aria-label="National Geographic Documentary Films (nouvel onglet)">
-        <img src="${base}images/logo-national-geographic.png" alt="National Geographic" width="700" height="206" />
-    </a>
-    <a class="brand" href="${base}" data-transition aria-label="Mondes Immergés, accueil">${logo()}</a>`;
+/** En-tête flottant : le logo Mondes Immergés seul, en haut à gauche (lien vers l'accueil). */
+export const header = (base) =>
+    `<a class="brand" href="${base}" data-transition aria-label="Mondes Immergés, accueil">${logo()}</a>`;
 
-/** Retour au globe : le même petit globe partout (coin de l'écran, fin de page). */
-export const toGlobe = (url, label = 'Le globe', cls = '') => `
+/** Retour au globe : le petit globe jaune, « Retour » d'un côté, « au globe » de l'autre. */
+export const toGlobe = (url, cls = '') => `
     <a class="to-globe ${cls}" href="${url}" data-transition aria-label="Retour au globe">
-        <span class="orb" aria-hidden="true"></span><span class="to-globe-label">${label}</span>
+        <span class="to-globe-side" aria-hidden="true">Retour</span><span class="orb" aria-hidden="true"></span><span class="to-globe-side" aria-hidden="true">au globe</span>
     </a>`;

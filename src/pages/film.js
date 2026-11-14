@@ -16,7 +16,7 @@ const [still, stillCaption, stillCredit] = film.gallery.at(-1);
 document.title = `${film.title} · Mondes Immergés`;
 const GLOBE = `${BASE}globe/?from=${film.slug}`;
 $('bar').innerHTML = header(BASE);
-document.body.insertAdjacentHTML('beforeend', toGlobe(GLOBE, 'Le globe', 'to-globe-fixed'));
+document.body.insertAdjacentHTML('beforeend', toGlobe(GLOBE, 'to-globe-fixed'));
 
 const SECTIONS = [];
 const section = (id, kicker, title, body, cls = '') => {
@@ -58,7 +58,7 @@ const gallery = film.gallery
         ([file, caption, credit], i) => `
         <li>
             <button class="shot" data-index="${i}" aria-label="Agrandir : ${caption}">
-                <img src="${image(file, 900)}" alt="${caption}" />
+                <img src="${image(file, 900)}" alt="${caption}" loading="lazy" decoding="async" />
                 <span class="shot-caption">${caption} <span>© ${credit}</span></span>
             </button>
         </li>`,
@@ -102,7 +102,7 @@ const actions = [
 
 $('page').innerHTML = `
     <section class="hero">
-        <img class="hero-image" src="${image(film.hero, 2000)}" alt="" fetchpriority="high" />
+        <img class="hero-image" src="${image(film.hero, 2000)}" srcset="${[1000, 1600, 2000, 2800].map((w) => `${image(film.hero, w)} ${w}w`).join(', ')}" sizes="100vw" alt="" fetchpriority="high" />
         <div class="hero-content">
             <span class="tag">${film.world}</span>
             <h1>${film.title}</h1>
@@ -113,7 +113,6 @@ $('page').innerHTML = `
                 <div><dt>Lieu</dt><dd>${film.place}, ${film.country}</dd></div>
             </dl>
         </div>
-        <a class="hero-scroll" href="#film" aria-label="Lire la suite">↓</a>
     </section>
 
     ${section(

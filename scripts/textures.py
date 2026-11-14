@@ -140,7 +140,9 @@ def relief(src, out):
         slope = np.arctan(np.hypot(gx, gy)); aspect = np.arctan2(-gx, gy)
         a, b = np.deg2rad(az), np.deg2rad(alt)
         return np.clip(np.sin(b) * np.cos(slope) + np.cos(b) * np.sin(slope) * np.cos(a - aspect), 0, 1)
-    hl = 0.6 * shade(gaussian_filter(z, 0.6), 22) + 0.4 * shade(gaussian_filter(z, 2.5), 30, 280, 55)
+    # relief accentué (pentes exagérées, vallées creusées, crêtes soulevées), mais avec les tons doux d'origine
+    hl = 0.6 * shade(gaussian_filter(z, 0.6), 40) + 0.4 * shade(gaussian_filter(z, 2.5), 55, 280, 55)
+    local = np.tanh((z - gaussian_filter(z, 10)) / 500)
     ho = shade(gaussian_filter(np.minimum(z, 0), 1.0), 14)
     def ramp(t, stops):
         t = np.clip(t, 0, 1); out = np.zeros(t.shape + (3,), 'f4')
@@ -155,7 +157,7 @@ def relief(src, out):
     # Terres : pierre claire → sable → sommets blancs
     elev = np.clip(z / 4500, 0, 1) ** 0.6
     terre = ramp(elev, [(0, hexc('#9d968a')), (0.35, hexc('#b3ab9c')), (0.7, hexc('#c9c2b4')), (1, hexc('#e9e6df'))])
-    terre *= (0.45 + 0.75 * hl)[..., None]
+    terre *= ((0.45 + 0.75 * hl) * (1 + 0.2 * local))[..., None]
     # Glaces (Antarctique, Groenland)
     lond = (-180 + (np.arange(W) + 0.5) * 360 / W)[None, :]
     latd = np.rad2deg(latr)

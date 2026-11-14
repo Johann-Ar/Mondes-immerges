@@ -16,7 +16,9 @@ import {
     instancedArray,
     length,
     max,
+    min,
     mix,
+    mx_noise_float,
     sin,
     smoothstep,
     texture,
@@ -29,36 +31,80 @@ import {
 } from 'three/tsl';
 
 const LIMIT = 1.6; // m/s : plage d'encodage du champ (voir scripts/textures.py)
+const RIVER = 0.45; // vitesse des splats fluviaux, dans la même unité
+const RIVER_SHARE = 0.1; // part des particules qui naissent sur les fleuves
 
 /**
  * Les courants de surface, à partir des mesures satellite NASA OSCAR.
  *
- * Des centaines de milliers de particules sont advectées sur le GPU (compute shader) par le champ de vitesse réel.
- * 1. Chaque particule laisse une traînée dans une texture équirectangulaire qui s'efface lentement :
- *    c'est elle qui est plaquée sur le globe (lignes fines, nettes à toutes les distances).
- * 2. Les particules des courants rapides sont aussi dessinées en micro-splats dorés posés sur la surface.
+ * Direction : de l'encre filmée au microscope. Des centaines de milliers de particules sont advectées sur le GPU
+ * (compute shader) par le champ de vitesse réel, auquel s'ajoutent :
+ * - une micro-turbulence (bruit de curl, deux échelles) qui fait vriller et effiler le flux en filaments ;
+ * - une agitation brownienne, le frémissement des micro-éléments en suspension.
+ * 1. Chaque particule dépose de l'encre dans une texture équirectangulaire. À chaque image, cette encre est
+ *    transportée par le courant, diffuse légèrement et s'efface : des nuages qui s'étalent autour de filaments nets
+ *    (canal R : encre diffusée · canal G : cœur des courants rapides, transporté sans diffusion).
+ * 2. Les particules sont aussi dessinées en micro-éléments posés sur la surface : surtout des grains,
+ *    et quelques cellules en anneau, plus grandes, comme des organismes sous la lentille.
  */
 export class Currents {
-    constructor({ field, count, resolution }) {
+    constructor({ field, rivers, depth, seeds, count, resolution }) {
         this.count = count;
         this.uDelta = uniform(0);
         this.uSeed = uniform(0);
-        this.uSpeed = uniform(0.22);
-        this.uFade = uniform(0.009);
-        this.uTone = uniform(0.75); // 0 : or, ambre · 1 : jaune National Geographic
+        this.uSpeed = uniform(0.17);
+        this.uFade = uniform(0.012);
+        this.uDiffuse = uniform(0.16);
+        // le curseur dans l'eau : position (uv), vitesse (uv/s, isotrope) et présence (0 → 1)
+        this.uPointer = uniform(new THREE.Vector2(0.5, 0.5));
+        this.uPointerVel = uniform(new THREE.Vector2());
+        this.uPointerOn = uniform(0);
+        // tourbillon du survol (visuel) : centre (uv) et torsion, pilotés par le globe
+        this.uEddy = uniform(new THREE.Vector2(0.5, 0.5));
+        this.uTwist = uniform(0);
+        this.uEddyOn = uniform(0); // présence du tourbillon : il se fond au lieu de se dérouler
+        this.uWake = uniform(new THREE.Vector2()); // l'eau entraînée dans le sens du geste (uv isotrope)
+        this.uFill = uniform(0); // touche Espace : les cellules en anneau deviennent pleines
 
         const state = instancedArray(count, 'vec4'); // x, y : position (uv) · z : âge · w : vitesse (m/s)
         this.state = state;
         const sample = (p) => texture(field, p).level(0);
+        // Trait de côte fin (bathymétrie ETOPO, 2048 × 1024) : 1 en mer, 0 sur les terres. Le champ OSCAR
+        // (1/3°) est trop grossier pour la côte : il laisserait passer les splats sur les isthmes et les rivages
+        const ocean = (p) => smoothstep(0.012, 0.045, texture(depth, p).level(0).x);
         const lifeOf = (i) => hash(i).mul(8).add(6);
 
+        // Fleuves (scripts/hydro.py) : R présence de l'eau, G B phase de l'écoulement (sin, cos)
+        const bank = (p) => texture(rivers, p).level(1).x; // présence élargie : frôler la rive n'est pas mourir
+        // Sens de l'aval : la phase croît en remontant vers la source ; dφ = cos·d(sin) − sin·d(cos)
+        const downstream = (p) => {
+            const e = 1.5 / 4096;
+            const sc = (q) => texture(rivers, q).level(0).yz.mul(2).sub(1);
+            const c0 = sc(p);
+            const dx = sc(p.add(vec2(e, 0))).sub(sc(p.sub(vec2(e, 0))));
+            const dy = sc(p.add(vec2(0, e))).sub(sc(p.sub(vec2(0, e))));
+            return vec2(c0.y.mul(dx.x).sub(c0.x.mul(dx.y)), c0.y.mul(dy.x).sub(c0.x.mul(dy.y))).negate();
+        };
+        const seedList = instancedArray(seeds, 'vec2');
+        const fluvial = (i) => hash(i.add(4242)).lessThan(RIVER_SHARE);
+
         const spawn = (p, seed) => {
-            p.x.assign(hash(seed));
-            p.y.assign(
-                asin(hash(seed.add(1e6)).mul(2).sub(1))
-                    .div(PI)
-                    .add(0.5),
-            ); // uniforme sur la sphère
+            If(fluvial(instanceIndex), () => {
+                const s = seedList.element(
+                    hash(seed.add(3))
+                        .mul(seeds.length / 2)
+                        .toUint(),
+                );
+                p.x.assign(s.x);
+                p.y.assign(s.y);
+            }).Else(() => {
+                p.x.assign(hash(seed));
+                p.y.assign(
+                    asin(hash(seed.add(1e6)).mul(2).sub(1))
+                        .div(PI)
+                        .add(0.5),
+                ); // uniforme sur la sphère
+            });
             p.z.assign(0);
         };
 
@@ -68,32 +114,122 @@ export class Currents {
             p.z.assign(hash(instanceIndex.toFloat().add(777)).mul(lifeOf(instanceIndex)));
         })().compute(count);
 
+        // Micro-turbulence : rotationnel d'un bruit 3D, donc sans divergence : ça tourbillonne sans faire d'amas.
+        // Grande échelle pour les volutes, petite pour les filaments. Optimisation sans perte : le champ est
+        // calculé une fois dans une texture 2048 × 1024 (rafraîchie toutes les 4 images, il évolue lentement)
+        // au lieu de 6 bruits par particule et par image ; les particules n'y font plus qu'une lecture.
+        const curl = (q, e) => {
+            const n0 = mx_noise_float(q);
+            const nx = mx_noise_float(q.add(vec3(e, 0, 0)));
+            const ny = mx_noise_float(q.add(vec3(0, e, 0)));
+            return vec2(ny.sub(n0), n0.sub(nx)).div(e);
+        };
+        this.swirlTarget = new THREE.RenderTarget(2048, 1024, {
+            type: THREE.HalfFloatType,
+            depthBuffer: false,
+        });
+        Object.assign(this.swirlTarget.texture, { wrapS: THREE.RepeatWrapping, generateMipmaps: false });
+        const swirlMaterial = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false });
+        swirlMaterial.colorNode = Fn(() => {
+            // coordonnées cylindriques : le bruit se referme sur lui-même au méridien 180° (aucune couture)
+            const a = uv().x.mul(TWO_PI);
+            const q = vec3(cos(a).mul(12.7), sin(a).mul(12.7), uv().y.mul(40).add(time.mul(0.05)));
+            const w = curl(q, 0.02)
+                .mul(0.07)
+                .add(curl(q.mul(3.1).add(17), 0.02).mul(0.03));
+            return vec4(w, 0, 1);
+        })();
+        this.swirl = new THREE.QuadMesh(swirlMaterial);
+        const swirlAt = (p) => texture(this.swirlTarget.texture, p).level(0).xy;
+
+        // Influence du curseur à une position (uv) : écart isotrope, et gaussienne de ~6° de rayon
+        const near = (xy) => {
+            const lat = xy.y.sub(0.5).mul(PI);
+            const dx = fract(xy.x.sub(this.uPointer.x).add(0.5)).sub(0.5).mul(cos(lat).mul(2));
+            const off = vec2(dx, xy.y.sub(this.uPointer.y));
+            const fall = exp(
+                off
+                    .dot(off)
+                    .div(0.032 * 0.032)
+                    .negate(),
+            ).mul(this.uPointerOn);
+            return { off, fall };
+        };
+        this.near = near;
+
         this.update = Fn(() => {
             const p = state.element(instanceIndex);
             const f = sample(p.xy);
-            const v = f.xy.mul(2).sub(1).mul(LIMIT);
+            const base = f.xy.mul(2).sub(1).mul(LIMIT);
+            const speed = length(base);
+            const swirl = swirlAt(p.xy);
+            // la turbulence suit l'énergie du courant, mais ne s'éteint jamais : l'eau calme frémit aussi
+            // le curseur ne touche jamais la simulation : sa réaction est purement visuelle (globe.js)
+            const drift = base.add(swirl.mul(speed.mul(0.9).add(0.18)));
+            // Les terres sont solides : près d'une côte, la part du mouvement qui va vers la terre est retirée
+            // et une légère poussée ramène au large ; les particules glissent le long du rivage
+            const e = 1.5 / 2048;
+            const shore = vec2(
+                ocean(p.xy.add(vec2(e, 0))).sub(ocean(p.xy.sub(vec2(e, 0)))),
+                ocean(p.xy.add(vec2(0, e))).sub(ocean(p.xy.sub(vec2(0, e)))),
+            );
+            const coast = smoothstep(0.03, 0.3, length(shore));
+            const off = shore.div(max(length(shore), 1e-4)); // vers le large
+            const sea = drift.sub(off.mul(min(drift.dot(off), 0)).mul(coast)).add(off.mul(coast.mul(0.5)));
+            // Sur les terres, seuls les fleuves portent : le fil de l'eau vers l'aval, et une attraction en
+            // travers du lit (jamais le long : elle créerait des pièges où tout s'entasse)
+            const g = downstream(p.xy);
+            const along = g.div(max(length(g), 1e-4));
+            const r = 1 / 2048;
+            const bg = vec2(
+                bank(p.xy.add(vec2(r, 0))).sub(bank(p.xy.sub(vec2(r, 0)))),
+                bank(p.xy.add(vec2(0, r))).sub(bank(p.xy.sub(vec2(0, r)))),
+            );
+            const across = bg.sub(along.mul(bg.dot(along))).mul(1.6);
+            // sur un fleuve à terre ; ailleurs, la mer
+            const wet = ocean(p.xy);
+            const land = wet.lessThan(0.5).and(bank(p.xy).greaterThan(0.01));
+            const v = land.select(along.mul(RIVER).add(across), sea);
             const lat = p.y.sub(0.5).mul(PI);
             const step = this.uDelta.mul(this.uSpeed);
             p.x.assign(fract(p.x.add(v.x.mul(step).div(max(cos(lat), 0.12).mul(TWO_PI)))));
             p.y.addAssign(v.y.mul(step).div(PI));
+            // mouvement brownien : un pas aléatoire d'environ un demi-texel à chaque image
+            const jitter = vec2(
+                hash(instanceIndex.add(this.uSeed.mul(7))),
+                hash(instanceIndex.add(this.uSeed.mul(13)).add(5e5)),
+            ).sub(0.5);
+            p.x.assign(fract(p.x.add(jitter.x.mul(0.00016))));
+            p.y.addAssign(jitter.y.mul(0.00011));
             p.z.addAssign(this.uDelta);
-            p.w.assign(length(v));
+            p.w.assign(land.select(0.05, speed)); // fleuves : splats minuscules, presque sans encre
             const dead = p.z
                 .greaterThan(lifeOf(instanceIndex))
-                .or(f.z.lessThan(0.4))
+                .or(wet.lessThan(0.5).and(land.not())) // échouée à terre, hors d'un fleuve
+                // contre la côte, une petite chance de renaître au large : aucun amas lumineux sur les rivages
+                .or(coast.greaterThan(0.15).and(hash(instanceIndex.add(this.uSeed.mul(3))).lessThan(0.15)))
+                .or(land.and(length(g).lessThan(0.06))) // là où le sens du fleuve se perd : pas d'entassement
                 .or(abs(p.y.sub(0.5)).greaterThan(0.44));
             If(dead, () => spawn(p, instanceIndex.toFloat().add(this.uSeed)));
         })().compute(count);
 
         // Traînées (texture équirectangulaire)
-        this.target = new THREE.RenderTarget(resolution, resolution / 2, {
-            type: THREE.HalfFloatType,
-            generateMipmaps: true,
-            minFilter: THREE.LinearMipmapLinearFilter,
-            magFilter: THREE.LinearFilter,
-            depthBuffer: false,
-        });
-        this.target.texture.wrapS = THREE.RepeatWrapping;
+        const target = () => {
+            const t = new THREE.RenderTarget(resolution, resolution / 2, {
+                type: THREE.HalfFloatType,
+                generateMipmaps: true,
+                minFilter: THREE.LinearMipmapLinearFilter,
+                magFilter: THREE.LinearFilter,
+                depthBuffer: false,
+            });
+            t.texture.wrapS = THREE.RepeatWrapping;
+            return t;
+        };
+        // Deux textures en alternance : on lit l'encre de l'image précédente, on écrit la nouvelle
+        this.targets = [target(), target()];
+        this.target = this.targets[0];
+        this.trailNode = texture(this.target.texture); // lu par la surface du globe (uv de la sphère)
+        this.readers = [this.trailNode]; // toutes les lectures de l'encre suivent l'alternance (reader())
 
         const life = (i) => {
             const age = state.toAttribute().z;
@@ -133,14 +269,28 @@ export class Currents {
         this.trailScene.add(trail(false), trail(true));
         this.trailCamera = new THREE.OrthographicCamera(0, 1, 1, 0, -1, 1);
 
-        const fadeMaterial = new THREE.MeshBasicNodeMaterial({
-            transparent: true,
-            depthTest: false,
-            depthWrite: false,
-        });
-        fadeMaterial.colorNode = vec3(0);
-        fadeMaterial.opacityNode = this.uFade;
-        this.fade = new THREE.QuadMesh(fadeMaterial);
+        // L'encre vit : transportée par le courant (on va chercher en amont), diffusée, puis effacée doucement
+        this.prevNode = texture(this.targets[1].texture);
+        const inkMaterial = new THREE.MeshBasicNodeMaterial({ depthTest: false, depthWrite: false });
+        inkMaterial.colorNode = Fn(() => {
+            const at = uv();
+            const v = sample(at).xy.mul(2).sub(1).mul(LIMIT);
+            const lat = at.y.sub(0.5).mul(PI);
+            const step = this.uDelta.mul(this.uSpeed);
+            const from = at.sub(vec2(v.x.div(max(cos(lat), 0.12).mul(TWO_PI)), v.y.div(PI)).mul(step));
+            const px = vec2(1 / resolution, 2 / resolution);
+            const read = (o) => this.prevNode.sample(from.add(o.mul(px))).level(0);
+            const c = read(vec2(0, 0));
+            const blur = read(vec2(1, 0))
+                .add(read(vec2(-1, 0)))
+                .add(read(vec2(0, 1)))
+                .add(read(vec2(0, -1)))
+                .mul(0.25);
+            const keep = float(1).sub(this.uFade);
+            // R : l'encre s'étale · G : les cœurs restent nets
+            return vec4(mix(c.r, blur.r, this.uDiffuse).mul(keep), mix(c.g, blur.g, 0.06).mul(keep), 0, 1);
+        })();
+        this.ink = new THREE.QuadMesh(inkMaterial);
 
         // Micro-splats : chaque particule des courants rapides est un minuscule point doré posé sur la surface.
         // Ils bougent avec le courant ; la lumière reste sur eux (testés en profondeur, aucun halo en volume).
@@ -149,31 +299,55 @@ export class Currents {
             depthWrite: false,
             blending: THREE.AdditiveBlending,
         });
-        const lon = head.x.mul(TWO_PI);
-        const theta = float(1).sub(head.y).mul(PI);
+        // Profondeur : chaque splat flotte à sa propre hauteur (les courants rapides plus haut), et le tourbillon
+        // du survol les entraîne en spirale vers le fond, comme une matière liquide aspirée
+        const k = max(cos(head.y.sub(0.5).mul(PI)), 0.05).mul(2);
+        const ox = fract(head.x.sub(this.uEddy.x).add(0.5)).sub(0.5).mul(k);
+        const oy = head.y.sub(this.uEddy.y);
+        const { shift: moved, core: pull } = this.finger(ox, oy, -1);
+        const ex = this.uEddy.x.add(ox.add(moved.x).div(k));
+        const ey = this.uEddy.y.add(oy.add(moved.y));
+        const lon = ex.mul(TWO_PI);
+        const theta = float(1).sub(ey).mul(PI);
         const normal = vec3(lon.cos().negate().mul(sin(theta)), cos(theta), lon.sin().mul(sin(theta)));
-        splatMaterial.positionNode = normal.mul(1.0012);
+        const lift = float(1.0012)
+            .add(hash(instanceIndex.add(57)).mul(0.0035))
+            .add(smoothstep(0.1, 0.9, head.w).mul(0.003))
+            .sub(pull.mul(0.003)); // aspirés vers le fond, sans jamais passer sous l'encre
+        splatMaterial.positionNode = normal.mul(max(lift, 1.0004));
         const facing = smoothstep(0.18, 0.45, normal.dot(cameraPosition.normalize()));
+        // jamais posé sur une terre, même entraîné par le tourbillon du survol
+        const afloat = max(
+            smoothstep(0.35, 0.8, ocean(vec2(ex, ey))),
+            smoothstep(0.01, 0.1, bank(vec2(ex, ey))),
+        );
+        const inRiver = fluvial(instanceIndex);
         const fast = smoothstep(0.04, 0.7, head.w);
         const seed = hash(instanceIndex.add(31));
         // scintillement : chaque splat a sa propre phase
         const twinkle = sin(time.mul(seed.mul(2.5).add(1.5)).add(seed.mul(TWO_PI)))
             .mul(0.35)
             .add(0.65);
-        // des grains : petits, nets, nombreux, même sur les courants lents
-        splatMaterial.scaleNode = vec2(float(0.0024).add(fast.mul(0.0032)).mul(seed.mul(0.7).add(0.6)));
-        splatMaterial.colorNode = vec4(
-            mix(
-                mix(vec3(1, 0.66, 0.06), vec3(1, 0.96, 0.78), fast.mul(fast)), // or
-                mix(vec3(1, 0.6, 0), vec3(1, 0.85, 0.3), fast.mul(fast)), // jaune #ffcc00 (linéaire)
-                this.uTone,
-            ),
-            1,
-        );
+        // micro-éléments : 88 % de grains nets, 12 % de cellules en anneau, deux à trois fois plus grandes
+        const cell = seed.lessThan(0.12).and(inRiver.not());
+        const size = float(0.0024)
+            .add(fast.mul(0.0032))
+            .mul(seed.mul(0.7).add(0.6))
+            .mul(cell.select(hash(instanceIndex.add(91)).mul(1.2).add(1.8), 1))
+            .mul(inRiver.select(0.75, 1)); // les splats des fleuves : petits
+        splatMaterial.scaleNode = vec2(size);
+        splatMaterial.colorNode = vec4(mix(vec3(1, 0.6, 0), vec3(1, 0.88, 0.4), fast.mul(fast)), 1); // jaune #ffcc00
         const d = uv().sub(0.5).mul(2);
-        splatMaterial.opacityNode = exp(d.dot(d).mul(-4.5))
-            .mul(fast.mul(0.75).add(0.25))
+        const r = length(d);
+        const dot = exp(d.dot(d).mul(-4.5));
+        const disc = float(1).sub(smoothstep(0.6, 0.76, r)); // la même cellule, pleine
+        // les cellules n'apparaissent que sur la touche Espace, pleines
+        splatMaterial.opacityNode = cell
+            .select(disc.mul(0.55).mul(this.uFill), dot)
+            .mul(inRiver.select(1.1, fast.mul(0.75).add(0.25)))
             .mul(facing)
+            .mul(afloat)
+            .mul(float(1).sub(pull.mul(0.6))) // sous le doigt, l’eau écartée les estompe : la fumée mène
             .mul(life(instanceIndex))
             .mul(twinkle)
             .mul(1.4);
@@ -183,14 +357,52 @@ export class Currents {
         this.splats.renderOrder = 2;
     }
 
+    /**
+     * Le doigt dans l'eau, partagé par l'encre (s = 1 : où aller lire) et les splats (s = −1 : où les déplacer).
+     * (ox, oy) : écart isotrope au centre du tourbillon, en uv. Profil de Lamb-Oseen : la rotation est maximale
+     * sous le doigt et retombe vite (en 1/r²), coupée au-delà de quelques degrés : un tourbillon serré, localisé.
+     * Le doigt écarte aussi l'eau autour de lui, et le geste l'entraîne sur son passage.
+     */
+    finger(ox, oy, s) {
+        const r2 = ox.mul(ox).add(oy.mul(oy));
+        const A = 0.016 * 0.016; // rayon du cœur (~3°)
+        const q = r2.div(A);
+        const reach = exp(r2.div(0.065 * 0.065).negate()); // portée totale (~12°)
+        const swirl = float(1).sub(exp(q.negate())).div(max(q, 1e-4)).mul(reach);
+        const core = exp(q.mul(-0.9));
+        const on = this.uEddyOn;
+        const turn = this.uTwist.mul(swirl).mul(on).mul(s); // sens horaire à l'écran, jamais l'inverse
+        const spread = float(1).sub(core.mul(0.45).mul(on).mul(s)); // l'eau écartée par le doigt
+        const c = cos(turn);
+        const n = sin(turn);
+        const wake = this.uWake
+            .mul(exp(q.mul(-0.35)))
+            .mul(on)
+            .mul(s);
+        const shift = vec2(
+            ox.mul(c).sub(oy.mul(n)).mul(spread).sub(ox).sub(wake.x),
+            ox.mul(n).add(oy.mul(c)).mul(spread).sub(oy).sub(wake.y),
+        );
+        return { shift, core: core.mul(on) };
+    }
+
+    /** L'encre lue à une position calculée (uv), tenue à jour à chaque alternance. */
+    reader(p) {
+        const node = texture(this.target.texture, p);
+        this.readers.push(node);
+        return node;
+    }
+
     async start(renderer) {
         // Les textures de rendu sont lues origine en haut (WebGPU, et le repli WebGL l'imite) : nord en v = 1
         Object.assign(this.trailCamera, { top: 0, bottom: 1 });
         this.trailCamera.updateProjectionMatrix();
         await renderer.computeAsync(this.init);
-        renderer.setRenderTarget(this.target);
-        renderer.setClearColor(0x000000, 0);
-        renderer.clear();
+        for (const t of this.targets) {
+            renderer.setRenderTarget(t);
+            renderer.setClearColor(0x000000, 0);
+            renderer.clear();
+        }
         renderer.setRenderTarget(null);
         this.advance(renderer, 1 / 60); // compile les pipelines avant la première image
     }
@@ -205,12 +417,22 @@ export class Currents {
     advance(renderer, delta) {
         this.uDelta.value = Math.min(delta, 1 / 20);
         this.uSeed.value = Math.floor(Math.random() * 65536);
-        renderer.compute(this.update);
         const autoClear = renderer.autoClear;
         renderer.autoClear = false;
-        renderer.setRenderTarget(this.target);
-        this.fade.render(renderer);
+        if ((this.ticks = (this.ticks ?? 0) + 1) % 4 === 1) {
+            renderer.setRenderTarget(this.swirlTarget);
+            this.swirl.render(renderer);
+        }
+        renderer.compute(this.update);
+        // l'encre de l'image précédente, transportée et diffusée, puis les nouveaux dépôts par-dessus
+        const [read, write] =
+            this.target === this.targets[0] ? this.targets : [this.targets[1], this.targets[0]];
+        this.prevNode.value = read.texture;
+        renderer.setRenderTarget(write);
+        this.ink.render(renderer);
         renderer.render(this.trailScene, this.trailCamera);
+        this.target = write;
+        for (const r of this.readers) r.value = write.texture;
         renderer.setRenderTarget(null);
         renderer.autoClear = autoClear;
     }
