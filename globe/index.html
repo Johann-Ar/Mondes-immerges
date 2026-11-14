@@ -30,8 +30,8 @@
         </main>
 
         <section class="intro" id="intro" aria-labelledby="intro-title">
-            <p class="kicker">National Geographic · Documentaires</p>
             <h1 class="intro-title" id="intro-title">Mondes<br />Immergés</h1>
+            <p class="intro-sig kicker">National Geographic · Documentaires</p>
             <p class="intro-lede">
                 Huit documentaires, huit mondes. Tous reliés par les courants de l'océan.
             </p>
@@ -49,6 +49,19 @@
                 En jaune, les courants de surface, mesurés par satellite.
                 <span>Données NASA&nbsp;OSCAR · relief NOAA&nbsp;ETOPO</span>
             </p>
+            <label class="tone">
+                <span>Or</span>
+                <input
+                    type="range"
+                    id="tone"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value="0.75"
+                    aria-label="Teinte des courants, de l'or au jaune National Geographic"
+                />
+                <span>Jaune</span>
+            </label>
         </aside>
 
         <dialog class="index" id="index" aria-labelledby="index-title">
@@ -59,6 +72,6 @@
             <ol class="index-list" id="index-list"></ol>
         </dialog>
 
-        <p class="credit">Projet étudiant non officiel · Films et photos © National Geographic</p>
+        <p class="credit">Films et photos © National Geographic</p>
     </body>
 </html>

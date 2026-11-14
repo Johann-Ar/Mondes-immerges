@@ -38,7 +38,13 @@
     --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     --tilt: 9deg;
     --gutter: clamp(20px, 5vw, 64px);
-    --bar: 64px;
+    --bar: clamp(60px, 7vw, 84px);
+    --logo-h: clamp(30px, 2.6vw, 42px);
+    /* échelle typographique fluide : tout grandit avec la fenêtre, sans paliers */
+    --fs-xs: clamp(10px, 0.72vw, 12px);
+    --fs-s: clamp(12px, 0.86vw, 14px);
+    --fs-m: clamp(15px, 1.05vw, 18px);
+    --fs-l: clamp(18px, 1.5vw, 24px);
     color-scheme: dark;
 }
 
@@ -59,7 +65,19 @@ html.is-entering::after {
     position: fixed;
     inset: 0;
     z-index: 1000;
-    background: var(--yellow);
+    background: #000;
+}
+
+/* Grain photographique très fin, posé sur tout le site : il casse les paliers des dégradés sombres
+   (8 bits ne suffisent pas pour un fondu noir propre) et donne une matière de tirage argentique */
+body::before {
+    content: '';
+    position: fixed;
+    inset: -50%;
+    z-index: 45;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1.6 -0.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.05;
+    pointer-events: none;
 }
 
 body {
@@ -67,7 +85,7 @@ body {
     background: var(--black);
     color: var(--white);
     font-family: var(--text);
-    font-size: 16px;
+    font-size: var(--fs-m);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
 }
@@ -100,7 +118,22 @@ button {
     white-space: nowrap;
 }
 
-/* Rideau de transition : un cadre dont l'ouverture grandit ou se referme */
+/* Vidéo de transition (avec transparence), jouée par-dessus la page */
+.wipe {
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    visibility: hidden;
+}
+.wipe.is-on {
+    visibility: visible;
+}
+
+/* Repli : un rideau noir dont l'ouverture penchée grandit ou se referme */
 .curtain {
     position: fixed;
     inset: 0;
@@ -111,17 +144,18 @@ button {
 .curtain-hole {
     position: absolute;
     inset: 0;
-    box-shadow: 0 0 0 300vmax var(--yellow);
+    box-shadow: 0 0 0 300vmax #000;
+    outline: 4px solid var(--yellow);
 }
 
-/* En-tête flottant : deux logos, aucune barre */
+/* En-tête flottant, sans barre : mon logo à gauche, National Geographic à droite */
 .bar {
     position: fixed;
     inset: 0 0 auto;
     z-index: 50;
     display: flex;
     align-items: center;
-    gap: 22px;
+    justify-content: space-between;
     height: var(--bar);
     padding: 0 var(--gutter);
     pointer-events: none;
@@ -129,34 +163,77 @@ button {
 .bar a {
     pointer-events: auto;
 }
+/* Les deux logos à la même hauteur optique : le cadre jaune de chacun mesure --logo-h */
 .natgeo img {
-    width: 104px;
-    height: auto;
+    display: block;
+    width: auto;
+    height: var(--logo-h);
+    opacity: 0.9;
+    transition: opacity 0.3s;
+}
+.natgeo:hover img {
+    opacity: 1;
 }
 .brand {
+    display: block;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Logo Mondes Immergés codé (shared/logo.js) : SVG des tracés d'origine. Le cadre jaune occupe toute la
+   hauteur du dessin, comme celui de National Geographic : même --logo-h, même hauteur optique. */
+.mi-logo {
+    display: block;
+    height: calc(
+        var(--logo-h) * 1.12
+    ); /* le cadre penché paraît plus petit qu'un cadre droit : compensation optique */
+    width: auto;
+    overflow: visible;
+}
+.mi-mark {
+    transition: rotate 0.7s var(--spring);
+}
+.brand:hover .mi-mark {
+    rotate: -6deg;
+}
+
+/* Retour au globe : un petit globe qui tourne (le relief défile dans un disque) */
+.to-globe {
     display: inline-flex;
     align-items: center;
     gap: 14px;
-    text-decoration: none;
-}
-/* Le motif du projet : le cadre penché vers la droite */
-.brand-mark {
-    width: 17px;
-    height: auto;
-    rotate: var(--tilt);
-    transition: rotate 0.5s var(--spring);
-}
-.brand:hover .brand-mark {
-    rotate: calc(var(--tilt) * 2.2);
-}
-.brand-label {
-    font-size: 12px;
+    color: #fff;
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    transition: color 0.2s;
+    text-decoration: none;
+    --d: 44px;
 }
-.brand:hover .brand-label {
+.orb {
+    position: relative;
+    flex: none;
+    width: var(--d);
+    height: var(--d);
+    border-radius: 50%;
+    /* le globe en jaune seul : terres jaunes, océan transparent, bord du disque estompé */
+    background: url('/textures/globe-mini.png') 0 0 / calc(var(--d) * 2) var(--d) repeat-x;
+    box-shadow: inset 0 0 0 1.5px rgb(255 204 0 / 0.75);
+    -webkit-mask-image: radial-gradient(circle at 40% 38%, #000 52%, rgb(0 0 0 / 0.35) 100%);
+    mask-image: radial-gradient(circle at 40% 38%, #000 52%, rgb(0 0 0 / 0.35) 100%);
+    animation: orb 18s linear infinite;
+    transition: scale 0.5s var(--spring);
+}
+@keyframes orb {
+    to {
+        background-position-x: calc(var(--d) * -2);
+    }
+}
+.to-globe:hover .orb {
+    scale: 1.1;
+    animation-duration: 6s;
+}
+.to-globe:hover {
     color: var(--yellow);
 }
 
@@ -164,7 +241,7 @@ button {
 .kicker {
     margin: 0 0 14px;
     color: var(--yellow);
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -194,7 +271,7 @@ button {
     border: 0;
     background: var(--yellow);
     color: var(--black);
-    font-size: 13px;
+    font-size: var(--fs-s);
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -223,12 +300,6 @@ button {
 .reveal.is-visible {
     opacity: 1;
     transform: none;
-}
-
-@media (max-width: 560px) {
-    .natgeo img {
-        width: 88px;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {

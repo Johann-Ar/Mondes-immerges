@@ -5,7 +5,9 @@ Fabrique les deux textures du globe à partir de données publiques (serveur ERD
     .venv/bin/python scripts/textures.py
 
 - public/textures/currents.png : courants de surface NASA/JPL OSCAR (1/3°, moyenne mars-avril 2013).
-  R, G : vitesse est, nord, encodées sur ±1,6 m/s (0,5 = immobile) · B : masque océan.
+  R, G : vitesse est, nord, encodées sur ±1,6 m/s (0,5 = immobile) · B : masque océan (trait de côte ETOPO).
+  Les mers sans mesure (Méditerranée, mer Noire, mer Rouge, Baltique, baie d'Hudson, marges antarctiques)
+  sont complétées : prolongement du champ mesuré, plus un courant côtier cyclonique, comme en réalité.
 - public/textures/relief.jpg : relief ETOPO1 (NOAA) ombré, terres claires, océan noir.
 """
 import os
@@ -14,7 +16,7 @@ import urllib.request
 import numpy as np
 from PIL import Image
 from scipy.io import netcdf_file
-from scipy.ndimage import gaussian_filter, map_coordinates, zoom
+from scipy.ndimage import distance_transform_edt, gaussian_filter, map_coordinates, zoom
 
 ERDDAP = 'https://coastwatch.pfeg.noaa.gov/erddap/griddap/'
 OSCAR = ERDDAP + 'jplOscar.nc?' + ','.join(
@@ -33,7 +35,7 @@ def fetch(url, name):
     return path
 
 
-def currents(src, out):
+def currents(src, out, ocean):
     f = netcdf_file(src, 'r', mmap=False)
     u = f.variables['u'][:, 0].astype('f8'); v = f.variables['v'][:, 0].astype('f8')
     lon = f.variables['longitude'][:]  # 20..420
@@ -57,12 +59,66 @@ def currents(src, out):
     V = map_coordinates(pad(vz), coords, order=1, mode='constant', cval=0)
     M = map_coordinates(pad(mask), coords, order=1, mode='constant', cval=0)
     U = np.where(M > 0, U / np.maximum(M, 1e-6), 0); V = np.where(M > 0, V / np.maximum(M, 1e-6), 0)
+    complete(U, V, M, Y, ocean, out)
+
+
+def from_png(path):
+    """Relit une texture déjà produite (si le serveur ERDDAP est indisponible) : mêmes U, V et masque mesuré."""
+    a = np.asarray(Image.open(path)).astype('f8')
+    U, V = (a[..., 0] / 255 - 0.5) * 3.2, (a[..., 1] / 255 - 0.5) * 3.2
+    M = a[..., 2] / 255
+    Y = (90 - (np.arange(a.shape[0]) + 0.5) * 180 / a.shape[0])[:, None] * np.ones((1, a.shape[1]))
+    return U, V, M, Y
+
+
+def complete(U, V, M, Y, ocean, out):
+    # Masque océan : le trait de côte du relief (ETOPO), pour que les courants épousent exactement les terres
+    O = ocean
+    have = M > 0.5
+    # 1. prolonge le champ mesuré dans les zones sans mesure (diffusion qui s'amortit en s'éloignant)
+    Uf, Vf, Wf = U * have, V * have, have.astype('f8')
+    for _ in range(160):
+        Uf = np.where(have, U, gaussian_filter(Uf, 1.5, mode=['nearest', 'wrap']) * 0.985)
+        Vf = np.where(have, V, gaussian_filter(Vf, 1.5, mode=['nearest', 'wrap']) * 0.985)
+        Wf = np.where(have, 1, gaussian_filter(Wf, 1.5, mode=['nearest', 'wrap']))
+    # 2. courant côtier : longe la côte, sens cyclonique (côte à droite au nord, à gauche au sud)
+    d = gaussian_filter(distance_transform_edt(O), 2)
+    gy, gx = np.gradient(d)
+    gy = -gy  # lignes vers le sud : nord = -y
+    n = np.hypot(gx, gy) + 1e-6
+    hemi = np.sign(Y)[...]
+    coast = 0.22 * np.exp(-d / 5) + 0.05
+    cu, cv = hemi * gy / n * coast, -hemi * gx / n * coast
+    far = np.clip(1 - Wf, 0, 1) ** 0.7  # loin des mesures, le courant côtier prend le relais
+    fill = ~have & O
+    U = np.where(fill, Uf + cu * far, U)
+    V = np.where(fill, Vf + cv * far, V)
+    # 3. lissage léger (bruit des tourbillons, artefact de l'équateur), sans déborder sur les terres
+    w = gaussian_filter(O.astype('f8'), 0.8, mode=['nearest', 'wrap']) + 1e-6
+    U = gaussian_filter(U * O, 0.8, mode=['nearest', 'wrap']) / w * O
+    V = gaussian_filter(V * O, 0.8, mode=['nearest', 'wrap']) / w * O
+    M = gaussian_filter(O.astype('f8'), 0.5, mode=['nearest', 'wrap'])
     R = 1.6
     enc = lambda a: np.clip(np.round((np.clip(a, -R, R) / R * 0.5 + 0.5) * 255), 0, 255).astype('u1')
     img = np.dstack([enc(U), enc(V), (np.clip(M, 0, 1) * 255).astype('u1')])
     Image.fromarray(img, 'RGB').save(out, optimize=True)
-    spd = np.hypot(U, V)
-    prev = (np.clip(spd / 0.8, 0, 1) ** 0.6 * 255).astype('u1')
+
+
+def ocean_mask(src, W=1440, H=720):
+    """Océan (altitude < 0) sur la grille des courants ; les grands lacs fermés restent des terres."""
+    f = netcdf_file(src, 'r', mmap=False)
+    z = f.variables['altitude'][:].astype('f4')
+    if f.variables['latitude'][0] < f.variables['latitude'][-1]: z = z[::-1]
+    z = z[:, :-1]
+    z = zoom(z, (H / z.shape[0], W / z.shape[1]), order=1)
+    from scipy.ndimage import label
+    lab, _ = label(z < 0)
+    sizes = np.bincount(lab.ravel())
+    lon = -180 + (np.arange(W) + 0.5) * 360 / W
+    lat = 90 - (np.arange(H) + 0.5) * 180 / H
+    caspian = (lat[:, None] > 35) & (lat[:, None] < 53) & (lon[None] > 44) & (lon[None] < 64)  # Caspienne, Aral
+    big = sizes[lab] > 300  # océans et mers ; les lacs et la Caspienne restent des terres
+    return (z < 0) & big & (lab > 0) & ~caspian
 
 
 def relief(src, out):
@@ -115,5 +171,11 @@ def relief(src, out):
 
 
 if __name__ == '__main__':
-    currents(fetch(OSCAR, 'oscar.nc'), os.path.join(OUT, 'currents.png'))
-    relief(fetch(ETOPO, 'etopo.nc'), os.path.join(OUT, 'relief.jpg'))
+    import sys
+    etopo = fetch(ETOPO, 'etopo.nc')
+    target = os.path.join(OUT, 'currents.png')
+    if '--from-png' in sys.argv:  # vitesses relues depuis une texture brute (mesures seules, masque OSCAR)
+        complete(*from_png(sys.argv[sys.argv.index('--from-png') + 1]), ocean_mask(etopo), target)
+    else:
+        currents(fetch(OSCAR, 'oscar.nc'), target, ocean_mask(etopo))
+    relief(etopo, os.path.join(OUT, 'relief.jpg'))

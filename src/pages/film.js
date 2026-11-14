@@ -1,5 +1,6 @@
 import { FILMS, SOURCE, filmBySlug, image } from '../data/films.js';
-import { header } from '../shared/logo.js';
+import { header, toGlobe } from '../shared/logo.js';
+import { gallery as arrange } from './gallery.js';
 import { reveal } from '../shared/reveal.js';
 import { bind, enter } from '../shared/transition.js';
 
@@ -13,7 +14,9 @@ const next = FILMS[(index + 1) % FILMS.length];
 const [still, stillCaption, stillCredit] = film.gallery.at(-1);
 
 document.title = `${film.title} · Mondes Immergés`;
-$('bar').innerHTML = header(`${BASE}globe/?from=${film.slug}`, BASE, '← Le globe');
+const GLOBE = `${BASE}globe/?from=${film.slug}`;
+$('bar').innerHTML = header(BASE);
+document.body.insertAdjacentHTML('beforeend', toGlobe(GLOBE, 'Le globe', 'to-globe-fixed'));
 
 const SECTIONS = [];
 const section = (id, kicker, title, body, cls = '') => {
@@ -53,11 +56,11 @@ const people = film.people
 const gallery = film.gallery
     .map(
         ([file, caption, credit], i) => `
-        <li class="reveal">
+        <li>
             <button class="shot" data-index="${i}" aria-label="Agrandir : ${caption}">
-                <img src="${image(file, 900)}" alt="${caption}" loading="lazy" />
+                <img src="${image(file, 900)}" alt="${caption}" />
+                <span class="shot-caption">${caption} <span>© ${credit}</span></span>
             </button>
-            <p>${caption} <span>© ${credit}</span></p>
         </li>`,
     )
     .join('');
@@ -133,7 +136,20 @@ $('page').innerHTML = `
 
     ${section('visages', 'Ils font le film', 'Les visages', `<ul class="people">${people}</ul>`, 'section-people')}
 
-    ${section('galerie', 'Dans l’objectif', 'Galerie photo', `<ul class="gallery">${gallery}</ul>`, 'section-gallery')}
+    ${section(
+        'galerie',
+        'Dans l’objectif',
+        'Galerie photo',
+        `<div class="gallery-tools reveal" id="gallery-tools">
+            <span class="gallery-count">${String(film.gallery.length).padStart(2, '0')} photos</span>
+            <div role="group" aria-label="Disposition">
+                <button type="button" data-layout="mosaic" aria-pressed="true">Mosaïque</button>
+                <button type="button" data-layout="grid" aria-pressed="false">Grille</button>
+            </div>
+        </div>
+        <ul class="gallery" id="gallery" data-layout="mosaic">${gallery}</ul>`,
+        'section-gallery',
+    )}
 
     ${reviews}
 
@@ -155,11 +171,11 @@ $('page').innerHTML = `
     </a>
 
     <footer class="footer">
-        <p>Mondes Immergés est un projet étudiant non officiel. Films, photos et informations : <a href="${SOURCE}" target="_blank" rel="noopener">National Geographic Documentary Films</a>. Textes adaptés en français.</p>
-        <a href="${BASE}globe/?from=${film.slug}" data-transition>Retour au globe</a>
+        <p>Films, photos et informations : <a href="${SOURCE}" target="_blank" rel="noopener">National Geographic Documentary Films</a>. Textes adaptés en français.</p>
     </footer>`;
 
 reveal();
+arrange($('gallery'), $('gallery-tools'));
 enter();
 bind();
 
@@ -184,17 +200,40 @@ new IntersectionObserver(([e]) => dots.classList.toggle('is-shown', !e.isInterse
 // Visionneuse de la galerie
 const dialog = $('lightbox');
 let shown = 0;
-function show(i) {
+function show(i, preview) {
     shown = (i + film.gallery.length) % film.gallery.length;
     const [file, caption, credit] = film.gallery[shown];
-    $('lightbox-img').src = image(file, 2000);
+    const img = $('lightbox-img');
+    const full = image(file, 2000);
+    img.src = preview ?? full; // l'image déjà chargée d'abord, la grande ensuite
+    if (preview) {
+        const big = new Image();
+        const current = shown;
+        big.onload = () => shown === current && (img.src = full);
+        big.src = full;
+    }
     $('lightbox-img').alt = caption;
     $('lightbox-caption').textContent = `${caption} © ${credit}`;
 }
+// La photo grandit depuis sa place dans la galerie
 document.querySelectorAll('.shot').forEach((b) =>
     b.addEventListener('click', () => {
-        show(Number(b.dataset.index));
+        const thumb = b.querySelector('img');
+        const from = thumb.getBoundingClientRect();
+        show(Number(b.dataset.index), thumb.currentSrc);
         dialog.showModal();
+        const img = $('lightbox-img');
+        const to = img.getBoundingClientRect();
+        if (!to.width || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        img.animate(
+            [
+                {
+                    transform: `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`,
+                },
+                { transform: 'none' },
+            ],
+            { duration: 550, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
+        );
     }),
 );
 $('lightbox-close').addEventListener('click', () => dialog.close());

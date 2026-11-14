@@ -32,6 +32,7 @@ export const FILMS = [
             { value: '2 400 km', label: 'parcourus en mokoro, la pirogue locale' },
             { value: '95 %', label: 'de l’eau du delta vient des hauts plateaux angolais' },
         ],
+        poster: 'docfilmswebsite_1080x1600_okavango_3a6c3ca3.jpeg', // affiche officielle, portrait 2:3
         hero: 'intotheokavango_hero_e8b99097.jpeg',
         thumb: ['intotheokavango_ngm_42_1be68c4f.jpeg', '45% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
@@ -118,6 +119,7 @@ export const FILMS = [
             { value: '1,5 m', label: 'de long : le plus petit cétacé du monde' },
             { value: 'Sundance', label: 'prix du public 2019' },
         ],
+        poster: 'docfilmswebsite_1080x1600_sos_ec1ddec1.jpeg', // affiche officielle, portrait 2:3
         hero: 'sos-1900x792_2b2a5bbd.png',
         thumb: ['sos-1900x792_2b2a5bbd.png', '40% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
@@ -239,6 +241,7 @@ export const FILMS = [
             { value: '2', label: 'pays, un seul peuple de part et d’autre de la glace' },
             { value: 'Pristine Seas', label: 'le programme de National Geographic pour protéger les océans' },
         ],
+        poster: 'thelastice-poster_1080x1600_68f3c53e.jpeg', // affiche officielle, portrait 2:3
         hero: 'the-last-ice_bg_desktop_79a50875.jpeg',
         thumb: ['thelastice_aleqatsiaq_peary_d6259274.jpeg', '55% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
@@ -320,6 +323,7 @@ export const FILMS = [
             { value: '107 ans', label: 'entre le naufrage et la découverte, en 2022' },
             { value: '27', label: 'hommes d’équipage, tous revenus vivants' },
         ],
+        poster: 'endurance_cover_f1c2b981.jpeg', // affiche officielle, portrait 2:3
         hero: 'ng_endurance_desktop_1920x792_1f8a7b66.png',
         thumb: ['endurance_004_9e394935.jpeg', '50% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
@@ -413,6 +417,7 @@ export const FILMS = [
             { value: 'Palme d’or', label: 'à Cannes en 1956 pour « Le Monde du silence »' },
             { value: 'Calypso', label: 'le navire de toutes ses expéditions' },
         ],
+        poster: 'becomingcousteau_1080x1620_2e6100f4.jpeg', // affiche officielle, portrait 2:3
         hero: 'cousteau-big-bg_cc204399.png',
         thumb: ['becomingcousteau_00015811_83bb0930.jpeg', '55% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
@@ -525,6 +530,7 @@ export const FILMS = [
             { value: '18 jours', label: 'sous la montagne avant la sortie du dernier' },
             { value: '4 km', label: 'de galeries, en partie noyées, jusqu’au groupe' },
         ],
+        poster: 'therescue-poster_1080x1600_e9ca44a1.jpeg', // affiche officielle, portrait 2:3
         hero: 'signal-2021-09-27-144025_001_db43b4b2.jpeg',
         thumb: ['therescue_sg_016_de7a36d3.jpeg', '45% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
@@ -614,6 +620,7 @@ export const FILMS = [
             { value: '1991', label: 'ils disparaissent sous une nuée ardente au mont Unzen' },
             { value: 'Oscars', label: 'nommé au meilleur documentaire en 2023' },
         ],
+        poster: 'fol-awards-poster-2_627fd1e0.jpeg', // affiche officielle, portrait 2:3
         hero: 'ng_fol_desktop_1920x792_e1f116a6.jpeg',
         thumb: ['fireoflove_kkrafft_01_285f3a97.jpeg', '72% 50%'], // vignette du globe, choisie à l'œil
         gallery: [
@@ -681,6 +688,7 @@ export const FILMS = [
             { value: '2 prix', label: 'à Sundance en 2022, dont le prix du public' },
             { value: 'Caméra', label: 'en partie tenue par les Uru-eu-wau-wau' },
         ],
+        poster: 'ng_theterritory_keyart_vertical_4b14a73f.jpeg', // affiche officielle, portrait 2:3
         hero: 'bitate-cropped_709c37fc.png',
         thumb: ['the_territory_33_9f17ff2b.jpeg', '58% 50%'], // vignette du globe, choisie à l'œil
         gallery: [

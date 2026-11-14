@@ -20,6 +20,7 @@ import {
     sin,
     smoothstep,
     texture,
+    time,
     uniform,
     uv,
     vec2,
@@ -44,6 +45,7 @@ export class Currents {
         this.uSeed = uniform(0);
         this.uSpeed = uniform(0.22);
         this.uFade = uniform(0.009);
+        this.uTone = uniform(0.75); // 0 : or, ambre · 1 : jaune National Geographic
 
         const state = instancedArray(count, 'vec4'); // x, y : position (uv) · z : âge · w : vitesse (m/s)
         this.state = state;
@@ -104,7 +106,7 @@ export class Currents {
             const d = uv().sub(0.5).mul(2);
             return exp(d.dot(d).mul(-2.5));
         })();
-        const amount = life(instanceIndex).mul(float(0.006).add(strength.mul(strength).mul(0.22)));
+        const amount = life(instanceIndex).mul(float(0.006).add(strength.mul(strength).mul(0.42)));
         // Deux passes : la traînée, et sa copie de l'autre côté du méridien 180° (aucune couture visible)
         const trail = (shift) => {
             const material = new THREE.SpriteNodeMaterial({
@@ -151,17 +153,32 @@ export class Currents {
         const theta = float(1).sub(head.y).mul(PI);
         const normal = vec3(lon.cos().negate().mul(sin(theta)), cos(theta), lon.sin().mul(sin(theta)));
         splatMaterial.positionNode = normal.mul(1.0012);
-        const facing = smoothstep(0.05, 0.3, normal.dot(cameraPosition.normalize()));
-        const fast = smoothstep(0.2, 0.8, head.w);
-        splatMaterial.scaleNode = vec2(float(0.0026).add(fast.mul(0.0022)));
-        splatMaterial.colorNode = vec4(mix(vec3(1, 0.72, 0.08), vec3(1, 0.93, 0.62), fast), 1);
-        splatMaterial.opacityNode = exp(uv().sub(0.5).mul(2).dot(uv().sub(0.5).mul(2)).mul(-3.2))
-            .mul(fast)
+        const facing = smoothstep(0.18, 0.45, normal.dot(cameraPosition.normalize()));
+        const fast = smoothstep(0.04, 0.7, head.w);
+        const seed = hash(instanceIndex.add(31));
+        // scintillement : chaque splat a sa propre phase
+        const twinkle = sin(time.mul(seed.mul(2.5).add(1.5)).add(seed.mul(TWO_PI)))
+            .mul(0.35)
+            .add(0.65);
+        // des grains : petits, nets, nombreux, même sur les courants lents
+        splatMaterial.scaleNode = vec2(float(0.0024).add(fast.mul(0.0032)).mul(seed.mul(0.7).add(0.6)));
+        splatMaterial.colorNode = vec4(
+            mix(
+                mix(vec3(1, 0.66, 0.06), vec3(1, 0.96, 0.78), fast.mul(fast)), // or
+                mix(vec3(1, 0.6, 0), vec3(1, 0.85, 0.3), fast.mul(fast)), // jaune #ffcc00 (linéaire)
+                this.uTone,
+            ),
+            1,
+        );
+        const d = uv().sub(0.5).mul(2);
+        splatMaterial.opacityNode = exp(d.dot(d).mul(-4.5))
+            .mul(fast.mul(0.75).add(0.25))
             .mul(facing)
             .mul(life(instanceIndex))
-            .mul(0.85);
+            .mul(twinkle)
+            .mul(1.4);
         this.splats = new THREE.Sprite(splatMaterial);
-        this.splats.count = Math.floor(count * 0.6);
+        this.splats.count = count;
         this.splats.frustumCulled = false;
         this.splats.renderOrder = 2;
     }

@@ -1,14 +1,55 @@
 /**
- * Transitions de page : le cadre jaune National Geographic.
- * En sortie, le jaune se referme autour de l'élément choisi (un marqueur, un lien) jusqu'à couvrir l'écran ;
- * à l'arrivée, le cadre s'ouvre depuis le centre et dévoile la nouvelle page.
- * Le script en ligne du <head> pose la classe « is-entering » avant le premier rendu (aucun flash).
+ * Transitions de page : les vidéos du logo, avec transparence, jouées par-dessus la page.
+ * Sortie : le cadre du logo tourne et se referme jusqu'au noir.
+ * Arrivée : la version inverse, qui s'ouvre depuis le noir sur la nouvelle page.
+ * Le script en ligne du <head> pose « is-entering » (écran noir) avant le premier rendu : aucun flash.
+ * Si la vidéo ne peut pas démarrer (économie d'énergie, réseau), un rideau animé prend le relais.
  */
 const KEY = 'mi:transition';
-const RATIO = 0.72; // proportions du cadre (logo)
-const TILT = '9deg'; // l'inclinaison du cadre, motif du projet
+const BASE = import.meta.env.BASE_URL;
+const TILT = '9deg';
 const still = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Safari ne lit la transparence qu'en HEVC ; les autres navigateurs en WebM VP9
+const safari = /^((?!chrome|chromium|android|crios|fxios).)*safari/i.test(navigator.userAgent);
+const src = (name) => `${BASE}transition/${name}.${safari ? 'mov' : 'webm'}`;
 
+const videos = {};
+function video(name) {
+    if (!videos[name]) {
+        const v = document.createElement('video');
+        Object.assign(v, { muted: true, playsInline: true, preload: 'auto', src: src(name) });
+        v.className = 'wipe';
+        v.setAttribute('aria-hidden', 'true');
+        document.body.append(v);
+        videos[name] = v;
+    }
+    return videos[name];
+}
+
+/** Lance la vidéo ; résout à la fin, ou rejette si elle ne démarre pas vite. */
+function play(v, onStart) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('lente')), 700);
+        v.addEventListener(
+            'playing',
+            () => {
+                clearTimeout(timer);
+                v.classList.add('is-on');
+                onStart?.();
+            },
+            { once: true },
+        );
+        v.addEventListener('ended', resolve, { once: true });
+        setTimeout(resolve, ((v.duration || 1) + 1.2) * 1000); // sécurité : une vidéo figée ne bloque jamais la page
+        v.currentTime = 0;
+        v.play().catch((e) => {
+            clearTimeout(timer);
+            reject(e);
+        });
+    });
+}
+
+// Repli : un rideau noir dont l'ouverture penchée se referme ou s'ouvre
 function curtain() {
     let el = document.querySelector('.curtain');
     if (!el) {
@@ -19,19 +60,17 @@ function curtain() {
     }
     return el.firstElementChild;
 }
-
 const box = (x, y, w, h) => ({ left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px` });
 const cover = () => {
-    const w = Math.max(innerWidth, innerHeight * RATIO) * 1.25;
-    const h = w / RATIO;
-    return box((innerWidth - w) / 2, (innerHeight - h) / 2, w, h);
+    const s = Math.hypot(innerWidth, innerHeight) * 1.1;
+    return box((innerWidth - s) / 2, (innerHeight - s * 0.7) / 2, s, s * 0.7);
 };
-const point = (x, y) => box(x, y, 0, 0);
+const point = () => box(innerWidth / 2, innerHeight / 2, 0, 0);
 
 let leaving = false;
 
-/** Quitte la page vers `url` ; `from` (DOMRect) est l'élément autour duquel le cadre se referme. */
-export async function leave(url, from) {
+/** Quitte la page vers `url`. */
+export async function leave(url) {
     if (leaving) return;
     leaving = true;
     try {
@@ -40,24 +79,21 @@ export async function leave(url, from) {
         /* stockage indisponible : arrivée sans transition */
     }
     if (still()) return location.assign(url);
-    const hole = curtain();
-    const r = from ?? { left: innerWidth / 2 - 30, top: innerHeight / 2 - 40, width: 60, height: 80 };
-    const cx = r.left + r.width / 2;
-    const cy = r.top + r.height / 2;
-    const w = Math.max(r.width, 26);
-    const h = Math.max(r.height, w / RATIO);
-    // le cadre se referme en penchant vers la droite, comme le cadre du logo
-    const frames = [
-        { ...cover(), rotate: '0deg' },
-        { ...box(cx - w / 2, cy - h / 2, w, h), rotate: TILT },
-        { ...point(cx, cy), rotate: TILT },
-    ];
-    await hole.animate(frames, { duration: 820, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' })
-        .finished;
+    try {
+        await play(video('out'));
+    } catch {
+        await curtain().animate(
+            [
+                { ...cover(), rotate: '0deg' },
+                { ...point(), rotate: TILT },
+            ],
+            { duration: 700, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' },
+        ).finished;
+    }
     location.assign(url);
 }
 
-/** À l'arrivée : ouvre le cadre si la page précédente a lancé une transition. */
+/** À l'arrivée : ouvre la page si la précédente a lancé une transition. */
 export function enter() {
     let pending = false;
     try {
@@ -67,41 +103,41 @@ export function enter() {
         /* rien */
     }
     const root = document.documentElement;
-    if (!pending || still()) {
-        root.classList.remove('is-entering');
-        return;
-    }
-    const hole = curtain();
-    Object.assign(hole.style, point(innerWidth / 2, innerHeight / 2));
-    root.classList.remove('is-entering');
-    const animation = hole.animate(
-        [
-            { ...point(innerWidth / 2, innerHeight / 2), rotate: TILT },
-            { ...cover(), rotate: '0deg' },
-        ],
-        {
-            duration: 900,
-            delay: 120,
-            easing: 'cubic-bezier(0.7, 0, 0.2, 1)',
-            fill: 'forwards',
-        },
-    );
-    animation.finished.then(() => hole.parentElement.remove());
+    const done = () => root.classList.remove('is-entering');
+    if (!pending || still()) return done();
+    const v = video('in');
+    play(v, done)
+        .then(() => v.classList.remove('is-on'))
+        .catch(() => {
+            const hole = curtain();
+            done();
+            hole.animate(
+                [
+                    { ...point(), rotate: TILT },
+                    { ...cover(), rotate: '0deg' },
+                ],
+                { duration: 800, easing: 'cubic-bezier(0.7, 0, 0.2, 1)', fill: 'forwards' },
+            ).finished.then(() => hole.parentElement.remove());
+        });
 }
 
-/** Liens internes marqués data-transition. */
+/** Liens internes marqués data-transition ; les vidéos se chargent en avance. */
 export function bind(root = document) {
     root.addEventListener('click', (e) => {
         const link = e.target.closest('a[data-transition]');
         if (!link || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
         e.preventDefault();
-        leave(link.href, link.getBoundingClientRect());
+        leave(link.href);
     });
+    const warm = () => ['out', 'in'].forEach(video);
+    if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 2000 });
+    else setTimeout(warm, 1200);
 }
 
-// Retour arrière depuis le cache du navigateur : la page doit réapparaître sans rideau
+// Retour arrière depuis le cache du navigateur : la page doit réapparaître sans voile
 addEventListener('pageshow', (e) => {
     if (!e.persisted) return;
     leaving = false;
     document.querySelector('.curtain')?.remove();
+    document.querySelectorAll('.wipe').forEach((v) => v.classList.remove('is-on'));
 });

@@ -22,9 +22,33 @@
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(rgb(0 0 0 / 0.55), transparent 18%),
-        linear-gradient(to top, #000 0%, rgb(0 0 0 / 0.6) 38%, transparent 70%),
-        linear-gradient(to right, rgb(0 0 0 / 0.55), transparent 60%);
+        /* fondus « easés » (courbe douce, nombreux arrêts) : pas de bande visible à la jonction */
+        linear-gradient(
+            rgb(0 0 0 / 0.6),
+            rgb(0 0 0 / 0.42) 5%,
+            rgb(0 0 0 / 0.22) 10%,
+            rgb(0 0 0 / 0.08) 15%,
+            transparent 22%
+        ),
+        linear-gradient(
+            to top,
+            #000,
+            rgb(0 0 0 / 0.94) 10%,
+            rgb(0 0 0 / 0.8) 20%,
+            rgb(0 0 0 / 0.6) 30%,
+            rgb(0 0 0 / 0.38) 41%,
+            rgb(0 0 0 / 0.19) 52%,
+            rgb(0 0 0 / 0.06) 63%,
+            transparent 74%
+        ),
+        linear-gradient(
+            to right,
+            rgb(0 0 0 / 0.5),
+            rgb(0 0 0 / 0.36) 15%,
+            rgb(0 0 0 / 0.18) 32%,
+            rgb(0 0 0 / 0.05) 48%,
+            transparent 60%
+        );
 }
 @keyframes settle {
     from {
@@ -61,7 +85,7 @@
     padding: 5px 10px;
     background: var(--yellow);
     color: var(--black);
-    font-size: 11px;
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -86,7 +110,7 @@
     max-width: 520px;
     margin: 0 0 28px;
     color: #e2e2e2;
-    font-size: 19px;
+    font-size: var(--fs-l);
     line-height: 1.45;
 }
 .hero-meta {
@@ -97,13 +121,13 @@
 }
 .hero-meta dt {
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--fs-xs);
     letter-spacing: 0.14em;
     text-transform: uppercase;
 }
 .hero-meta dd {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--fs-s);
     font-weight: 500;
 }
 .hero-scroll {
@@ -166,7 +190,7 @@
     top: 50%;
     padding: 3px 8px;
     background: var(--black);
-    font-size: 11px;
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -208,18 +232,16 @@
 .story-text p {
     margin: 0 0 22px;
     color: #cfcfcf;
-    font-size: 17px;
+    font-size: var(--fs-m);
     line-height: 1.7;
 }
 .story-text .lead {
     color: #fff;
-    font-size: 21px;
+    font-size: var(--fs-l);
     line-height: 1.55;
 }
 .story-frame {
     margin: 0;
-    padding: 10px;
-    border: 3px solid var(--yellow);
 }
 .story-frame img {
     width: 100%;
@@ -229,7 +251,7 @@
 .story-frame figcaption {
     padding-top: 8px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--fs-xs);
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
@@ -254,7 +276,7 @@
     display: block;
     margin-top: 10px;
     color: var(--muted);
-    font-size: 14px;
+    font-size: var(--fs-s);
     line-height: 1.5;
 }
 
@@ -291,17 +313,17 @@
     background: var(--panel);
     color: var(--yellow);
     font-family: var(--display);
-    font-size: 22px;
+    font-size: var(--fs-l);
 }
 .person h3 {
     margin: 0;
-    font-size: 17px;
+    font-size: var(--fs-m);
     font-weight: 700;
 }
 .person-role {
     margin: 2px 0 8px;
     color: var(--yellow);
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -309,27 +331,79 @@
 .person p:last-child {
     margin: 0;
     color: #bdbdbd;
-    font-size: 15px;
+    font-size: var(--fs-m);
     line-height: 1.6;
 }
 
-/* Galerie */
-.gallery {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
+/* Galerie : les photos arrivent en pile puis se rangent (mosaïque ou grille), voir pages/gallery.js */
+.gallery-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 16px;
+    margin-bottom: 20px;
+}
+.gallery-count {
+    color: var(--muted);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+.gallery-tools [role='group'] {
+    display: flex;
+    gap: 4px;
+}
+.gallery-tools button {
+    padding: 8px 14px;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+        color 0.2s,
+        background 0.2s;
+}
+.gallery-tools button:hover {
+    color: #fff;
+}
+.gallery-tools button[aria-pressed='true'] {
+    background: var(--yellow);
+    color: var(--black);
+}
+.gallery {
+    position: relative;
     margin: 0;
     padding: 0;
     list-style: none;
+    transition: height 0.8s var(--ease);
 }
 .gallery li {
-    grid-column: span 2;
+    position: absolute;
+    left: 0;
+    top: 0;
+    rotate: var(--r);
+    scale: 0.92;
+    opacity: 0;
+    transition:
+        transform 0.9s var(--ease),
+        width 0.9s var(--ease),
+        height 0.9s var(--ease),
+        rotate 0.9s var(--ease),
+        scale 0.9s var(--ease),
+        opacity 0.5s;
 }
-.gallery li:nth-child(5n + 1) {
-    grid-column: span 4;
-    grid-row: span 2;
+.gallery.is-arranged li {
+    rotate: 0deg;
+    scale: 1;
+    opacity: 1;
 }
 .shot {
+    position: relative;
     display: block;
     width: 100%;
     height: 100%;
@@ -339,40 +413,45 @@
     cursor: zoom-in;
     overflow: hidden;
 }
-.gallery li:not(:nth-child(5n + 1)) .shot {
-    height: auto;
-    aspect-ratio: 3 / 2;
-}
-.gallery li:nth-child(5n + 1) {
-    display: flex;
-    flex-direction: column;
-}
-.gallery li:nth-child(5n + 1) .shot {
-    flex: 1;
-    min-height: 0;
-}
 .shot img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition:
-        transform 0.8s var(--ease),
-        opacity 0.4s;
+    transition: transform 0.8s var(--ease);
 }
 .shot:hover img {
-    transform: scale(1.04);
+    transform: scale(1.05);
 }
 .shot:focus-visible {
     outline-offset: 0;
 }
-.gallery p {
-    margin: 8px 0 0;
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.5;
+.shot-caption {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 36px 14px 12px;
+    background: linear-gradient(
+        transparent,
+        rgb(0 0 0 / 0.12) 25%,
+        rgb(0 0 0 / 0.4) 55%,
+        rgb(0 0 0 / 0.7) 80%,
+        rgb(0 0 0 / 0.85)
+    );
+    color: #fff;
+    font-size: var(--fs-s);
+    line-height: 1.45;
+    text-align: left;
+    opacity: 0;
+    translate: 0 8px;
+    transition:
+        opacity 0.35s,
+        translate 0.45s var(--ease);
 }
-.gallery p span {
-    color: #6f6f6f;
+.shot-caption span {
+    color: #9a9a9a;
+}
+.shot:is(:hover, :focus-visible) .shot-caption {
+    opacity: 1;
+    translate: none;
 }
 
 /* Presse */
@@ -390,12 +469,12 @@
 }
 .quotes blockquote {
     margin: 0 0 12px;
-    font-size: 19px;
+    font-size: var(--fs-l);
     line-height: 1.5;
 }
 .quotes cite {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-style: normal;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -419,15 +498,15 @@
     transition: color 0.2s;
 }
 .action strong {
-    font-size: 17px;
+    font-size: var(--fs-m);
 }
 .action span {
     color: var(--muted);
-    font-size: 15px;
+    font-size: var(--fs-m);
 }
 .action .action-arrow {
     color: var(--yellow);
-    font-size: 20px;
+    font-size: var(--fs-l);
     text-align: right;
     transition: transform 0.3s var(--ease);
 }
@@ -447,13 +526,13 @@
 }
 .credits dt {
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--fs-xs);
     letter-spacing: 0.14em;
     text-transform: uppercase;
 }
 .credits dd {
     margin: 4px 0 0;
-    font-size: 15px;
+    font-size: var(--fs-m);
 }
 
 /* Monde suivant */
@@ -504,7 +583,7 @@
 }
 .next-label {
     color: var(--yellow);
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -525,10 +604,11 @@
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 16px 40px;
+    align-items: center;
     padding: 32px var(--gutter) 40px;
     border-top: 1px solid var(--line);
     color: #7a7a7a;
-    font-size: 13px;
+    font-size: var(--fs-s);
 }
 .footer p {
     max-width: 640px;
@@ -564,6 +644,7 @@
     text-align: center;
 }
 .lightbox img {
+    transform-origin: 0 0;
     max-width: 100%;
     max-height: 82dvh;
     margin: 0 auto;
@@ -573,7 +654,7 @@
     max-width: 720px;
     margin: 14px auto 0;
     color: #bdbdbd;
-    font-size: 14px;
+    font-size: var(--fs-s);
 }
 .lightbox button {
     border: 0;
@@ -592,9 +673,12 @@
     width: 52px;
     height: 52px;
     margin: auto;
-    border: 2px solid var(--yellow) !important;
+    color: #fff;
+    font-size: 24px;
+    transition: color 0.2s;
+}
+.lightbox-arrow:hover {
     color: var(--yellow);
-    font-size: 20px;
 }
 .lightbox-arrow.prev {
     grid-column: 1;
@@ -619,7 +703,7 @@
         padding-bottom: 48px;
     }
     .hero-pitch {
-        font-size: 17px;
+        font-size: var(--fs-m);
     }
     .hero-scroll {
         display: none;
@@ -643,16 +727,8 @@
         width: 56px;
         height: 56px;
     }
-    .gallery {
-        grid-template-columns: 1fr 1fr;
-    }
-    .gallery li,
-    .gallery li:nth-child(5n + 1) {
-        grid-column: span 2;
-        grid-row: auto;
-    }
-    .gallery li:nth-child(5n + 1) .shot {
-        aspect-ratio: 3 / 2;
+    .shot-caption {
+        display: none;
     }
     .action {
         grid-template-columns: 1fr 24px;
@@ -682,7 +758,32 @@
     }
 }
 
-/* Le bandeau défile avec la page : rien ne reste posé sur la lecture */
+/* Le bandeau défile avec la page ; seul le petit globe reste, en bas à gauche */
 .bar {
     position: absolute;
+}
+.to-globe-fixed {
+    position: fixed;
+    left: var(--gutter);
+    bottom: 24px;
+    z-index: 40;
+}
+.to-globe-fixed .to-globe-label {
+    opacity: 0;
+    translate: -8px 0;
+    padding: 6px 10px;
+    background: rgb(0 0 0 / 0.7);
+    transition:
+        opacity 0.3s,
+        translate 0.4s var(--ease);
+}
+.to-globe-fixed:is(:hover, :focus-visible) .to-globe-label {
+    opacity: 1;
+    translate: none;
+}
+@media (max-width: 640px) {
+    .to-globe-fixed {
+        --d: 38px;
+        bottom: 16px;
+    }
 }

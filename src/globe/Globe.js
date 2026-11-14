@@ -5,6 +5,9 @@ import {
     dot,
     exp,
     float,
+    floor,
+    fract,
+    hash,
     max,
     mix,
     normalWorld,
@@ -15,12 +18,14 @@ import {
     texture,
     uniform,
     uv,
+    vec2,
     vec3,
     vec4,
 } from 'three/tsl';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Currents } from './Currents.js';
 import { createSky } from './Sky.js';
+import { dither } from './dither.js';
 import { toVector } from './geo.js';
 
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
@@ -64,7 +69,7 @@ export class Globe {
             dampingFactor: 0.07,
             enablePan: false,
             minDistance: 2.15, // au-delà, le relief (4096 px) devient flou
-            maxDistance: 5.5,
+            maxDistance: 7,
             rotateSpeed: 0.4,
             zoomSpeed: 0.6,
             autoRotate: !this.reducedMotion,
@@ -72,7 +77,7 @@ export class Globe {
         });
         this.controls.addEventListener('start', () => this.hold());
 
-        // La molette fait tourner le globe ; le pincement (pavé tactile, écran) zoome
+        // La molette fait voyager la caméra sur une orbite elliptique (voir orbit) ; le pincement zoome
         this.spin = 0;
         addEventListener(
             'wheel',
@@ -109,7 +114,7 @@ export class Globe {
 
         this.currents = new Currents({
             field,
-            count: this.mobile ? 90_000 : 240_000,
+            count: this.mobile ? 110_000 : 300_000,
             resolution: this.mobile ? 2048 : 4096,
         });
 
@@ -124,17 +129,34 @@ export class Globe {
             const light = float(0.48).add(max(dot(n, this.uSun), 0).mul(0.42));
             const trail = texture(this.currents.target.texture, uv());
             const sea = smoothstep(0.45, 0.85, texture(field, uv()).b).mul(this.uCurrents); // jamais sur les terres
+            // grain de sable : un bruit fin et fixe sur la surface, les courants semblent faits de poudre dorée
+            const cell = floor(uv().mul(vec2(this.mobile ? 2560 : 3584, this.mobile ? 1280 : 1792)));
+            const grain = fract(
+                hash(cell.x)
+                    .mul(43.7)
+                    .add(hash(cell.y.add(0.5)).mul(91.3)),
+            );
+            const sand = mix(float(0.22), float(1.9), grain.mul(grain));
             const glow = float(1)
-                .sub(exp(trail.r.mul(-1.1)))
-                .mul(smoothstep(0.03, 0.18, trail.r))
+                .sub(exp(trail.r.mul(-1.6)))
+                .mul(smoothstep(0.012, 0.1, trail.r))
+                .mul(sand)
                 .mul(sea);
-            const hot = smoothstep(0.25, 1.6, trail.g).mul(sea);
-            let color = ground.mul(light).mul(0.82);
-            color = color.add(vec3(YELLOW.r, YELLOW.g, YELLOW.b).mul(glow).mul(1.1));
-            color = color.add(vec3(1, 0.96, 0.8).mul(hot).mul(0.9));
+            const hot = smoothstep(0.12, 1.1, trail.g)
+                .mul(mix(float(0.6), float(1.3), grain))
+                .mul(sea);
+            let color = ground.mul(light).mul(0.58);
+            const Y = vec3(YELLOW.r, YELLOW.g, YELLOW.b);
+            const tone = this.currents.uTone; // 0 : or, ambre ; 1 : jaune National Geographic
+            // or : ambre sombre pour les courants lents, jaune franc pour les grands, cœur blanc (lumière ajoutée)
+            const amber = mix(vec3(0.55, 0.32, 0.02), Y, smoothstep(0.02, 0.5, trail.g));
+            const gold = color.add(amber.mul(glow).mul(1.9)).add(vec3(1, 0.95, 0.78).mul(hot).mul(1.7));
+            // jaune : la couleur du cadre posée telle quelle (pas d'assombrissement brun), cœur jaune clair
+            const flat = mix(color, Y, glow.mul(1.25).min(1)).add(vec3(1, 0.9, 0.35).mul(hot).mul(0.9));
+            color = mix(gold, flat, tone);
             const rim = pow(float(1).sub(max(dot(n, view), 0)), 5);
             color = mix(color, vec3(0.42, 0.4, 0.36), rim.mul(0.12));
-            return vec4(color, 1);
+            return vec4(dither(color), 1);
         })();
         this.surface = new THREE.Mesh(new THREE.SphereGeometry(1, 256, 160), surface);
 
@@ -145,6 +167,32 @@ export class Globe {
         this.resize();
         window.addEventListener('resize', () => this.resize());
         this.renderer.setAnimationLoop(() => this.frame());
+    }
+
+    /**
+     * Défilement : la caméra suit une orbite elliptique qui précesse. En plus de tourner autour du globe,
+     * elle s'approche et s'éloigne (une boucle par ~15 crans de molette) tout en montant et descendant à une
+     * autre cadence (×0,62) : le point le plus proche ne tombe jamais deux fois au même endroit.
+     * Les trois mouvements dérivent d'une même phase : revenir en arrière refait le chemin à l'envers.
+     */
+    orbit(d) {
+        this.spin *= 0.88;
+        this.phase = (this.phase ?? 0) + d * 4;
+        const p = this.camera.position;
+        p.applyAxisAngle(UP, d);
+        const { minDistance, maxDistance } = this.controls;
+        const r = THREE.MathUtils.clamp(
+            p.length() * Math.exp(-d * 0.9 * Math.cos(this.phase)),
+            minDistance,
+            maxDistance,
+        );
+        const lat = THREE.MathUtils.clamp(
+            Math.asin(p.y / p.length()) + d * 0.7 * Math.cos(this.phase * 0.62),
+            -1.05,
+            1.05,
+        );
+        const flat = new THREE.Vector3(p.x, 0, p.z).normalize();
+        p.copy(flat.multiplyScalar(Math.cos(lat) * r)).addScaledVector(UP, Math.sin(lat) * r);
     }
 
     /** L'utilisateur prend la main : la rotation automatique s'arrête un moment. */
@@ -197,6 +245,11 @@ export class Globe {
         }
     }
 
+    /** Teinte des courants : 0 = or et ambre, 1 = jaune National Geographic. */
+    setTone(value) {
+        this.currents.uTone.value = value;
+    }
+
     setCurrents(visible) {
         this.uCurrents.value = visible ? 1 : 0;
     }
@@ -226,10 +279,7 @@ export class Globe {
         this.clock.update();
         const delta = Math.min(this.clock.getDelta(), 1 / 20); // retour sur un onglet caché : pas de saut
         if (this.flight) this.flight();
-        if (Math.abs(this.spin) > 1e-5) {
-            this.camera.position.applyAxisAngle(UP, this.spin * 0.12);
-            this.spin *= 0.88;
-        }
+        if (Math.abs(this.spin) > 1e-5) this.orbit(this.spin * 0.12);
         this.applyShift();
         this.controls.update(delta);
         this.uSun.value.set(-0.4, 0.5, 0.75).normalize().applyQuaternion(this.camera.quaternion);
@@ -260,7 +310,15 @@ export class Globe {
                 m.element.tabIndex = visible ? 0 : -1;
             }
             m.width ??= m.element.querySelector('.marker-label')?.offsetWidth ?? 120;
-            const box = { x0: x, x1: x + m.width + 30, y0: y - 16, y1: y + 16 };
+            // près du bord gauche : tout en miroir (le cadre tombe à gauche, l'étiquette passe à droite)
+            const flip = x < (this.mobile ? 170 : 250);
+            if (flip !== m.flip && !m.element.classList.contains('is-open')) {
+                m.flip = flip;
+                m.element.classList.toggle('is-flip', flip);
+            }
+            const box = m.flip
+                ? { x0: x, x1: x + m.width + 30, y0: y - 16, y1: y + 16 }
+                : { x0: x - m.width - 30, x1: x, y0: y - 16, y1: y + 16 };
             const overlaps =
                 visible &&
                 placed.some((b) => box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0);

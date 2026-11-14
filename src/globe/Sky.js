@@ -17,6 +17,7 @@ import {
     vec3,
     vec4,
 } from 'three/tsl';
+import { dither } from './dither.js';
 
 // Pôle de la Voie lactée : la bande traverse le ciel en biais
 const POLE = new THREE.Vector3(-0.35, 0.8, 0.48).normalize();
@@ -37,10 +38,8 @@ export function createSky({ count = 5000 } = {}) {
         const cloud = mx_fractal_noise_float(dir.mul(2.6), 4).mul(0.5).add(0.5);
         const dust = smoothstep(0.25, 0.85, mx_fractal_noise_float(dir.mul(6.5), 3).mul(0.5).add(0.5));
         const glow = band.mul(cloud).mul(float(1).sub(dust.mul(0.45)));
-        return vec4(
-            vec3(0.82, 0.8, 0.76).mul(glow.mul(0.0065)) /* linéaire : ≈ 4 % de gris une fois affiché */,
-            1,
-        );
+        // linéaire : ≈ 4 % de gris une fois affiché, tramé pour un fondu sans paliers
+        return vec4(dither(vec3(0.82, 0.8, 0.76).mul(glow.mul(0.0065))), 1);
     })();
     const backdrop = new THREE.Mesh(new THREE.SphereGeometry(80, 64, 32), milky);
     backdrop.renderOrder = -2;
@@ -62,10 +61,17 @@ export function createSky({ count = 5000 } = {}) {
         blending: THREE.AdditiveBlending,
     });
     material.positionNode = star.xyz;
-    material.scaleNode = vec2(float(0.06).add(star.w.mul(0.2)));
+    // beaucoup d'étoiles minuscules, quelques-unes plus grandes
+    material.scaleNode = vec2(
+        float(0.028)
+            .add(star.w.mul(0.17))
+            .mul(hash(instanceIndex.add(7)).mul(0.6).add(0.55)),
+    );
     const d = uv().sub(0.5).mul(2);
-    const tint = mix(vec3(0.72, 0.8, 1), vec3(1, 0.86, 0.66), hash(instanceIndex));
-    material.colorNode = vec4(mix(vec3(1), tint, 0.55), 1);
+    // teintes : bleutées, chaudes, et un tiers dorées (le jaune du projet)
+    const h = hash(instanceIndex);
+    const tint = h.lessThan(0.34).select(vec3(1, 0.78, 0.28), mix(vec3(0.72, 0.8, 1), vec3(1, 0.88, 0.7), h));
+    material.colorNode = vec4(mix(vec3(1), tint, 0.75), 1);
     material.opacityNode = exp(d.dot(d).mul(-5)).mul(float(0.18).add(star.w.mul(0.8)));
     const stars = new THREE.Sprite(material);
     stars.count = count;

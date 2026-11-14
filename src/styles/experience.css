@@ -1,16 +1,5 @@
 /* L'expérience : accueil (intro) et globe (explore) sur la même scène plein écran */
 
-@property --frame-w {
-    syntax: '<length>';
-    inherits: true;
-    initial-value: 16px;
-}
-@property --frame-h {
-    syntax: '<length>';
-    inherits: true;
-    initial-value: 22px;
-}
-
 html,
 body {
     height: 100%;
@@ -43,7 +32,7 @@ body {
     left: var(--gutter);
     top: 50%;
     z-index: 10;
-    max-width: 520px;
+    max-width: clamp(340px, 34vw, 600px);
     transform: translateY(-46%);
     transition:
         opacity 0.8s var(--ease),
@@ -53,25 +42,23 @@ body {
 .intro-title {
     margin: 0;
     font-family: var(--display);
-    font-size: clamp(52px, 7vw, 112px);
+    font-size: clamp(52px, 7.2vw, 128px);
     font-weight: 400;
     line-height: 0.9;
     text-transform: uppercase;
 }
-.intro-title::after {
-    content: '';
-    display: block;
-    width: 72px;
-    height: 4px;
-    margin: 28px 0 24px;
-    background: var(--yellow);
+/* La signature remplace le filet jaune : même place, même rôle de césure entre titre et texte */
+.intro-sig {
+    margin: clamp(18px, 2vw, 30px) 0 clamp(16px, 1.6vw, 24px);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.22em;
 }
 .intro-lede {
-    max-width: 380px;
-    margin: 0 0 36px;
+    max-width: 28ch;
+    margin: 0 0 clamp(26px, 2.6vw, 40px);
     color: #d6d6d6;
-    font-size: 18px;
-    line-height: 1.5;
+    font-size: var(--fs-l);
+    line-height: 1.45;
 }
 .intro > * {
     animation: rise 1.2s var(--ease) both;
@@ -101,9 +88,9 @@ body {
 .guide {
     position: fixed;
     left: var(--gutter);
-    bottom: 34px;
+    bottom: clamp(24px, 3vw, 44px);
     z-index: 10;
-    max-width: 360px;
+    max-width: clamp(300px, 26vw, 420px);
     opacity: 0;
     visibility: hidden;
     transform: translateY(12px);
@@ -126,7 +113,7 @@ body {
     align-items: center;
     gap: 12px;
     margin-bottom: 10px !important;
-    font-size: 15px;
+    font-size: var(--fs-m);
     font-weight: 500;
 }
 .guide-frame {
@@ -138,15 +125,66 @@ body {
 .guide-data {
     padding-left: 24px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--fs-s);
     line-height: 1.5;
 }
 .guide-data span {
     display: block;
     color: #6f6f6f;
-    font-size: 11px;
+    font-size: var(--fs-xs);
     letter-spacing: 0.06em;
     text-transform: uppercase;
+}
+
+/* Curseur de teinte : de l'or au jaune National Geographic */
+.tone {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0 0 24px;
+    color: #8a8a8a;
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.tone input {
+    width: 120px;
+    height: 18px;
+    margin: 0;
+    background: none;
+    accent-color: var(--yellow);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.tone input::-webkit-slider-runnable-track {
+    height: 2px;
+    background: linear-gradient(90deg, #b8860b, var(--yellow));
+}
+.tone input::-moz-range-track {
+    height: 2px;
+    background: linear-gradient(90deg, #b8860b, var(--yellow));
+}
+.tone input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 14px;
+    margin-top: -6px;
+    border: 2px solid var(--yellow);
+    background: #000;
+    rotate: var(--tilt);
+}
+.tone input::-moz-range-thumb {
+    width: 6px;
+    height: 10px;
+    border: 2px solid var(--yellow);
+    border-radius: 0;
+    background: #000;
+    rotate: var(--tilt);
+}
+.tone input:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 4px;
 }
 
 .credit {
@@ -156,12 +194,13 @@ body {
     z-index: 10;
     margin: 0;
     color: #6f6f6f;
-    font-size: 11px;
+    font-size: var(--fs-xs);
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
-/* Marqueurs : le cadre jaune, fenêtre ouverte sur chaque film */
+/* Marqueurs : le cadre jaune. Au survol il bascule à 90° vers la droite comme s'il tombait, se pose en
+   paysage, puis s'ouvre d'un coup en fenêtre sur le film (animations dans pages/experience.js). */
 .markers {
     position: absolute;
     inset: 0;
@@ -176,8 +215,6 @@ body {
     text-decoration: none;
     pointer-events: auto;
     transition: opacity 0.4s;
-    --frame-w: 16px;
-    --frame-h: 22px;
 }
 [data-mode='intro'] .marker,
 .marker.is-hidden {
@@ -195,106 +232,97 @@ body {
 }
 .marker-frame {
     position: absolute;
-    left: 0;
-    top: 0;
-    width: var(--frame-w);
-    height: var(--frame-h);
+    left: -8px;
+    top: -12px;
+    width: 16px;
+    height: 24px;
     border: 3px solid var(--yellow);
     background: rgb(0 0 0 / 0.35);
     overflow: hidden;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 18px rgb(255 204 0 / 0.3);
-    /* Au départ : la fenêtre se referme, puis le cadre se redresse */
-    transition:
-        --frame-w 0.32s var(--ease),
-        --frame-h 0.32s var(--ease),
-        border-width 0.32s var(--ease),
-        rotate 0.45s var(--ease) 0.15s;
+    box-shadow:
+        0 0 18px rgb(255 204 0 / 0.3),
+        0 18px 40px -12px rgb(0 0 0 / 0.8);
 }
 .marker-frame img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     opacity: 0;
-    transition: opacity 0.25s;
+    transition: opacity 0.2s;
 }
+.marker.is-landed img {
+    opacity: 1;
+    transition: opacity 0.4s 0.15s;
+}
+/* L'étiquette se tient du côté opposé à la chute : à gauche (texte calé à droite), ou à droite en miroir.
+   Pendant la chute elle descend jusqu'au coin bas du cadre couché (translate animé dans experience.js). */
 .marker-label {
     position: absolute;
-    left: calc(var(--frame-w) / 2 + var(--frame-h) * 0.08 + 12px); /* dégage le coin penché */
+    right: 14px;
     top: 0;
     display: grid;
-    gap: 1px;
+    gap: 2px;
     width: max-content;
-    max-width: 240px;
-    padding: 6px 10px 7px;
-    background: rgb(0 0 0 / 0.72);
+    max-width: clamp(180px, 16vw, 260px);
+    padding: 7px 11px 8px;
+    background: rgb(0 0 0 / 0.78);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    text-align: right;
     transform: translateY(-50%);
-    transition:
-        opacity 0.3s,
-        left 0.32s var(--ease);
+    transition: opacity 0.3s;
+}
+.marker.is-flip .marker-label {
+    right: auto;
+    left: 14px;
+    text-align: left;
 }
 .marker-label strong {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
 }
 .marker-label span {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--fs-xs);
 }
-.marker.is-crowded:not(:hover, :focus-visible, .is-open) .marker-label {
+.marker.is-open .marker-label {
+    box-shadow: inset 0 -2px 0 var(--yellow);
+}
+.marker.is-crowded:not(.is-open) .marker-label {
     opacity: 0;
 }
-/* Au survol : le cadre penche vers la droite comme s'il tombait… puis s'ouvre d'un coup en fenêtre */
-.marker:hover,
-.marker:focus-visible,
 .marker.is-open {
     z-index: 2;
-    --frame-w: 210px;
-    --frame-h: 280px;
 }
-.marker:hover .marker-frame,
-.marker:focus-visible .marker-frame,
-.marker.is-open .marker-frame {
-    rotate: var(--tilt);
-    border-width: 7px;
-    transition:
-        rotate 0.3s cubic-bezier(0.55, 0, 0.85, 0.35),
-        --frame-w 0.55s var(--spring) 0.22s,
-        --frame-h 0.55s var(--spring) 0.22s,
-        border-width 0.4s var(--ease) 0.22s;
+/* Une fenêtre ouverte : les autres cadres s'effacent, rien ne se chevauche */
+.has-open .marker:not(.is-open, .is-hidden) {
+    opacity: 0.18;
 }
-.marker:hover img,
-.marker:focus-visible img,
-.marker.is-open img {
-    opacity: 1;
-    transition-delay: 0.3s;
-}
-.marker:hover .marker-label,
-.marker:focus-visible .marker-label,
-.marker.is-open .marker-label {
-    transition:
-        opacity 0.3s,
-        left 0.55s var(--spring) 0.22s;
+.has-open .marker:not(.is-open) .marker-label {
+    opacity: 0;
 }
 .marker:focus-visible {
     outline: none;
+}
+.marker:focus-visible .marker-frame {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
 }
 .marker::after {
     /* pulsation discrète, pour inviter au clic */
     content: '';
     position: absolute;
-    left: 0;
-    top: 0;
+    left: -8px;
+    top: -12px;
     width: 16px;
-    height: 22px;
+    height: 24px;
     border: 2px solid var(--yellow);
-    transform: translate(-50%, -50%);
     animation: pulse 2.6s var(--ease) infinite;
     pointer-events: none;
 }
-.marker:is(:hover, .is-open)::after {
+.marker.is-open::after {
     animation: none;
     opacity: 0;
 }
@@ -304,7 +332,7 @@ body {
     }
     to {
         opacity: 0;
-        transform: translate(-50%, -50%) scale(2.4);
+        scale: 2.4;
     }
 }
 
@@ -353,7 +381,7 @@ body {
 }
 .index-list a {
     display: grid;
-    grid-template-columns: 28px 96px 1fr;
+    grid-template-columns: 28px 54px 1fr;
     align-items: center;
     gap: 16px;
     padding: 12px 24px;
@@ -365,25 +393,25 @@ body {
 }
 .index-n {
     color: var(--yellow);
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 700;
 }
 .index-list img {
-    width: 96px;
-    height: 54px;
+    width: 54px;
+    height: 80px;
     object-fit: cover;
 }
 .index-text {
     display: grid;
 }
 .index-text strong {
-    font-size: 13px;
+    font-size: var(--fs-s);
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 .index-text span {
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--fs-s);
 }
 
 /* Sans globe : la liste devient la page */
@@ -423,11 +451,11 @@ body {
         position: fixed;
         inset: 35% 0 0;
         z-index: -1;
-        background: linear-gradient(transparent, #000 55%);
+        background: linear-gradient(transparent, rgb(0 0 0 / 0.3) 18%, rgb(0 0 0 / 0.72) 36%, #000 58%);
         pointer-events: none;
     }
     .intro-lede {
-        font-size: 16px;
+        font-size: var(--fs-m);
         margin-bottom: 26px;
     }
     .guide {
@@ -438,12 +466,6 @@ body {
         left: var(--gutter);
         bottom: 16px;
         font-size: 10px;
-    }
-    .marker:hover,
-    .marker:focus-visible,
-    .marker.is-open {
-        --frame-w: 150px;
-        --frame-h: 200px;
     }
     .marker-label {
         padding: 4px 8px 5px;
